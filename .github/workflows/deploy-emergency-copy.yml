@@ -1,0 +1,160 @@
+name: Deploy emergency LMS copy
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/deploy-emergency-copy.yml
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
+      - name: Mirror current live LMS
+        run: |
+          mkdir -p _site/assets
+          curl --fail --location --silent --show-error \
+            https://sparkplus-lms-prototype.min20993.chatgpt.site/ \
+            --output _site/index.html
+
+          grep -oE '(href|src)="/assets/[^"]+' _site/index.html \
+            | cut -d'"' -f2 \
+            | sort -u \
+            | while read -r asset; do
+                mkdir -p "_site/$(dirname "$asset")"
+                curl --fail --location --silent --show-error \
+                  "https://sparkplus-lms-prototype.min20993.chatgpt.site$asset" \
+                  --output "_site$asset"
+              done
+
+          curl --fail --location --silent --show-error \
+            https://sparkplus-lms-prototype.min20993.chatgpt.site/sparkplus-logo-black.png \
+            --output _site/sparkplus-logo-black.png
+
+          curl --fail --location --silent --show-error \
+            https://sparkplus-lms-prototype.min20993.chatgpt.site/favicon.svg \
+            --output _site/favicon.svg
+
+      - name: Apply bright classroom theme
+        run: |
+          css_file=$(find _site/assets -maxdepth 1 -name '*.css' | head -n 1)
+          cat >> "$css_file" <<'CSS'
+
+          /* Emergency bright classroom and comfortable action colors */
+          :root {
+            --blue: #356f9f;
+            --blue-dark: #28587f;
+            --brand-soft: #edf4fa;
+          }
+
+          .player-page {
+            background: #f3f5f7 !important;
+            color: #1f2937 !important;
+          }
+
+          .player-header {
+            color: #1f2937 !important;
+            background: #ffffff !important;
+            border-bottom: 1px solid #dce3ea !important;
+          }
+
+          .player-main {
+            background: #ffffff !important;
+            border: 1px solid #e0e5ea !important;
+            border-radius: 14px !important;
+            margin-top: 24px !important;
+            margin-bottom: 40px !important;
+            padding: 30px !important;
+            box-shadow: 0 8px 28px rgba(37, 55, 74, 0.08) !important;
+          }
+
+          .lesson-sidebar,
+          .player-tab-content,
+          .player-files button {
+            background: #ffffff !important;
+          }
+
+          .primary,
+          .player-actions .primary,
+          .player-actions .save {
+            color: #ffffff !important;
+            background: #356f9f !important;
+            border-color: #356f9f !important;
+          }
+
+          .primary:hover,
+          .player-actions .primary:hover,
+          .player-actions .save:hover {
+            background: #28587f !important;
+            border-color: #28587f !important;
+          }
+
+          .secondary,
+          .exit-classroom,
+          .open-sidebar {
+            color: #40566d !important;
+            background: #ffffff !important;
+            border-color: #c6d0da !important;
+          }
+
+          .player-tabs button.active,
+          .player-head span {
+            color: #356f9f !important;
+            border-bottom-color: #356f9f !important;
+          }
+
+          .sidebar-lessons button.current {
+            background: #edf4fa !important;
+            border-left-color: #356f9f !important;
+          }
+
+          .admin-portal {
+            --mint: #356f9f !important;
+            --mint-dark: #28587f !important;
+            --mint-light: #edf4fa !important;
+          }
+
+          .admin-portal .primary,
+          .admin-portal .course-search-button {
+            color: #ffffff !important;
+            background: #356f9f !important;
+            border-color: #356f9f !important;
+          }
+          CSS
+
+      - name: Rewrite paths for GitHub Pages
+        run: |
+          find _site -type f \( -name '*.html' -o -name '*.js' -o -name '*.css' \) -print0 \
+            | xargs -0 sed -i \
+              -e 's|"/assets/|"/SPARKPLUS-LMS/assets/|g' \
+              -e "s|'/assets/|'/SPARKPLUS-LMS/assets/|g" \
+              -e 's|url(/assets/|url(/SPARKPLUS-LMS/assets/|g' \
+              -e 's|"/sparkplus-logo-black.png|"/SPARKPLUS-LMS/sparkplus-logo-black.png|g' \
+              -e 's|"/favicon.svg|"/SPARKPLUS-LMS/favicon.svg|g'
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
