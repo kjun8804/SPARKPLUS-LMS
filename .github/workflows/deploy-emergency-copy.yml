@@ -1,4 +1,4 @@
-name: Deploy emergency LMS copy
+name: Recover source and deploy LMS
 
 on:
   workflow_dispatch:
@@ -8,7 +8,7 @@ on:
       - .github/workflows/deploy-emergency-copy.yml
 
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
@@ -17,48 +17,52 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  deploy:
+  recover-build-deploy:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
-      - name: Configure Pages
-        uses: actions/configure-pages@v5
-        with:
-          enablement: true
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - name: Mirror current live LMS
+      - name: Download latest deployed application
         run: |
-          mkdir -p _site/assets
           curl --fail --location --silent --show-error \
-            https://sparkplus-lms-prototype.min20993.chatgpt.site/ \
-            --output _site/index.html
-
-          grep -oE '(href|src)="/assets/[^"]+' _site/index.html \
-            | cut -d'"' -f2 \
-            | sort -u \
-            | while read -r asset; do
-                mkdir -p "_site/$(dirname "$asset")"
-                curl --fail --location --silent --show-error \
-                  "https://sparkplus-lms-prototype.min20993.chatgpt.site$asset" \
-                  --output "_site$asset"
-              done
-
+            https://sparkplus-lms-prototype.min20993.chatgpt.site/assets/page-BQVpnc2q.js \
+            --output /tmp/latest-page.js
           curl --fail --location --silent --show-error \
-            https://sparkplus-lms-prototype.min20993.chatgpt.site/sparkplus-logo-black.png \
-            --output _site/sparkplus-logo-black.png
+            https://sparkplus-lms-prototype.min20993.chatgpt.site/assets/index-EbbBzZq3.css \
+            --output /tmp/latest-styles.css
 
-          curl --fail --location --silent --show-error \
-            https://sparkplus-lms-prototype.min20993.chatgpt.site/favicon.svg \
-            --output _site/favicon.svg
-
-      - name: Apply bright classroom theme
+      - name: Recover editable React source
         run: |
-          css_file=$(find _site/assets -maxdepth 1 -name '*.css' | head -n 1)
-          cat >> "$css_file" <<'CSS'
+          python3 <<'PY'
+          from pathlib import Path
 
-          /* Emergency bright classroom and comfortable action colors */
+          raw = Path("/tmp/latest-page.js").read_text(encoding="utf-8")
+          marker = ",i=n(),a=["
+          if marker not in raw:
+              raise SystemExit("Unable to locate the compiled React application marker")
+
+          body = raw.split(marker, 1)[1]
+          header = '''import * as r from "react";
+          import { jsx, jsxs, Fragment } from "react/jsx-runtime";
+
+          const i = { jsx, jsxs, Fragment };
+          var a=['''
+
+          app = header + body
+          app = app.replace(
+              "src:`/sparkplus-logo-black.png`",
+              "src:`https://sparkplus-lms-prototype.min20993.chatgpt.site/sparkplus-logo-black.png`",
+          )
+          Path("src/App.jsx").write_text(app, encoding="utf-8")
+
+          css = Path("/tmp/latest-styles.css").read_text(encoding="utf-8")
+          css += r'''
+
+          /* Bright classroom and comfortable action colors */
           :root {
             --blue: #356f9f;
             --blue-dark: #28587f;
@@ -138,22 +142,49 @@ jobs:
             background: #356f9f !important;
             border-color: #356f9f !important;
           }
-          CSS
+          '''
+          Path("src/styles.css").write_text(css, encoding="utf-8")
 
-      - name: Rewrite paths for GitHub Pages
+          Path("vite.config.js").write_text(
+              '''import { defineConfig } from "vite";
+          import react from "@vitejs/plugin-react";
+
+          export default defineConfig({
+            plugins: [react()],
+            base: "/SPARKPLUS-LMS/",
+          });
+          ''',
+              encoding="utf-8",
+          )
+          PY
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install and build recovered source
         run: |
-          find _site -type f \( -name '*.html' -o -name '*.js' -o -name '*.css' \) -print0 \
-            | xargs -0 sed -i \
-              -e 's|"/assets/|"/SPARKPLUS-LMS/assets/|g' \
-              -e "s|'/assets/|'/SPARKPLUS-LMS/assets/|g" \
-              -e 's|url(/assets/|url(/SPARKPLUS-LMS/assets/|g' \
-              -e 's|"/sparkplus-logo-black.png|"/SPARKPLUS-LMS/sparkplus-logo-black.png|g' \
-              -e 's|"/favicon.svg|"/SPARKPLUS-LMS/favicon.svg|g'
+          npm install
+          npm run build
+
+      - name: Save recovered source to GitHub
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/App.jsx src/styles.css vite.config.js package-lock.json
+          if ! git diff --cached --quiet; then
+            git commit -m "Recover latest editable LMS source"
+            git push
+          fi
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: _site
+          path: dist
 
       - name: Deploy to GitHub Pages
         id: deployment
