@@ -6994,6 +6994,41 @@ html[data-theme="dark"] .home-badge-main > span {
   }
 }
 
+/* Wider administrator workspace */
+.admin-portal > .main {
+  width: calc(100% - clamp(40px, 6vw, 96px)) !important;
+  max-width: none !important;
+  margin: 0 auto !important;
+  padding-right: 0 !important;
+  padding-left: 0 !important;
+}
+.admin-course-card-top {
+  justify-content: flex-start !important;
+}
+.course-manage-link {
+  justify-content: center !important;
+  height: 42px;
+  margin-top: 15px !important;
+  border-radius: 12px !important;
+  background: #f2f6fa !important;
+  color: #416d92 !important;
+  transition: 0.18s;
+}
+.course-manage-link:hover {
+  background: #e7f2fd !important;
+  color: #276fae !important;
+}
+@media (min-width: 1700px) {
+  .admin-course-card-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+@media (max-width: 760px) {
+  .admin-portal > .main {
+    width: calc(100% - 28px) !important;
+  }
+}
+
 /* Course administration cards and lesson studio */
 .course-admin-grid-page,
 .course-editor-v2 {
@@ -7003,10 +7038,9 @@ html[data-theme="dark"] .home-badge-main > span {
 }
 .course-card-filter {
   display: grid;
-  grid-template-columns: minmax(280px, 1.4fr) minmax(150px, 0.6fr) minmax(
-      150px,
-      0.6fr
-    ) auto;
+  grid-template-columns:
+    minmax(280px, 1.4fr) minmax(150px, 0.6fr) minmax(150px, 0.6fr)
+    auto;
   gap: 8px;
   padding: 16px;
   border: 1px solid #e8edf2;
@@ -7527,10 +7561,9 @@ html[data-theme="dark"] .home-badge-main > span {
 }
 .lesson-quiz-list article {
   display: grid;
-  grid-template-columns: 30px minmax(180px, 1fr) 100px minmax(
-      130px,
-      0.75fr
-    ) 34px;
+  grid-template-columns:
+    30px minmax(180px, 1fr) 100px minmax(130px, 0.75fr)
+    34px;
   align-items: center;
   gap: 7px;
   padding: 9px;
