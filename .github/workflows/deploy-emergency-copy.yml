@@ -1,4 +1,5 @@
 name: Build and deploy LMS
+# Redeploy the current complete source and styles together
 
 on:
   workflow_dispatch:
