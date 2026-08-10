@@ -1,0 +1,347 @@
+/* Dark mode fallback layer
+ * Loaded after styles.css so legacy light-only declarations cannot leak through.
+ */
+
+html[data-theme="dark"] {
+  background: var(--ui-bg) !important;
+}
+
+html[data-theme="dark"] body,
+html[data-theme="dark"] #root,
+html[data-theme="dark"] .app-shell,
+html[data-theme="dark"] .admin-portal,
+html[data-theme="dark"] .dashboard-page,
+html[data-theme="dark"] .main,
+html[data-theme="dark"] .page {
+  background-color: var(--ui-bg) !important;
+  color: var(--ui-text) !important;
+}
+
+/* Native form controls */
+html[data-theme="dark"] input,
+html[data-theme="dark"] select,
+html[data-theme="dark"] textarea,
+html[data-theme="dark"] .search-wrap,
+html[data-theme="dark"] .search,
+html[data-theme="dark"] .form-grid input,
+html[data-theme="dark"] .form-grid select,
+html[data-theme="dark"] .password-form input,
+html[data-theme="dark"] .criteria-form input,
+html[data-theme="dark"] .criteria-form select,
+html[data-theme="dark"] .course-info-form input,
+html[data-theme="dark"] .course-info-form select,
+html[data-theme="dark"] .lesson-editor-fields input,
+html[data-theme="dark"] .lesson-editor-fields select,
+html[data-theme="dark"] .lesson-editor-fields textarea,
+html[data-theme="dark"] .course-card-filter .search,
+html[data-theme="dark"] .course-card-filter select {
+  background: var(--ui-surface) !important;
+  color: var(--ui-text) !important;
+  border-color: var(--ui-line) !important;
+}
+
+html[data-theme="dark"] select option,
+html[data-theme="dark"] select optgroup {
+  background: var(--ui-surface) !important;
+  color: var(--ui-text) !important;
+}
+
+html[data-theme="dark"] input::placeholder,
+html[data-theme="dark"] textarea::placeholder {
+  color: var(--ui-sub) !important;
+  opacity: 0.75;
+}
+
+html[data-theme="dark"] input[type="date"],
+html[data-theme="dark"] input[type="datetime-local"] {
+  color-scheme: dark;
+}
+
+/* Header dropdowns and profile menus */
+html[data-theme="dark"] .profile-menu,
+html[data-theme="dark"] .dropdown {
+  background: var(--ui-surface) !important;
+  color: var(--ui-text) !important;
+  border-color: var(--ui-line) !important;
+}
+
+html[data-theme="dark"] .profile-menu button,
+html[data-theme="dark"] .dropdown button {
+  background: transparent !important;
+  color: var(--ui-text) !important;
+  border-color: var(--ui-line) !important;
+}
+
+html[data-theme="dark"] .profile-menu button:hover,
+html[data-theme="dark"] .dropdown button:hover,
+html[data-theme="dark"] .dropdown button.selected {
+  background: var(--ui-surface-soft) !important;
+  color: var(--ui-text) !important;
+}
+
+html[data-theme="dark"] .dropdown::before {
+  background: var(--ui-surface) !important;
+  border-color: var(--ui-line) !important;
+}
+
+html[data-theme="dark"] .profile-copy small,
+html[data-theme="dark"] .profile-button small,
+html[data-theme="dark"] .profile-menu small {
+  color: var(--ui-sub) !important;
+}
+
+/* Generic dialogs. Certificate preview intentionally stays paper-white. */
+html[data-theme="dark"] .modal:not(.certificate-modal) {
+  background: var(--ui-surface) !important;
+  color: var(--ui-text) !important;
+  border: 1px solid var(--ui-line) !important;
+}
+
+html[data-theme="dark"] .modal:not(.certificate-modal) p,
+html[data-theme="dark"] .modal:not(.certificate-modal) p b {
+  color: var(--ui-sub) !important;
+}
+
+html[data-theme="dark"] .modal:not(.certificate-modal) h2,
+html[data-theme="dark"] .modal:not(.certificate-modal) h3 {
+  color: var(--ui-text) !important;
+}
+
+html[data-theme="dark"] .modal-close,
+html[data-theme="dark"] .drawer-head > button {
+  background: var(--ui-surface-soft) !important;
+  color: var(--ui-sub) !important;
+}
+
+html[data-theme="dark"] .modal-icon {
+  background: #243241 !important;
+  color: #73adff !important;
+}
+
+html[data-theme="dark"] .modal-icon.success {
+  background: #18362b !important;
+  color: #69d5a8 !important;
+}
+
+/* Lists, table-like rows and pagination */
+html[data-theme="dark"] .notice-row,
+html[data-theme="dark"] .notice-table > button,
+html[data-theme="dark"] .notice-navigation button,
+html[data-theme="dark"] .notice-attachment > button,
+html[data-theme="dark"] .file-card > button,
+html[data-theme="dark"] .player-files button,
+html[data-theme="dark"] .sidebar-lessons button,
+html[data-theme="dark"] .profile-side button,
+html[data-theme="dark"] .pagination button {
+  background: var(--ui-surface) !important;
+  color: var(--ui-text) !important;
+  border-color: var(--ui-line) !important;
+}
+
+html[data-theme="dark"] .notice-row:hover,
+html[data-theme="dark"] .notice-table > button:hover,
+html[data-theme="dark"] .notice-navigation button:hover,
+html[data-theme="dark"] .notice-attachment > button:hover,
+html[data-theme="dark"] .file-card > button:hover,
+html[data-theme="dark"] .player-files button:hover,
+html[data-theme="dark"] .sidebar-lessons button:hover,
+html[data-theme="dark"] .profile-side button:hover,
+html[data-theme="dark"] .pagination button:hover {
+  background: var(--ui-surface-soft) !important;
+}
+
+html[data-theme="dark"] .pagination button.active,
+html[data-theme="dark"] .sidebar-lessons button.current,
+html[data-theme="dark"] .profile-side button.active,
+html[data-theme="dark"] .profile-side button.on {
+  background: var(--ui-surface-soft) !important;
+  color: #73adff !important;
+  border-color: var(--ui-line) !important;
+}
+
+html[data-theme="dark"] .notice-title-cell,
+html[data-theme="dark"] .notice-detail-body,
+html[data-theme="dark"] .notice-navigation button b,
+html[data-theme="dark"] .file-card > button b,
+html[data-theme="dark"] .player-files button b {
+  color: var(--ui-text) !important;
+}
+
+/* Course detail / classroom leftovers */
+html[data-theme="dark"] .tabs button,
+html[data-theme="dark"] .player-tabs button,
+html[data-theme="dark"] .open-sidebar,
+html[data-theme="dark"] .exit-classroom,
+html[data-theme="dark"] .lesson-status-guide > span {
+  background: transparent !important;
+  color: var(--ui-sub) !important;
+  border-color: var(--ui-line) !important;
+}
+
+html[data-theme="dark"] .tabs button.active,
+html[data-theme="dark"] .player-tabs button.active {
+  color: var(--ui-text) !important;
+}
+
+html[data-theme="dark"] .open-sidebar:hover,
+html[data-theme="dark"] .exit-classroom:hover,
+html[data-theme="dark"] .lesson-status-guide > span:hover {
+  background: var(--ui-surface-soft) !important;
+}
+
+html[data-theme="dark"] .player-main textarea,
+html[data-theme="dark"] .player-tab-content,
+html[data-theme="dark"] .lesson-sidebar,
+html[data-theme="dark"] .player-main,
+html[data-theme="dark"] .player-header {
+  background-color: var(--ui-surface) !important;
+  color: var(--ui-text) !important;
+  border-color: var(--ui-line) !important;
+}
+
+html[data-theme="dark"] .auto-save,
+html[data-theme="dark"] .sidebar-head {
+  background: var(--ui-surface-soft) !important;
+  color: var(--ui-sub) !important;
+  border-color: var(--ui-line) !important;
+}
+
+/* Admin editor and drawer leftovers */
+html[data-theme="dark"] .drawer,
+html[data-theme="dark"] .profile-sidebar,
+html[data-theme="dark"] .course-editor-footer,
+html[data-theme="dark"] .criteria span,
+html[data-theme="dark"] .course-thumbnail-editor,
+html[data-theme="dark"] .lesson-quiz-list article,
+html[data-theme="dark"] .question-editor-row,
+html[data-theme="dark"] .badge-rule-list,
+html[data-theme="dark"] .badge-rule {
+  background: var(--ui-surface) !important;
+  color: var(--ui-text) !important;
+  border-color: var(--ui-line) !important;
+}
+
+html[data-theme="dark"] .course-editor-footer {
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.3) !important;
+}
+
+html[data-theme="dark"] .lesson-editor-card,
+html[data-theme="dark"] .lesson-quiz-setting,
+html[data-theme="dark"] .analysis-callout,
+html[data-theme="dark"] .badge-rule-guide {
+  background: var(--ui-surface-soft) !important;
+  border-color: var(--ui-line) !important;
+}
+
+html[data-theme="dark"] .danger-outline {
+  background: transparent !important;
+  color: #ef8b8b !important;
+  border-color: #7f4646 !important;
+}
+
+html[data-theme="dark"] .danger-outline:hover {
+  background: #352326 !important;
+}
+
+/* Dashboard / performance controls that use light-only hover or accent fills */
+html[data-theme="dark"] .quick-actions button:hover,
+html[data-theme="dark"] .lesson-list button:hover,
+html[data-theme="dark"] .actions button:hover,
+html[data-theme="dark"] .edit-course:hover,
+html[data-theme="dark"] .analysis-ranking-chart > button:hover {
+  background: #253241 !important;
+  color: #73adff !important;
+}
+
+html[data-theme="dark"] .performance-period,
+html[data-theme="dark"] .performance-tabs,
+html[data-theme="dark"] .ranking-toolbar > div,
+html[data-theme="dark"] .sub-tabs {
+  background: var(--ui-surface-soft) !important;
+  border-color: var(--ui-line) !important;
+}
+
+html[data-theme="dark"] .performance-period button.active,
+html[data-theme="dark"] .performance-tabs button.active,
+html[data-theme="dark"] .ranking-toolbar button.active,
+html[data-theme="dark"] .sub-tabs button.active,
+html[data-theme="dark"] .analysis-pagination button.active {
+  background: var(--ui-surface) !important;
+  color: var(--ui-text) !important;
+  border-color: var(--ui-line) !important;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.22) !important;
+}
+
+html[data-theme="dark"] .incomplete-segment,
+html[data-theme="dark"] .chart-legend .incomplete-legend::before {
+  background: #4b5661 !important;
+}
+
+html[data-theme="dark"] .horizontal-course-chart strong,
+html[data-theme="dark"] .analysis-ranking-chart strong,
+html[data-theme="dark"] .like-stat,
+html[data-theme="dark"] .text-button,
+html[data-theme="dark"] .compact-survey-result > div:first-child span,
+html[data-theme="dark"] .managed-badge-copy > span,
+html[data-theme="dark"] .course-analysis-drawer .drawer-head span,
+html[data-theme="dark"] .badge-rule-drawer .drawer-head span {
+  color: #73adff !important;
+}
+
+/* Soft semantic colors should stay dark, not turn into light islands. */
+html[data-theme="dark"] .deadline.urgent,
+html[data-theme="dark"] .badge.red,
+html[data-theme="dark"] .important-badge,
+html[data-theme="dark"] .notice-table em.important-category,
+html[data-theme="dark"] .quiz-result.wrong,
+html[data-theme="dark"] .course-like.liked {
+  background: #352326 !important;
+  color: #ef8b8b !important;
+  border-color: #573337 !important;
+}
+
+html[data-theme="dark"] .quiz-result.correct,
+html[data-theme="dark"] .managed-badge-icon.green {
+  background: #17382d !important;
+  color: #6ed6ac !important;
+}
+
+html[data-theme="dark"] .managed-badge-icon.gold,
+html[data-theme="dark"] .ranking-admin-row i,
+html[data-theme="dark"] .home-icon.gold,
+html[data-theme="dark"] .home-badge-main > span {
+  background: #3a3020 !important;
+  color: #e4b95b !important;
+}
+
+html[data-theme="dark"] .managed-badge-icon.blue,
+html[data-theme="dark"] .question-editor-row > b,
+html[data-theme="dark"] .podium-avatar {
+  background: #213243 !important;
+  color: #79b1e4 !important;
+}
+
+html[data-theme="dark"] .managed-badge-icon.violet {
+  background: #302844 !important;
+  color: #b9a2f2 !important;
+}
+
+/* Keep borders and separators visible across legacy components. */
+html[data-theme="dark"] .notice-row,
+html[data-theme="dark"] .notice-navigation button,
+html[data-theme="dark"] .sidebar-lessons button,
+html[data-theme="dark"] .file-card > button,
+html[data-theme="dark"] .profile-menu .profile-menu-head,
+html[data-theme="dark"] .profile-menu .logout-button,
+html[data-theme="dark"] .managed-badge-actions,
+html[data-theme="dark"] .learner-profile-contact {
+  border-color: var(--ui-line) !important;
+}
+
+/* Dark scrollbars for long admin drawers and classroom sidebars. */
+html[data-theme="dark"] .drawer,
+html[data-theme="dark"] .lesson-sidebar,
+html[data-theme="dark"] .profile-menu,
+html[data-theme="dark"] .dropdown {
+  scrollbar-color: #4a5058 var(--ui-surface);
+}
