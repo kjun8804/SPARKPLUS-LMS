@@ -441,7 +441,7 @@ function f({ logout: e }) {
             }),
           t === `assignments` &&
             (0, i.jsx)(x, { onCreate: () => M(`교육과정 배정`) }),
-          t === `performance` && (0, i.jsx)(PerformanceAnalysis, {}),
+          t === `performance` && (0, i.jsx)(PerformanceAnalysisV2, {}),
           t === `rewards` && (0, i.jsx)(RankingBadgeDashboard, {}),
           t === `completion` && (0, i.jsx)(S, { tab: N, setTab: P }),
           t === `surveys` && (0, i.jsx)(C, {}),
@@ -1773,6 +1773,443 @@ function x({ onCreate: e }) {
     ],
   });
 }
+function PerformanceAnalysisV2() {
+  const [tab, setTab] = r.useState(`성과`);
+  const [query, setQuery] = r.useState(``);
+  const [dept, setDept] = r.useState(`전체 소속`);
+  const [position, setPosition] = r.useState(`전체 직급`);
+  const [sort, setSort] = r.useState(`수강 인원순`);
+  const [page, setPage] = r.useState(1);
+  const [selected, setSelected] = r.useState(null);
+  const names = [
+    `개인정보보호 필수교육`,
+    `생성형 AI 업무 활용`,
+    `데이터 분석 기초 입문`,
+    `처음 맡는 팀장을 위한 리더십`,
+    `협업을 높이는 커뮤니케이션`,
+    `신입사원 온보딩`,
+    `정보보안 기본교육`,
+    `엑셀 데이터 시각화`,
+    `프로젝트 관리 실무`,
+    `고객 경험 디자인`,
+    `성과 면담 가이드`,
+    `문서 작성의 기술`,
+    `SQL 데이터 분석`,
+    `직장 내 괴롭힘 예방교육`,
+    `재무 기초 이해`,
+    `프레젠테이션 스킬`,
+    `문제 해결과 의사결정`,
+    `AI 시대의 리더십`,
+  ];
+  const departments = [
+    `전체`,
+    `개발팀`,
+    `마케팅팀`,
+    `People팀`,
+    `운영팀`,
+    `세일즈팀`,
+  ];
+  const positions = [`전체`, `매니저`, `인턴`, `팀장`, `파트장`];
+  const rows = names.map((name, index) => {
+    const learners = 32 + ((index * 37) % 191);
+    const rate = 51 + ((index * 11) % 43);
+    const complete = Math.round((learners * rate) / 100);
+    return {
+      id: index + 1,
+      name,
+      dept: departments[index % departments.length],
+      position: positions[index % positions.length],
+      learners,
+      complete,
+      incomplete: learners - complete,
+      rate,
+      previous: rate - (index % 3 === 0 ? -3 : 2 + (index % 4)),
+      likes: 28 + ((index * 19) % 121),
+      quiz: 68 + ((index * 7) % 27),
+      response: 57 + ((index * 9) % 39),
+      satisfaction: (4.1 + ((index * 3) % 8) / 10).toFixed(1),
+    };
+  });
+  const filtered = rows
+    .filter(
+      (item) =>
+        (!query || item.name.includes(query)) &&
+        (dept === `전체 소속` || item.dept === `전체` || item.dept === dept) &&
+        (position === `전체 직급` ||
+          item.position === `전체` ||
+          item.position === position),
+    )
+    .sort((a, b) =>
+      sort === `수료율 높은순`
+        ? b.rate - a.rate
+        : sort === `수료율 낮은순`
+          ? a.rate - b.rate
+          : b.learners - a.learners,
+    );
+  const pageSize = 10;
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const visible = filtered.slice((page - 1) * pageSize, page * pageSize);
+  const chartRows = [...filtered].sort((a, b) => b.rate - a.rate).slice(0, 6);
+  const average = filtered.length
+    ? Math.round(
+        filtered.reduce((sum, item) => sum + item.rate, 0) / filtered.length,
+      )
+    : 0;
+  const reset = () => {
+    setQuery(``);
+    setDept(`전체 소속`);
+    setPosition(`전체 직급`);
+    setSort(`수강 인원순`);
+    setPage(1);
+  };
+  return (
+    <section className="performance-analysis-v2">
+      <div className="analysis-filter-bar">
+        <div className="search">
+          <Icon icon={Search01Icon} />
+          <input
+            value={query}
+            onChange={(event) => {
+              setQuery(event.target.value);
+              setPage(1);
+            }}
+            placeholder="교육과정 검색"
+          />
+        </div>
+        <select
+          value={dept}
+          onChange={(event) => {
+            setDept(event.target.value);
+            setPage(1);
+          }}
+        >
+          {[
+            `전체 소속`,
+            `People팀`,
+            `개발팀`,
+            `마케팅팀`,
+            `운영팀`,
+            `세일즈팀`,
+          ].map((value) => (
+            <option key={value}>{value}</option>
+          ))}
+        </select>
+        <select
+          value={position}
+          onChange={(event) => {
+            setPosition(event.target.value);
+            setPage(1);
+          }}
+        >
+          {[`전체 직급`, `인턴`, `매니저`, `파트장`, `팀장`].map((value) => (
+            <option key={value}>{value}</option>
+          ))}
+        </select>
+        <select>
+          <option>최근 3개월</option>
+          <option>최근 6개월</option>
+          <option>2026년 전체</option>
+        </select>
+        <button className="filter-reset" onClick={reset}>
+          <Icon icon={RefreshIcon} />
+          초기화
+        </button>
+      </div>
+
+      <div className="analysis-findings">
+        <div>
+          <span>평균 수료율</span>
+          <b>{average}%</b>
+          <small className="up">전월보다 3.8%p 상승</small>
+        </div>
+        <div>
+          <span>성과가 높은 과정</span>
+          <b>{chartRows[0]?.name || `-`}</b>
+          <small>수료율 {chartRows[0]?.rate || 0}%</small>
+        </div>
+        <div>
+          <span>관리 필요</span>
+          <b>{filtered.filter((item) => item.rate < 65).length}개 과정</b>
+          <small className="down">수료율 65% 미만</small>
+        </div>
+        <div>
+          <span>가장 큰 소속 격차</span>
+          <b>18.4%p</b>
+          <small>개발팀 ↔ 세일즈팀</small>
+        </div>
+      </div>
+
+      <section className="panel analysis-chart-section">
+        <div className="analysis-section-head">
+          <div>
+            <h2>과정 수료율 비교</h2>
+            <p>현재 조건에서 수료율이 높은 6개 과정입니다.</p>
+          </div>
+          <button
+            className="text-button"
+            onClick={() => setSort(`수료율 낮은순`)}
+          >
+            관리 필요 과정 먼저 보기
+          </button>
+        </div>
+        <div className="analysis-ranking-chart">
+          {chartRows.map((item, index) => (
+            <button key={item.id} onClick={() => setSelected(item)}>
+              <span>{String(index + 1).padStart(2, `0`)}</span>
+              <b>{item.name}</b>
+              <div>
+                <i style={{ width: `${item.rate}%` }} />
+              </div>
+              <strong>{item.rate}%</strong>
+              <small>
+                {item.complete}/{item.learners}명
+              </small>
+            </button>
+          ))}
+        </div>
+      </section>
+
+      <div className="analysis-list-head">
+        <div className="performance-main-tabs">
+          <button
+            className={tab === `성과` ? `active` : ``}
+            onClick={() => setTab(`성과`)}
+          >
+            과정 성과
+          </button>
+          <button
+            className={tab === `퀴즈` ? `active` : ``}
+            onClick={() => setTab(`퀴즈`)}
+          >
+            퀴즈 결과
+          </button>
+          <button
+            className={tab === `설문` ? `active` : ``}
+            onClick={() => setTab(`설문`)}
+          >
+            설문 결과
+          </button>
+        </div>
+        <div>
+          <span>총 {filtered.length}개</span>
+          <select
+            value={sort}
+            onChange={(event) => {
+              setSort(event.target.value);
+              setPage(1);
+            }}
+          >
+            <option>수강 인원순</option>
+            <option>수료율 높은순</option>
+            <option>수료율 낮은순</option>
+          </select>
+        </div>
+      </div>
+      <div className="table-wrap scalable-performance-table">
+        <table>
+          <thead>
+            <tr>
+              <th>교육과정</th>
+              {tab === `성과` ? (
+                <>
+                  <th>수강 인원</th>
+                  <th>수료</th>
+                  <th>미수료</th>
+                  <th>수료율</th>
+                  <th>좋아요</th>
+                </>
+              ) : tab === `퀴즈` ? (
+                <>
+                  <th>응시 인원</th>
+                  <th>평균 점수</th>
+                  <th>전월 대비</th>
+                  <th>결과</th>
+                </>
+              ) : (
+                <>
+                  <th>응답 인원</th>
+                  <th>응답률</th>
+                  <th>만족도</th>
+                  <th>답변</th>
+                </>
+              )}
+              <th>상세</th>
+            </tr>
+          </thead>
+          <tbody>
+            {visible.map((item) => (
+              <tr key={item.id}>
+                <td>
+                  <b>{item.name}</b>
+                  <small>
+                    {item.dept} · {item.position}
+                  </small>
+                </td>
+                {tab === `성과` ? (
+                  <>
+                    <td>{item.learners}명</td>
+                    <td className="complete-number">{item.complete}명</td>
+                    <td className="incomplete-number">{item.incomplete}명</td>
+                    <td>
+                      <div className="rate-cell">
+                        <span>
+                          <i style={{ width: `${item.rate}%` }} />
+                        </span>
+                        <b>{item.rate}%</b>
+                      </div>
+                    </td>
+                    <td>
+                      <span className="like-stat">
+                        <Icon icon={ThumbsUpIcon} size={14} />
+                        {item.likes}
+                      </span>
+                    </td>
+                  </>
+                ) : tab === `퀴즈` ? (
+                  <>
+                    <td>{Math.round(item.learners * 0.82)}명</td>
+                    <td>
+                      <b>{item.quiz}점</b>
+                    </td>
+                    <td className={item.quiz > 78 ? `trend-up` : `trend-down`}>
+                      {item.quiz > 78 ? `+3.2점` : `-1.4점`}
+                    </td>
+                    <td>
+                      <button className="detail">응시 결과</button>
+                    </td>
+                  </>
+                ) : (
+                  <>
+                    <td>
+                      {Math.round((item.learners * item.response) / 100)}명
+                    </td>
+                    <td>{item.response}%</td>
+                    <td>
+                      <b>{item.satisfaction} / 5</b>
+                    </td>
+                    <td>
+                      <button className="detail">답변 조회</button>
+                    </td>
+                  </>
+                )}
+                <td>
+                  <button className="detail" onClick={() => setSelected(item)}>
+                    분석 보기
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div className="analysis-pagination">
+        <button disabled={page === 1} onClick={() => setPage(page - 1)}>
+          ‹
+        </button>
+        {Array.from({ length: totalPages }, (_, index) => index + 1).map(
+          (number) => (
+            <button
+              className={page === number ? `active` : ``}
+              onClick={() => setPage(number)}
+              key={number}
+            >
+              {number}
+            </button>
+          ),
+        )}
+        <button
+          disabled={page === totalPages}
+          onClick={() => setPage(page + 1)}
+        >
+          ›
+        </button>
+      </div>
+
+      {selected && (
+        <div
+          className="overlay"
+          onMouseDown={(event) =>
+            event.target === event.currentTarget && setSelected(null)
+          }
+        >
+          <aside className="drawer course-analysis-drawer">
+            <div className="drawer-head">
+              <div>
+                <span>과정 상세 분석</span>
+                <h2>{selected.name}</h2>
+              </div>
+              <button onClick={() => setSelected(null)}>
+                <Icon icon={Cancel01Icon} />
+              </button>
+            </div>
+            <div className="detail-analysis-summary">
+              <div>
+                <span>수강</span>
+                <b>{selected.learners}명</b>
+              </div>
+              <div>
+                <span>수료율</span>
+                <b>{selected.rate}%</b>
+              </div>
+              <div>
+                <span>퀴즈</span>
+                <b>{selected.quiz}점</b>
+              </div>
+            </div>
+            <section>
+              <h3>최근 6개월 수료율</h3>
+              <div className="mini-trend-bars">
+                {[
+                  selected.rate - 12,
+                  selected.rate - 9,
+                  selected.rate - 7,
+                  selected.rate - 5,
+                  selected.rate - 2,
+                  selected.rate,
+                ].map((value, index) => (
+                  <div key={index}>
+                    <span style={{ height: `${value}%` }} />
+                    <small>{index + 3}월</small>
+                  </div>
+                ))}
+              </div>
+            </section>
+            <section>
+              <h3>소속별 수료율</h3>
+              {[
+                [`개발팀`, selected.rate + 5],
+                [`People팀`, selected.rate + 1],
+                [`마케팅팀`, selected.rate - 4],
+                [`세일즈팀`, selected.rate - 9],
+              ].map(([name, value]) => (
+                <div className="drawer-stat-row" key={name}>
+                  <span>{name}</span>
+                  <div>
+                    <i style={{ width: `${Math.min(100, value)}%` }} />
+                  </div>
+                  <b>{value}%</b>
+                </div>
+              ))}
+            </section>
+            <div className="analysis-callout">
+              <b>
+                {selected.rate < 65
+                  ? `수료 독려가 필요합니다.`
+                  : `안정적으로 운영 중입니다.`}
+              </b>
+              <span>
+                {selected.rate < 65
+                  ? `미수료자 안내와 학습 기한 확인을 권장합니다.`
+                  : `전월 대비 수료율이 꾸준히 유지되고 있습니다.`}
+              </span>
+            </div>
+          </aside>
+        </div>
+      )}
+    </section>
+  );
+}
+
 function PerformanceAnalysis() {
   const [tab, setTab] = r.useState(`courses`);
   const [dept, setDept] = r.useState(`전체 소속`);
