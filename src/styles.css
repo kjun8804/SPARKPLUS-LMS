@@ -7029,6 +7029,304 @@ html[data-theme="dark"] .home-badge-main > span {
   }
 }
 
+/* Final admin scale system — match the spacious user experience */
+.admin-portal > .topbar {
+  min-height: 82px !important;
+  padding: 0 clamp(28px, 5vw, 78px) !important;
+}
+.admin-portal > .topbar > .brand {
+  margin-right: 52px !important;
+}
+.admin-portal > .topbar .brand-logo {
+  width: 154px !important;
+}
+.admin-portal > .topbar .nav-button {
+  min-height: 82px !important;
+  padding: 0 21px !important;
+  font-size: 14px !important;
+}
+.admin-portal > .main {
+  width: min(1500px, calc(100% - 72px)) !important;
+  max-width: 1500px !important;
+  padding: 58px 0 100px !important;
+}
+.admin-portal .page-heading {
+  margin-bottom: 38px !important;
+}
+.admin-portal .page-heading h1 {
+  margin-bottom: 11px !important;
+  font-size: 36px !important;
+}
+.admin-portal .page-heading > div > span {
+  font-size: 15px !important;
+}
+.admin-portal .page-heading p {
+  margin-bottom: 10px !important;
+  font-size: 11px !important;
+}
+.admin-portal .primary,
+.admin-portal .secondary {
+  min-height: 46px !important;
+  padding-right: 20px !important;
+  padding-left: 20px !important;
+  border-radius: 13px !important;
+  font-size: 12px !important;
+}
+.admin-portal .panel,
+.admin-portal .card,
+.admin-portal .survey-card {
+  padding: 32px !important;
+  border-radius: 25px !important;
+}
+.admin-portal .panel-head h2,
+.admin-portal .analysis-section-head h2,
+.admin-portal .performance-section-head h2 {
+  font-size: 20px !important;
+}
+.admin-portal .panel-head p,
+.admin-portal .analysis-section-head p,
+.admin-portal .performance-section-head p {
+  font-size: 13px !important;
+}
+
+/* Large user-style search/filter blocks */
+.admin-portal .course-card-filter {
+  grid-template-columns: repeat(3, minmax(180px, 1fr)) auto !important;
+  gap: 14px !important;
+  padding: 30px !important;
+  border-radius: 26px !important;
+  background: var(--ui-surface) !important;
+}
+.admin-portal .course-card-filter .search {
+  grid-column: 1/-1 !important;
+  height: 58px !important;
+  padding: 0 18px !important;
+  border: 0 !important;
+  border-radius: 16px !important;
+  background: #f3f5f7 !important;
+}
+.admin-portal .course-card-filter .search input {
+  font-size: 14px !important;
+}
+.admin-portal .course-card-filter select,
+.admin-portal .course-card-filter .filter-reset {
+  height: 52px !important;
+  border-radius: 14px !important;
+  font-size: 13px !important;
+}
+.admin-portal .course-filters,
+.admin-portal .learner-filter-panel,
+.admin-portal .analysis-filter-bar,
+.admin-portal .performance-filter-panel,
+.admin-portal .filters,
+.admin-portal .period-bar {
+  padding: 26px !important;
+  border-radius: 25px !important;
+}
+.admin-portal .course-filter-fields .search,
+.admin-portal .learner-filter-fields .search,
+.admin-portal .analysis-filter-bar .search,
+.admin-portal .performance-filter-panel .search,
+.admin-portal .course-filter-fields input,
+.admin-portal .course-filter-fields select,
+.admin-portal .learner-filter-fields input,
+.admin-portal .learner-filter-fields select,
+.admin-portal .analysis-filter-bar input,
+.admin-portal .analysis-filter-bar select,
+.admin-portal .performance-filter-panel input,
+.admin-portal .performance-filter-panel select,
+.admin-portal .filters input,
+.admin-portal .filters select {
+  min-height: 50px !important;
+  border-radius: 14px !important;
+  font-size: 13px !important;
+}
+.admin-portal .filter-title b {
+  font-size: 16px !important;
+}
+.admin-portal .filter-title span {
+  font-size: 12px !important;
+}
+.admin-portal .course-search-button,
+.admin-portal .filter-reset {
+  min-height: 50px !important;
+  border-radius: 14px !important;
+  font-size: 12px !important;
+}
+
+/* Three generous columns, never four */
+.admin-course-card-grid,
+.department-card-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 22px !important;
+}
+.badge-management-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 18px !important;
+}
+.admin-course-card {
+  border-radius: 26px !important;
+}
+.admin-course-thumb {
+  height: 205px !important;
+}
+.admin-course-card-body {
+  padding: 24px !important;
+}
+.admin-course-card h3 {
+  min-height: 56px !important;
+  margin: 17px 0 20px !important;
+  font-size: 19px !important;
+}
+.admin-course-card-info {
+  padding: 18px 0 !important;
+}
+.admin-course-card-info span {
+  font-size: 11px !important;
+}
+.admin-course-card-info b {
+  font-size: 13px !important;
+}
+.course-manage-link {
+  height: 50px !important;
+  font-size: 12px !important;
+}
+.department-card {
+  min-height: 238px !important;
+  padding: 28px !important;
+  border-radius: 26px !important;
+}
+.department-card-title h3 {
+  font-size: 19px !important;
+}
+.department-card-metrics {
+  padding-top: 20px !important;
+}
+.department-card-metrics small {
+  font-size: 11px !important;
+}
+.department-card-metrics b {
+  font-size: 18px !important;
+}
+
+/* Larger summaries, charts, lists and editor */
+.admin-summary,
+.department-summary-strip,
+.learner-profile-summary,
+.analysis-findings,
+.performance-kpis {
+  border-radius: 24px !important;
+}
+.admin-summary > div,
+.department-summary-strip > div,
+.learner-profile-summary > div,
+.analysis-findings > div,
+.performance-kpis > div {
+  min-height: 142px !important;
+  padding: 28px 30px !important;
+}
+.admin-summary strong,
+.department-summary-strip b,
+.learner-profile-summary b,
+.analysis-findings b,
+.performance-kpis strong {
+  font-size: 27px !important;
+}
+.admin-insight-grid,
+.department-analysis-grid,
+.learner-profile-grid,
+.performance-overview-grid {
+  gap: 24px !important;
+}
+.line-chart,
+.analysis-ranking-chart,
+.department-bars,
+.profile-line-chart,
+.performance-bars {
+  min-height: 280px !important;
+}
+.analysis-ranking-chart > button {
+  min-height: 52px !important;
+  font-size: 13px !important;
+}
+.ranking-podium {
+  gap: 22px !important;
+}
+.podium-card {
+  min-height: 280px !important;
+  padding: 32px !important;
+}
+.podium-avatar {
+  width: 68px !important;
+  height: 68px !important;
+}
+.badge-management-card {
+  min-height: 225px !important;
+  padding: 27px !important;
+  border-radius: 24px !important;
+}
+.admin-portal .table-wrap {
+  border-radius: 23px !important;
+}
+.admin-portal .table-wrap th {
+  height: 58px !important;
+  padding: 0 22px !important;
+  font-size: 12px !important;
+}
+.admin-portal .table-wrap td {
+  min-height: 62px !important;
+  padding: 21px 22px !important;
+  font-size: 13px !important;
+}
+.admin-portal .table-wrap td b {
+  font-size: 14px !important;
+}
+.admin-portal .table-wrap td small {
+  font-size: 11px !important;
+}
+.course-editor-v2-hero,
+.department-detail-hero,
+.learner-profile-hero {
+  padding: 32px !important;
+  border-radius: 26px !important;
+}
+.course-editor-v2 .editor-section {
+  padding: 36px !important;
+}
+.lesson-manage-list > article {
+  min-height: 104px !important;
+  padding: 21px !important;
+}
+
+@media (max-width: 1150px) {
+  .admin-course-card-grid,
+  .department-card-grid,
+  .badge-management-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+@media (max-width: 760px) {
+  .admin-portal > .topbar {
+    min-height: 64px !important;
+  }
+  .admin-portal > .main {
+    width: calc(100% - 28px) !important;
+    padding-top: 32px !important;
+  }
+  .admin-portal .page-heading h1 {
+    font-size: 28px !important;
+  }
+  .admin-course-card-grid,
+  .department-card-grid,
+  .badge-management-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .admin-portal .course-card-filter {
+    grid-template-columns: 1fr !important;
+    padding: 20px !important;
+  }
+}
+
 /* Course administration cards and lesson studio */
 .course-admin-grid-page,
 .course-editor-v2 {
