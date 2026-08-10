@@ -892,9 +892,6 @@ function CourseAdminGrid({ onEdit }) {
                 >
                   {course.status}
                 </span>
-                <button onClick={() => onEdit(course)} title="교육과정 수정">
-                  <Icon icon={Edit02Icon} />
-                </button>
               </div>
               <h3>{course.title}</h3>
               <div className="admin-course-card-info">
