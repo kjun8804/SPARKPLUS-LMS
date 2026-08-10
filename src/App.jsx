@@ -184,7 +184,13 @@ var a = [
     { label: `홈`, page: `home` },
     { label: `교육과정 관리`, page: `courses` },
     { label: `학습자 관리`, page: `learners` },
-    { label: `교육 성과 관리`, page: `performance` },
+    {
+      label: `교육 성과 관리`,
+      items: [
+        { label: `교육 성과 분석`, page: `performance` },
+        { label: `랭킹·뱃지 관리`, page: `rewards` },
+      ],
+    },
     { label: `공지사항 관리`, page: `notices` },
   ],
   l = {
@@ -202,9 +208,10 @@ var a = [
       `임직원 정보와 개인별 학습 현황을 확인합니다.`,
     ],
     performance: [
-      `교육 성과 관리`,
-      `핵심 교육 성과와 관리가 필요한 학습자를 한눈에 확인합니다.`,
+      `교육 성과 분석`,
+      `과정별 학습 성과와 평가 결과를 확인합니다.`,
     ],
+    rewards: [`랭킹·뱃지 관리`, `학습 랭킹과 뱃지 지급 기준을 관리합니다.`],
     assignments: [
       `교육 배정 관리`,
       `개인·부서·직급별 교육과정을 배정하고 필수 여부를 설정합니다.`,
@@ -434,7 +441,8 @@ function f({ logout: e }) {
             }),
           t === `assignments` &&
             (0, i.jsx)(x, { onCreate: () => M(`교육과정 배정`) }),
-          t === `performance` && (0, i.jsx)(PerformanceDashboard, {}),
+          t === `performance` && (0, i.jsx)(PerformanceAnalysis, {}),
+          t === `rewards` && (0, i.jsx)(RankingBadgeDashboard, {}),
           t === `completion` && (0, i.jsx)(S, { tab: N, setTab: P }),
           t === `surveys` && (0, i.jsx)(C, {}),
           t === `statistics` && (0, i.jsx)(w, {}),
@@ -932,6 +940,25 @@ function v({ selected: e, onBack: t }) {
       `기초 개념부터 실무 적용까지 단계적으로 학습합니다.`,
     thumbnail: e.thumbnail || ``,
     curriculum: initialLessons,
+    quizQuestions: e.quizQuestions || [
+      {
+        question: `강의의 핵심 내용을 가장 잘 설명한 것은 무엇인가요?`,
+        type: `객관식`,
+        score: 20,
+      },
+      {
+        question: `실무 적용 시 가장 먼저 확인해야 할 사항을 작성해 주세요.`,
+        type: `주관식`,
+        score: 20,
+      },
+    ],
+    surveyQuestions: e.surveyQuestions || [
+      { question: `교육 내용에 전반적으로 만족하셨나요?`, type: `5점 척도` },
+      {
+        question: `업무에 도움이 된 내용을 자유롭게 작성해 주세요.`,
+        type: `서술형`,
+      },
+    ],
   });
   const update = (key, value) => setForm((prev) => ({ ...prev, [key]: value }));
   const updateLesson = (index, key, value) =>
@@ -958,6 +985,28 @@ function v({ selected: e, onBack: t }) {
     setForm((prev) => ({
       ...prev,
       curriculum: prev.curriculum.filter((_, i) => i !== index),
+    }));
+  const updateQuestion = (group, index, key, value) =>
+    setForm((prev) => ({
+      ...prev,
+      [group]: prev[group].map((item, itemIndex) =>
+        itemIndex === index ? { ...item, [key]: value } : item,
+      ),
+    }));
+  const addQuestion = (group) =>
+    setForm((prev) => ({
+      ...prev,
+      [group]: [
+        ...prev[group],
+        group === `quizQuestions`
+          ? { question: `새 퀴즈 문항`, type: `객관식`, score: 20 }
+          : { question: `새 설문 문항`, type: `5점 척도` },
+      ],
+    }));
+  const removeQuestion = (group, index) =>
+    setForm((prev) => ({
+      ...prev,
+      [group]: prev[group].filter((_, itemIndex) => itemIndex !== index),
     }));
   const uploadThumbnail = (event) => {
     const file = event.target.files?.[0];
@@ -1191,6 +1240,136 @@ function v({ selected: e, onBack: t }) {
         <button className="add-lesson" onClick={addLesson}>
           <Icon icon={Add01Icon} />
           차시 추가
+        </button>
+      </section>
+
+      <section className="panel editor-section assessment-editor-section">
+        <div className="editor-section-head">
+          <div>
+            <span>03</span>
+            <h3>퀴즈 설정</h3>
+          </div>
+          <p>이 과정에서 사용할 평가 문항을 작성하고 수정합니다.</p>
+        </div>
+        <div className="question-editor-list">
+          {form.quizQuestions.map((item, index) => (
+            <article className="question-editor-row" key={`quiz-${index}`}>
+              <b>Q{index + 1}</b>
+              <input
+                value={item.question}
+                onChange={(event) =>
+                  updateQuestion(
+                    `quizQuestions`,
+                    index,
+                    `question`,
+                    event.target.value,
+                  )
+                }
+              />
+              <select
+                value={item.type}
+                onChange={(event) =>
+                  updateQuestion(
+                    `quizQuestions`,
+                    index,
+                    `type`,
+                    event.target.value,
+                  )
+                }
+              >
+                <option>객관식</option>
+                <option>복수 선택</option>
+                <option>주관식</option>
+              </select>
+              <label>
+                <input
+                  type="number"
+                  value={item.score}
+                  onChange={(event) =>
+                    updateQuestion(
+                      `quizQuestions`,
+                      index,
+                      `score`,
+                      event.target.value,
+                    )
+                  }
+                />
+                점
+              </label>
+              <button
+                onClick={() => removeQuestion(`quizQuestions`, index)}
+                title="문항 삭제"
+              >
+                <Icon icon={Delete02Icon} />
+              </button>
+            </article>
+          ))}
+        </div>
+        <button
+          className="add-question"
+          onClick={() => addQuestion(`quizQuestions`)}
+        >
+          <Icon icon={Add01Icon} />
+          퀴즈 문항 추가
+        </button>
+      </section>
+
+      <section className="panel editor-section assessment-editor-section">
+        <div className="editor-section-head">
+          <div>
+            <span>04</span>
+            <h3>설문 설정</h3>
+          </div>
+          <p>수강 완료 후 노출할 만족도 설문을 구성합니다.</p>
+        </div>
+        <div className="question-editor-list">
+          {form.surveyQuestions.map((item, index) => (
+            <article
+              className="question-editor-row survey-question-row"
+              key={`survey-${index}`}
+            >
+              <b>{index + 1}</b>
+              <input
+                value={item.question}
+                onChange={(event) =>
+                  updateQuestion(
+                    `surveyQuestions`,
+                    index,
+                    `question`,
+                    event.target.value,
+                  )
+                }
+              />
+              <select
+                value={item.type}
+                onChange={(event) =>
+                  updateQuestion(
+                    `surveyQuestions`,
+                    index,
+                    `type`,
+                    event.target.value,
+                  )
+                }
+              >
+                <option>5점 척도</option>
+                <option>단일 선택</option>
+                <option>서술형</option>
+              </select>
+              <button
+                onClick={() => removeQuestion(`surveyQuestions`, index)}
+                title="문항 삭제"
+              >
+                <Icon icon={Delete02Icon} />
+              </button>
+            </article>
+          ))}
+        </div>
+        <button
+          className="add-question"
+          onClick={() => addQuestion(`surveyQuestions`)}
+        >
+          <Icon icon={Add01Icon} />
+          설문 문항 추가
         </button>
       </section>
 
@@ -1594,6 +1773,491 @@ function x({ onCreate: e }) {
     ],
   });
 }
+function PerformanceAnalysis() {
+  const [tab, setTab] = r.useState(`courses`);
+  const [dept, setDept] = r.useState(`전체 소속`);
+  const [position, setPosition] = r.useState(`전체 직급`);
+  const [course, setCourse] = r.useState(`전체 과정`);
+  const results = [
+    {
+      name: `개인정보보호 필수교육`,
+      dept: `전체`,
+      position: `전체`,
+      learners: 214,
+      complete: 188,
+      incomplete: 26,
+      rate: 88,
+      likes: 142,
+      quiz: 91,
+      response: 86,
+      satisfaction: 4.7,
+    },
+    {
+      name: `생성형 AI 업무 활용`,
+      dept: `개발팀`,
+      position: `매니저`,
+      learners: 126,
+      complete: 99,
+      incomplete: 27,
+      rate: 79,
+      likes: 126,
+      quiz: 84,
+      response: 74,
+      satisfaction: 4.6,
+    },
+    {
+      name: `데이터 분석 기초 입문`,
+      dept: `마케팅팀`,
+      position: `인턴`,
+      learners: 84,
+      complete: 57,
+      incomplete: 27,
+      rate: 68,
+      likes: 87,
+      quiz: 76,
+      response: 69,
+      satisfaction: 4.4,
+    },
+    {
+      name: `처음 맡는 팀장을 위한 리더십`,
+      dept: `People팀`,
+      position: `팀장`,
+      learners: 32,
+      complete: 17,
+      incomplete: 15,
+      rate: 53,
+      likes: 98,
+      quiz: 72,
+      response: 63,
+      satisfaction: 4.3,
+    },
+  ];
+  const filtered = results.filter(
+    (item) =>
+      (dept === `전체 소속` || item.dept === `전체` || item.dept === dept) &&
+      (position === `전체 직급` ||
+        item.position === `전체` ||
+        item.position === position) &&
+      (course === `전체 과정` || item.name === course),
+  );
+  return (
+    <section className="performance-analysis-page">
+      <div className="performance-filter-panel">
+        <select value={dept} onChange={(event) => setDept(event.target.value)}>
+          {[`전체 소속`, `People팀`, `개발팀`, `마케팅팀`, `운영팀`].map(
+            (value) => (
+              <option key={value}>{value}</option>
+            ),
+          )}
+        </select>
+        <select
+          value={position}
+          onChange={(event) => setPosition(event.target.value)}
+        >
+          {[`전체 직급`, `인턴`, `매니저`, `파트장`, `팀장`].map((value) => (
+            <option key={value}>{value}</option>
+          ))}
+        </select>
+        <select
+          value={course}
+          onChange={(event) => setCourse(event.target.value)}
+        >
+          <option>전체 과정</option>
+          {results.map((item) => (
+            <option key={item.name}>{item.name}</option>
+          ))}
+        </select>
+        <button
+          className="filter-reset"
+          onClick={() => {
+            setDept(`전체 소속`);
+            setPosition(`전체 직급`);
+            setCourse(`전체 과정`);
+          }}
+        >
+          <Icon icon={RefreshIcon} />
+          초기화
+        </button>
+      </div>
+      <div className="performance-main-tabs">
+        <button
+          className={tab === `courses` ? `active` : ``}
+          onClick={() => setTab(`courses`)}
+        >
+          과정별 성과
+        </button>
+        <button
+          className={tab === `quiz` ? `active` : ``}
+          onClick={() => setTab(`quiz`)}
+        >
+          퀴즈 결과
+        </button>
+        <button
+          className={tab === `survey` ? `active` : ``}
+          onClick={() => setTab(`survey`)}
+        >
+          설문 결과
+        </button>
+      </div>
+      {tab === `courses` && (
+        <>
+          <div className="course-performance-chart panel">
+            <div className="panel-head">
+              <div>
+                <h2>강의별 수강 현황</h2>
+                <p>수료자와 미수료자를 함께 비교합니다.</p>
+              </div>
+              <div className="chart-legend">
+                <span className="completion">수료</span>
+                <span className="incomplete-legend">미수료</span>
+              </div>
+            </div>
+            <div className="horizontal-course-chart">
+              {filtered.map((item) => (
+                <div key={item.name}>
+                  <b>{item.name}</b>
+                  <div>
+                    <span
+                      className="complete-segment"
+                      style={{ width: `${item.rate}%` }}
+                    ></span>
+                    <span
+                      className="incomplete-segment"
+                      style={{ width: `${100 - item.rate}%` }}
+                    ></span>
+                  </div>
+                  <strong>{item.rate}%</strong>
+                  <small>
+                    {item.complete} / {item.learners}명
+                  </small>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="table-wrap performance-result-table">
+            <table>
+              <thead>
+                <tr>
+                  <th>교육과정</th>
+                  <th>수강 인원</th>
+                  <th>수료자</th>
+                  <th>미수료자</th>
+                  <th>수료율</th>
+                  <th>좋아요</th>
+                  <th>상세</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map((item) => (
+                  <tr key={item.name}>
+                    <td>
+                      <b>{item.name}</b>
+                    </td>
+                    <td>{item.learners}명</td>
+                    <td className="complete-number">{item.complete}명</td>
+                    <td className="incomplete-number">{item.incomplete}명</td>
+                    <td>
+                      <strong>{item.rate}%</strong>
+                    </td>
+                    <td>
+                      <span className="like-stat">
+                        <Icon icon={ThumbsUpIcon} size={14} />
+                        {item.likes}
+                      </span>
+                    </td>
+                    <td>
+                      <button className="detail">상세보기</button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
+      {tab === `quiz` && (
+        <div className="table-wrap performance-result-table">
+          <table>
+            <thead>
+              <tr>
+                <th>교육과정</th>
+                <th>응시 인원</th>
+                <th>평균 점수</th>
+                <th>최고 점수</th>
+                <th>완료율</th>
+                <th>결과</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map((item) => (
+                <tr key={item.name}>
+                  <td>
+                    <b>{item.name}</b>
+                  </td>
+                  <td>{Math.round(item.learners * 0.82)}명</td>
+                  <td>
+                    <strong>{item.quiz}점</strong>
+                  </td>
+                  <td>{Math.min(100, item.quiz + 12)}점</td>
+                  <td>{Math.round(item.rate * 0.92)}%</td>
+                  <td>
+                    <button className="detail">응시 결과 보기</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+      {tab === `survey` && (
+        <div className="survey-result-grid">
+          {filtered.map((item) => (
+            <article className="panel compact-survey-result" key={item.name}>
+              <div>
+                <span>{item.response}% 응답</span>
+                <b>{item.name}</b>
+              </div>
+              <strong>
+                {item.satisfaction}
+                <small>/ 5</small>
+              </strong>
+              <div className="survey-response-bar">
+                <i style={{ width: `${item.response}%` }} />
+              </div>
+              <button className="secondary">답변 조회</button>
+            </article>
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
+function RankingBadgeDashboard() {
+  const [tab, setTab] = r.useState(`ranking`);
+  const [period, setPeriod] = r.useState(`월간`);
+  const [badges, setBadges] = r.useState([
+    {
+      id: 1,
+      icon: Medal01Icon,
+      tone: `gold`,
+      name: `이달의 학습 TOP 3`,
+      condition: `월간 학습 점수 상위 3명`,
+      issued: 3,
+      active: true,
+    },
+    {
+      id: 2,
+      icon: Award01Icon,
+      tone: `blue`,
+      name: `수료 마스터`,
+      condition: `교육과정 5개 이상 수료`,
+      issued: 18,
+      active: true,
+    },
+    {
+      id: 3,
+      icon: CheckmarkCircle02Icon,
+      tone: `green`,
+      name: `필수교육 완료`,
+      condition: `필수교육 전체 수료`,
+      issued: 164,
+      active: true,
+    },
+    {
+      id: 4,
+      icon: SparklesIcon,
+      tone: `violet`,
+      name: `꾸준한 학습자`,
+      condition: `7일 연속 학습`,
+      issued: 24,
+      active: false,
+    },
+  ]);
+  const ranking = [
+    {
+      rank: 1,
+      name: `이지은`,
+      dept: `마케팅팀`,
+      score: 1280,
+      completed: 9,
+      minutes: 742,
+    },
+    {
+      rank: 2,
+      name: `정유진`,
+      dept: `운영팀`,
+      score: 1160,
+      completed: 8,
+      minutes: 695,
+    },
+    {
+      rank: 3,
+      name: `김지수`,
+      dept: `People팀`,
+      score: 1040,
+      completed: 7,
+      minutes: 641,
+    },
+    {
+      rank: 4,
+      name: `최하늘`,
+      dept: `세일즈팀`,
+      score: 920,
+      completed: 6,
+      minutes: 582,
+    },
+    {
+      rank: 5,
+      name: `박서준`,
+      dept: `개발팀`,
+      score: 870,
+      completed: 6,
+      minutes: 544,
+    },
+  ];
+  const toggleBadge = (id) =>
+    setBadges((items) =>
+      items.map((item) =>
+        item.id === id ? { ...item, active: !item.active } : item,
+      ),
+    );
+  return (
+    <section className="reward-management-page">
+      <div className="performance-main-tabs reward-tabs">
+        <button
+          className={tab === `ranking` ? `active` : ``}
+          onClick={() => setTab(`ranking`)}
+        >
+          학습자 랭킹
+        </button>
+        <button
+          className={tab === `badges` ? `active` : ``}
+          onClick={() => setTab(`badges`)}
+        >
+          뱃지 관리
+        </button>
+      </div>
+      {tab === `ranking` ? (
+        <>
+          <div className="ranking-toolbar">
+            <div>
+              <button
+                className={period === `월간` ? `active` : ``}
+                onClick={() => setPeriod(`월간`)}
+              >
+                월간
+              </button>
+              <button
+                className={period === `연간` ? `active` : ``}
+                onClick={() => setPeriod(`연간`)}
+              >
+                연간
+              </button>
+            </div>
+            <select>
+              <option>2026년 8월</option>
+              <option>2026년 7월</option>
+            </select>
+          </div>
+          <div className="ranking-podium">
+            {ranking.slice(0, 3).map((person) => (
+              <article
+                className={`podium-card rank-${person.rank}`}
+                key={person.rank}
+              >
+                <span className={`podium-medal medal-${person.rank}`}>
+                  <Icon icon={Medal01Icon} size={30} />
+                </span>
+                <div className="podium-avatar">{person.name[0]}</div>
+                <em>{person.rank}위</em>
+                <h3>{person.name}</h3>
+                <p>{person.dept}</p>
+                <strong>{person.score.toLocaleString()}점</strong>
+                <small>
+                  수료 {person.completed}개 · 학습 {person.minutes}분
+                </small>
+              </article>
+            ))}
+          </div>
+          <div className="panel ranking-full-list">
+            <div className="panel-head">
+              <div>
+                <h2>{period} 학습 랭킹</h2>
+                <p>학습 시간·수료·퀴즈 점수를 합산합니다.</p>
+              </div>
+            </div>
+            {ranking.map((person) => (
+              <div
+                className={`home-rank-row ${person.rank <= 3 ? `medal-${person.rank}` : ``}`}
+                key={person.rank}
+              >
+                <span>
+                  {person.rank <= 3 ? (
+                    <Icon icon={Medal01Icon} size={22} />
+                  ) : (
+                    person.rank
+                  )}
+                </span>
+                <div>
+                  <b>{person.name}</b>
+                  <small>
+                    {person.dept} · 수료 {person.completed}개
+                  </small>
+                </div>
+                <em>{person.minutes}분</em>
+                <strong>{person.score.toLocaleString()}점</strong>
+              </div>
+            ))}
+          </div>
+        </>
+      ) : (
+        <>
+          <div className="badge-management-head">
+            <div>
+              <b>자동 지급 뱃지</b>
+              <span>조건 달성 시 매일 자동으로 지급됩니다.</span>
+            </div>
+            <button className="primary">
+              <Icon icon={Add01Icon} />새 뱃지 만들기
+            </button>
+          </div>
+          <div className="badge-management-grid">
+            {badges.map((badge) => (
+              <article className="badge-management-card" key={badge.id}>
+                <div className={`managed-badge-icon ${badge.tone}`}>
+                  <Icon icon={badge.icon} size={25} />
+                </div>
+                <div className="managed-badge-copy">
+                  <span>{badge.active ? `사용 중` : `사용 안 함`}</span>
+                  <h3>{badge.name}</h3>
+                  <p>{badge.condition}</p>
+                  <small>지급 {badge.issued}명</small>
+                </div>
+                <button
+                  className={badge.active ? `rule-switch on` : `rule-switch`}
+                  onClick={() => toggleBadge(badge.id)}
+                >
+                  <i />
+                </button>
+                <div className="managed-badge-actions">
+                  <button className="secondary">
+                    <Icon icon={Edit02Icon} />
+                    기준 수정
+                  </button>
+                  <button title="삭제">
+                    <Icon icon={Delete02Icon} />
+                  </button>
+                </div>
+              </article>
+            ))}
+          </div>
+        </>
+      )}
+    </section>
+  );
+}
+
 function PerformanceDashboard() {
   const [view, setView] = r.useState(`courses`);
   const [badgeOpen, setBadgeOpen] = r.useState(false);
