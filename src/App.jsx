@@ -425,13 +425,16 @@ function f({ logout: e }) {
           }),
           t === `home` && (0, i.jsx)(p, { onGo: B }),
           t === `courses` &&
-            (0, i.jsx)(_, {
+            (0, i.jsx)(CourseAdminGrid, {
               onEdit: (e) => {
                 (R(e), B(`content`));
               },
             }),
           t === `content` &&
-            (0, i.jsx)(v, { selected: L, onBack: () => B(`courses`) }),
+            (0, i.jsx)(CourseEditorV2, {
+              selected: L,
+              onBack: () => B(`courses`),
+            }),
           t === `learners` &&
             (0, i.jsx)(LearnerDepartmentHub, {
               onSelect: (learner) => {
@@ -810,6 +813,713 @@ function g() {
     ],
   });
 }
+function CourseAdminGrid({ onEdit }) {
+  const [query, setQuery] = r.useState(``);
+  const [category, setCategory] = r.useState(`전체 분야`);
+  const [status, setStatus] = r.useState(`전체 상태`);
+  const filtered = a.filter(
+    (course) =>
+      (!query || course.title.includes(query)) &&
+      (category === `전체 분야` || course.category === category) &&
+      (status === `전체 상태` || course.status === status),
+  );
+  return (
+    <section className="course-admin-grid-page">
+      <div className="course-card-filter">
+        <div className="search">
+          <Icon icon={Search01Icon} />
+          <input
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="교육과정명을 검색해 주세요"
+          />
+        </div>
+        <select
+          value={category}
+          onChange={(event) => setCategory(event.target.value)}
+        >
+          {[`전체 분야`, `직무역량`, `리더십`, `AX`, `법정필수`].map(
+            (value) => (
+              <option key={value}>{value}</option>
+            ),
+          )}
+        </select>
+        <select
+          value={status}
+          onChange={(event) => setStatus(event.target.value)}
+        >
+          {[`전체 상태`, `오픈 전`, `운영 중`, `종료`].map((value) => (
+            <option key={value}>{value}</option>
+          ))}
+        </select>
+        <button
+          className="filter-reset"
+          onClick={() => {
+            setQuery(``);
+            setCategory(`전체 분야`);
+            setStatus(`전체 상태`);
+          }}
+        >
+          <Icon icon={RefreshIcon} />
+          초기화
+        </button>
+      </div>
+      <div className="course-admin-result">
+        <span>전체 교육과정</span>
+        <b>{filtered.length}개</b>
+      </div>
+      <div className="admin-course-card-grid">
+        {filtered.map((course, index) => (
+          <article className="admin-course-card" key={course.id}>
+            <div className={`admin-course-thumb thumb-${index + 1}`}>
+              <span>{course.category}</span>
+              <Icon
+                icon={
+                  course.category === `AX`
+                    ? SparklesIcon
+                    : course.category === `리더십`
+                      ? UserGroupIcon
+                      : BookOpen01Icon
+                }
+                size={34}
+              />
+              <small>SPARKPLUS LMS</small>
+            </div>
+            <div className="admin-course-card-body">
+              <div className="admin-course-card-top">
+                <span
+                  className={`course-status-pill ${course.status === `운영 중` ? `open` : course.status === `오픈 전` ? `ready` : `closed`}`}
+                >
+                  {course.status}
+                </span>
+                <button onClick={() => onEdit(course)} title="교육과정 수정">
+                  <Icon icon={Edit02Icon} />
+                </button>
+              </div>
+              <h3>{course.title}</h3>
+              <div className="admin-course-card-info">
+                <div>
+                  <span>교육 기간</span>
+                  <b>{course.period}</b>
+                </div>
+                <div>
+                  <span>전체 학습자</span>
+                  <b>{course.learners}명</b>
+                </div>
+              </div>
+              <button
+                className="course-manage-link"
+                onClick={() => onEdit(course)}
+              >
+                과정 관리 <Icon icon={ArrowRight01Icon} size={15} />
+              </button>
+            </div>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function youtubeEmbedUrl(url) {
+  if (!url) return ``;
+  const match = url.match(
+    /(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([^?&/]+)/,
+  );
+  return match
+    ? `https://www.youtube-nocookie.com/embed/${match[1]}?rel=0`
+    : ``;
+}
+
+function CourseEditorV2({ selected, onBack }) {
+  const defaultDates = {
+    1: [`2026-08-01`, `2026-09-30`],
+    2: [`2026-08-18`, `2026-10-10`],
+    3: [`2026-09-01`, `2026-11-30`],
+    4: [`2026-03-01`, `2026-06-30`],
+  };
+  const baseLessons = [
+    {
+      title: `교육 소개 및 학습 안내`,
+      description: `과정의 목표와 전체 학습 흐름을 확인합니다.`,
+      duration: `18분`,
+      videoUrl:
+        selected.id === 3
+          ? `https://youtu.be/P8pEFQBXbKI?si=QXqrVhzXOuFvw1_s`
+          : ``,
+      goals: `과정의 핵심 목표와 학습 순서를 이해할 수 있습니다.`,
+      contents: `과정 소개\n학습 방법과 수료 흐름\n업무 적용 포인트`,
+      attachments: `오리엔테이션 자료.pdf`,
+      quizEnabled: true,
+      quiz: [
+        {
+          question: `이번 차시의 핵심 학습 목표는 무엇인가요?`,
+          type: `객관식`,
+          answer: `목표와 학습 흐름 이해`,
+        },
+      ],
+    },
+    {
+      title: `핵심 개념 이해`,
+      description: `업무에 필요한 핵심 개념과 기본 원리를 학습합니다.`,
+      duration: `24분`,
+      videoUrl: ``,
+      goals: `핵심 개념을 설명하고 업무 사례에 연결할 수 있습니다.`,
+      contents: `핵심 용어\n기본 원칙\n실무 판단 기준`,
+      attachments: `핵심 개념 요약.pdf`,
+      quizEnabled: true,
+      quiz: [
+        {
+          question: `핵심 원칙으로 올바른 것은 무엇인가요?`,
+          type: `객관식`,
+          answer: `상황과 목표를 먼저 확인한다`,
+        },
+      ],
+    },
+    {
+      title: `실무 사례 분석`,
+      description: `실제 업무 사례를 통해 적용 방법을 살펴봅니다.`,
+      duration: `22분`,
+      videoUrl: ``,
+      goals: `사례의 문제를 분석하고 적절한 해결 방법을 선택할 수 있습니다.`,
+      contents: `업무 사례\n문제 분석\n해결안 비교`,
+      attachments: `사례 실습지.xlsx`,
+      quizEnabled: false,
+      quiz: [],
+    },
+    {
+      title: `업무 적용 실습`,
+      description: `학습 내용을 자신의 업무 상황에 직접 적용합니다.`,
+      duration: `20분`,
+      videoUrl: ``,
+      goals: `학습 내용을 자신의 업무에 적용할 수 있습니다.`,
+      contents: `적용 단계\n실습\n자가 점검`,
+      attachments: `업무 적용 템플릿.docx`,
+      quizEnabled: false,
+      quiz: [],
+    },
+    {
+      title: `최종 점검`,
+      description: `핵심 내용을 복습하고 학습을 마무리합니다.`,
+      duration: `15분`,
+      videoUrl: ``,
+      goals: `과정 전체의 핵심 내용을 정리할 수 있습니다.`,
+      contents: `핵심 요약\n최종 점검\n다음 학습 안내`,
+      attachments: `최종 요약.pdf`,
+      quizEnabled: true,
+      quiz: [
+        {
+          question: `과정에서 가장 중요하게 다룬 내용은 무엇인가요?`,
+          type: `주관식`,
+          answer: `핵심 개념의 실무 적용`,
+        },
+      ],
+    },
+  ].slice(0, selected.lessons || 5);
+  const [form, setForm] = r.useState({
+    title: selected.title,
+    category: selected.category,
+    status: selected.status,
+    level: `레벨 2`,
+    department: `전체 부서`,
+    position: `전체 직급`,
+    startDate: defaultDates[selected.id]?.[0] || `2026-08-01`,
+    endDate: defaultDates[selected.id]?.[1] || `2026-09-30`,
+    thumbnail: selected.thumbnail || ``,
+    introduction: `${selected.title} 과정의 핵심 개념을 이해하고 실제 업무에 활용할 수 있도록 구성된 교육과정입니다.`,
+    curriculumSummary: `기초 개념부터 실무 적용까지 단계적으로 학습합니다.`,
+    lessons: selected.curriculum || baseLessons,
+    surveyEnabled: true,
+    surveyTitle: `과정 만족도 설문`,
+  });
+  const [editingIndex, setEditingIndex] = r.useState(null);
+  const update = (key, value) =>
+    setForm((current) => ({ ...current, [key]: value }));
+  const updateLesson = (key, value) =>
+    setForm((current) => ({
+      ...current,
+      lessons: current.lessons.map((lesson, index) =>
+        index === editingIndex ? { ...lesson, [key]: value } : lesson,
+      ),
+    }));
+  const lesson = editingIndex === null ? null : form.lessons[editingIndex];
+  const addLesson = () => {
+    setForm((current) => ({
+      ...current,
+      lessons: [
+        ...current.lessons,
+        {
+          title: `새 차시`,
+          description: `차시 소개를 입력해 주세요.`,
+          duration: `20분`,
+          videoUrl: ``,
+          goals: `학습 목표를 입력해 주세요.`,
+          contents: `주요 내용을 입력해 주세요.`,
+          attachments: ``,
+          quizEnabled: false,
+          quiz: [],
+        },
+      ],
+    }));
+    setEditingIndex(form.lessons.length);
+  };
+  const addQuiz = () =>
+    updateLesson(`quiz`, [
+      ...(lesson.quiz || []),
+      { question: `새 퀴즈 문항`, type: `객관식`, answer: `` },
+    ]);
+  const updateQuiz = (index, key, value) =>
+    updateLesson(
+      `quiz`,
+      lesson.quiz.map((item, itemIndex) =>
+        itemIndex === index ? { ...item, [key]: value } : item,
+      ),
+    );
+  const save = () => {
+    if (confirm(`변경한 교육과정 정보를 저장하시겠습니까?`)) {
+      Object.assign(selected, {
+        ...form,
+        period: `${form.startDate.replaceAll(`-`, `.`)} ~ ${form.endDate.replaceAll(`-`, `.`)}`,
+        lessons: form.lessons.length,
+        curriculum: form.lessons,
+      });
+      alert(`교육과정이 저장되었습니다.`);
+    }
+  };
+  const remove = () => {
+    if (
+      confirm(
+        `이 교육과정을 삭제하시겠습니까? 삭제한 과정은 복구할 수 없습니다.`,
+      )
+    ) {
+      alert(`교육과정이 삭제되었습니다.`);
+      onBack();
+    }
+  };
+  return (
+    <div className="course-editor-v2">
+      <button className="department-back" onClick={onBack}>
+        <Icon icon={ArrowLeft01Icon} />
+        교육과정 목록으로
+      </button>
+      <section className="course-editor-v2-hero">
+        <div className="course-editor-v2-thumb">
+          {form.thumbnail ? (
+            <img src={form.thumbnail} alt="강의 썸네일" />
+          ) : (
+            <>
+              <Icon icon={BookOpen01Icon} size={34} />
+              <span>강의 썸네일</span>
+            </>
+          )}
+          <label>
+            이미지 변경
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(event) => {
+                const file = event.target.files?.[0];
+                if (file) {
+                  const reader = new FileReader();
+                  reader.onload = () => update(`thumbnail`, reader.result);
+                  reader.readAsDataURL(file);
+                }
+              }}
+            />
+          </label>
+        </div>
+        <div>
+          <span>교육과정 상세 수정</span>
+          <h2>{form.title}</h2>
+          <p>과정 정보와 차시별 영상·자료·퀴즈를 한 화면에서 관리합니다.</p>
+        </div>
+      </section>
+      <section className="panel editor-section">
+        <div className="editor-section-head">
+          <div>
+            <span>01</span>
+            <h3>과정 기본 정보</h3>
+          </div>
+          <p>사용자 과정 상세 화면에 표시되는 정보입니다.</p>
+        </div>
+        <div className="course-edit-grid">
+          <label className="wide">
+            강의 제목
+            <input
+              value={form.title}
+              onChange={(event) => update(`title`, event.target.value)}
+            />
+          </label>
+          <label>
+            분야
+            <select
+              value={form.category}
+              onChange={(event) => update(`category`, event.target.value)}
+            >
+              {[`직무역량`, `리더십`, `AX`, `법정필수`].map((value) => (
+                <option key={value}>{value}</option>
+              ))}
+            </select>
+          </label>
+          <label>
+            레벨
+            <select
+              value={form.level}
+              onChange={(event) => update(`level`, event.target.value)}
+            >
+              {[`레벨 1`, `레벨 2`, `레벨 3`].map((value) => (
+                <option key={value}>{value}</option>
+              ))}
+            </select>
+          </label>
+          <label>
+            상태
+            <select
+              value={form.status}
+              onChange={(event) => update(`status`, event.target.value)}
+            >
+              {[`오픈 전`, `운영 중`, `종료`].map((value) => (
+                <option key={value}>{value}</option>
+              ))}
+            </select>
+          </label>
+          <label>
+            대상 부서
+            <select
+              value={form.department}
+              onChange={(event) => update(`department`, event.target.value)}
+            >
+              {[
+                `전체 부서`,
+                `People팀`,
+                `개발팀`,
+                `마케팅팀`,
+                `세일즈팀`,
+                `운영팀`,
+              ].map((value) => (
+                <option key={value}>{value}</option>
+              ))}
+            </select>
+          </label>
+          <label>
+            대상 직급
+            <select
+              value={form.position}
+              onChange={(event) => update(`position`, event.target.value)}
+            >
+              {[`전체 직급`, `인턴`, `매니저`, `파트장`, `팀장`].map(
+                (value) => (
+                  <option key={value}>{value}</option>
+                ),
+              )}
+            </select>
+          </label>
+          <div className="course-date-range wide">
+            <label>
+              교육 시작일
+              <input
+                type="date"
+                value={form.startDate}
+                onChange={(event) => update(`startDate`, event.target.value)}
+              />
+            </label>
+            <span>–</span>
+            <label>
+              교육 종료일
+              <input
+                type="date"
+                value={form.endDate}
+                min={form.startDate}
+                onChange={(event) => update(`endDate`, event.target.value)}
+              />
+            </label>
+          </div>
+          <label className="wide">
+            강의 소개
+            <textarea
+              rows="5"
+              value={form.introduction}
+              onChange={(event) => update(`introduction`, event.target.value)}
+            />
+          </label>
+        </div>
+      </section>
+      <section className="panel editor-section">
+        <div className="editor-section-head">
+          <div>
+            <span>02</span>
+            <h3>커리큘럼 및 차시</h3>
+          </div>
+          <p>차시 수정에서 영상·자료·학습 내용·퀴즈를 설정합니다.</p>
+        </div>
+        <label className="curriculum-summary">
+          커리큘럼 소개
+          <textarea
+            rows="3"
+            value={form.curriculumSummary}
+            onChange={(event) =>
+              update(`curriculumSummary`, event.target.value)
+            }
+          />
+        </label>
+        <div className="lesson-manage-list">
+          {form.lessons.map((item, index) => (
+            <article key={index}>
+              <span>{String(index + 1).padStart(2, `0`)}</span>
+              <div>
+                <small>
+                  {index + 1}차시 · {item.duration}
+                </small>
+                <b>{item.title}</b>
+                <p>{item.description}</p>
+              </div>
+              <div className="lesson-setting-tags">
+                <span className={item.videoUrl ? `done` : ``}>
+                  <Icon icon={PlayIcon} size={13} />
+                  {item.videoUrl ? `영상 등록` : `영상 미등록`}
+                </span>
+                <span className={item.quizEnabled ? `done` : ``}>
+                  <Icon icon={Quiz01Icon} size={13} />
+                  {item.quizEnabled
+                    ? `퀴즈 ${item.quiz.length}문항`
+                    : `퀴즈 없음`}
+                </span>
+              </div>
+              <button
+                className="secondary"
+                onClick={() => setEditingIndex(index)}
+              >
+                <Icon icon={Edit02Icon} />
+                차시 수정
+              </button>
+            </article>
+          ))}
+        </div>
+        <button className="add-question" onClick={addLesson}>
+          <Icon icon={Add01Icon} />
+          차시 추가
+        </button>
+      </section>
+      <section className="panel editor-section course-survey-compact">
+        <div className="editor-section-head">
+          <div>
+            <span>03</span>
+            <h3>과정 설문</h3>
+          </div>
+          <label className="setting-switch-label">
+            <span>수강 완료 후 설문 노출</span>
+            <button
+              className={form.surveyEnabled ? `rule-switch on` : `rule-switch`}
+              onClick={() => update(`surveyEnabled`, !form.surveyEnabled)}
+            >
+              <i />
+            </button>
+          </label>
+        </div>
+        <label>
+          설문 제목
+          <input
+            value={form.surveyTitle}
+            onChange={(event) => update(`surveyTitle`, event.target.value)}
+          />
+        </label>
+      </section>
+      <div className="course-editor-final-actions">
+        <button className="danger-outline" onClick={remove}>
+          <Icon icon={Delete02Icon} />
+          과정 삭제
+        </button>
+        <button className="primary" onClick={save}>
+          변경사항 저장
+        </button>
+      </div>
+      {lesson && (
+        <div
+          className="overlay"
+          onMouseDown={(event) =>
+            event.target === event.currentTarget && setEditingIndex(null)
+          }
+        >
+          <aside className="drawer lesson-studio-drawer">
+            <div className="drawer-head">
+              <div>
+                <span>{editingIndex + 1}차시 편집</span>
+                <h2>{lesson.title}</h2>
+              </div>
+              <button onClick={() => setEditingIndex(null)}>
+                <Icon icon={Cancel01Icon} />
+              </button>
+            </div>
+            <div className="lesson-video-preview">
+              {youtubeEmbedUrl(lesson.videoUrl) ? (
+                <iframe
+                  src={youtubeEmbedUrl(lesson.videoUrl)}
+                  title="강의 영상 미리보기"
+                  allowFullScreen
+                />
+              ) : (
+                <div>
+                  <Icon icon={PlayIcon} size={28} />
+                  <b>영상 미리보기</b>
+                  <span>YouTube 링크를 입력하면 영상이 표시됩니다.</span>
+                </div>
+              )}
+            </div>
+            <div className="lesson-studio-form">
+              <label>
+                차시명
+                <input
+                  value={lesson.title}
+                  onChange={(event) =>
+                    updateLesson(`title`, event.target.value)
+                  }
+                />
+              </label>
+              <label>
+                차시 소개
+                <textarea
+                  rows="3"
+                  value={lesson.description}
+                  onChange={(event) =>
+                    updateLesson(`description`, event.target.value)
+                  }
+                />
+              </label>
+              <div className="lesson-inline-fields">
+                <label>
+                  학습 시간
+                  <input
+                    value={lesson.duration}
+                    onChange={(event) =>
+                      updateLesson(`duration`, event.target.value)
+                    }
+                    placeholder="예: 24분"
+                  />
+                </label>
+                <label>
+                  YouTube 영상 링크
+                  <input
+                    value={lesson.videoUrl}
+                    onChange={(event) =>
+                      updateLesson(`videoUrl`, event.target.value)
+                    }
+                    placeholder="https://youtu.be/..."
+                  />
+                </label>
+              </div>
+              <label>
+                학습 목표
+                <textarea
+                  rows="3"
+                  value={lesson.goals}
+                  onChange={(event) =>
+                    updateLesson(`goals`, event.target.value)
+                  }
+                  placeholder="목표를 줄바꿈으로 구분해 주세요"
+                />
+              </label>
+              <label>
+                주요 내용
+                <textarea
+                  rows="4"
+                  value={lesson.contents}
+                  onChange={(event) =>
+                    updateLesson(`contents`, event.target.value)
+                  }
+                  placeholder="주요 내용을 줄바꿈으로 구분해 주세요"
+                />
+              </label>
+              <label>
+                첨부자료
+                <input
+                  value={lesson.attachments}
+                  onChange={(event) =>
+                    updateLesson(`attachments`, event.target.value)
+                  }
+                  placeholder="파일명 또는 자료 링크"
+                />
+              </label>
+              <div className="lesson-quiz-setting">
+                <div>
+                  <div>
+                    <b>차시 퀴즈</b>
+                    <span>현재 차시 영상과 자료를 기준으로 설정합니다.</span>
+                  </div>
+                  <button
+                    className={
+                      lesson.quizEnabled ? `rule-switch on` : `rule-switch`
+                    }
+                    onClick={() =>
+                      updateLesson(`quizEnabled`, !lesson.quizEnabled)
+                    }
+                  >
+                    <i />
+                  </button>
+                </div>
+                {lesson.quizEnabled && (
+                  <>
+                    <div className="lesson-quiz-list">
+                      {(lesson.quiz || []).map((question, index) => (
+                        <article key={index}>
+                          <span>Q{index + 1}</span>
+                          <input
+                            value={question.question}
+                            onChange={(event) =>
+                              updateQuiz(index, `question`, event.target.value)
+                            }
+                          />
+                          <select
+                            value={question.type}
+                            onChange={(event) =>
+                              updateQuiz(index, `type`, event.target.value)
+                            }
+                          >
+                            <option>객관식</option>
+                            <option>복수 선택</option>
+                            <option>주관식</option>
+                          </select>
+                          <input
+                            value={question.answer}
+                            onChange={(event) =>
+                              updateQuiz(index, `answer`, event.target.value)
+                            }
+                            placeholder="정답 또는 예시 답안"
+                          />
+                          <button
+                            onClick={() =>
+                              updateLesson(
+                                `quiz`,
+                                lesson.quiz.filter(
+                                  (_, itemIndex) => itemIndex !== index,
+                                ),
+                              )
+                            }
+                          >
+                            <Icon icon={Delete02Icon} />
+                          </button>
+                        </article>
+                      ))}
+                    </div>
+                    <button className="add-question" onClick={addQuiz}>
+                      <Icon icon={Add01Icon} />
+                      퀴즈 문항 추가
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+            <div className="lesson-studio-actions">
+              <button className="primary" onClick={() => setEditingIndex(null)}>
+                차시 적용
+              </button>
+            </div>
+          </aside>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function _({ onEdit: e }) {
   return (0, i.jsxs)(`section`, {
     className: `course-list-page`,
