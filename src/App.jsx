@@ -870,46 +870,35 @@ function CourseAdminGrid({ onEdit }) {
       </div>
       <div className="admin-course-card-grid">
         {filtered.map((course, index) => (
-          <article className="admin-course-card" key={course.id}>
-            <div className={`admin-course-thumb thumb-${index + 1}`}>
-              <span>{course.category}</span>
-              <Icon
-                icon={
-                  course.category === `AX`
-                    ? SparklesIcon
-                    : course.category === `리더십`
-                      ? UserGroupIcon
-                      : BookOpen01Icon
-                }
-                size={34}
+          <article
+            className="course-card toss-card admin-course-user-copy"
+            key={course.id}
+          >
+            <div className="visual-wrap">
+              <J
+                accent={[`blue`, `green`, `purple`, `red`][index % 4]}
+                label={course.category}
               />
-              <small>SPARKPLUS LMS</small>
-            </div>
-            <div className="admin-course-card-body">
-              <div className="admin-course-card-top">
-                <span
-                  className={`course-status-pill ${course.status === `운영 중` ? `open` : course.status === `오픈 전` ? `ready` : `closed`}`}
-                >
-                  {course.status}
-                </span>
-              </div>
-              <h3>{course.title}</h3>
-              <div className="admin-course-card-info">
-                <div>
-                  <span>교육 기간</span>
-                  <b>{course.period}</b>
-                </div>
-                <div>
-                  <span>전체 학습자</span>
-                  <b>{course.learners}명</b>
-                </div>
-              </div>
-              <button
-                className="course-manage-link"
-                onClick={() => onEdit(course)}
+              <span
+                className={`status-ribbon ${course.status === `종료` ? `danger` : course.status === `오픈 전` ? `muted` : ``}`}
               >
-                과정 관리 <Icon icon={ArrowRight01Icon} size={15} />
-              </button>
+                {course.status}
+              </span>
+            </div>
+            <div className="course-card-body">
+              <div className="course-labels">
+                <span className="category-text">{course.category}</span>
+              </div>
+              <h2>{course.title}</h2>
+              <div className="card-meta admin-course-meta">
+                <span>▣ {course.period}</span>
+                <span>전체 학습자 {course.learners}명</span>
+              </div>
+              <div className="card-actions single-admin-action">
+                <button className="primary" onClick={() => onEdit(course)}>
+                  과정 관리
+                </button>
+              </div>
             </div>
           </article>
         ))}
