@@ -6994,6 +6994,377 @@ html[data-theme="dark"] .home-badge-main > span {
   }
 }
 
+/* Admin visual refinement — user-facing design language */
+.admin-portal {
+  --admin-blue: #3182f6;
+  --admin-blue-soft: #edf6ff;
+  --admin-green: #20a675;
+  --admin-green-soft: #eaf8f2;
+  --admin-coral: #e66b63;
+  --admin-coral-soft: #fff0ef;
+  --admin-neutral: #8b95a1;
+}
+.admin-portal > .main {
+  max-width: 1420px !important;
+  padding-top: 42px !important;
+}
+.admin-portal .page-heading {
+  margin-bottom: 28px !important;
+}
+.admin-portal .page-heading p {
+  margin: 0 0 8px !important;
+  color: #8da0b5 !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+}
+.admin-portal .page-heading h1 {
+  margin: 0 0 8px !important;
+  color: var(--ui-text) !important;
+  font-size: 30px !important;
+  font-weight: 700 !important;
+  line-height: 1.25 !important;
+  letter-spacing: -0.035em !important;
+}
+.admin-portal .page-heading > div > span {
+  color: var(--ui-muted) !important;
+  font-size: 13px !important;
+  line-height: 1.6 !important;
+}
+.admin-portal h2,
+.admin-portal h3 {
+  letter-spacing: -0.025em !important;
+}
+.admin-portal .panel-head h2,
+.admin-portal .analysis-section-head h2,
+.admin-portal .performance-section-head h2 {
+  font-size: 17px !important;
+  font-weight: 680 !important;
+  line-height: 1.35 !important;
+}
+.admin-portal .panel-head p,
+.admin-portal .analysis-section-head p,
+.admin-portal .performance-section-head p {
+  margin-top: 6px !important;
+  color: var(--ui-muted) !important;
+  font-size: 11px !important;
+  line-height: 1.55 !important;
+}
+.admin-portal .panel,
+.admin-portal .card,
+.admin-portal .metric,
+.admin-portal .survey-card {
+  border-color: #e7edf3 !important;
+  border-radius: 22px !important;
+  box-shadow: 0 2px 8px rgba(24, 39, 75, 0.025) !important;
+}
+
+/* Filters: same soft container and controls as the user catalog */
+.admin-portal .course-filters,
+.admin-portal .learner-filter-panel,
+.admin-portal .analysis-filter-bar,
+.admin-portal .performance-filter-panel,
+.admin-portal .filters,
+.admin-portal .period-bar {
+  padding: 16px !important;
+  border: 1px solid #e8edf2 !important;
+  border-radius: 22px !important;
+  background: #f7f9fb !important;
+  box-shadow: none !important;
+}
+.admin-portal .filter-title {
+  display: flex !important;
+  align-items: baseline !important;
+  gap: 10px !important;
+  margin: 0 2px 13px !important;
+}
+.admin-portal .filter-title b {
+  color: var(--ui-text) !important;
+  font-size: 13px !important;
+  font-weight: 680 !important;
+}
+.admin-portal .filter-title span {
+  color: var(--ui-muted) !important;
+  font-size: 10px !important;
+  font-weight: 400 !important;
+}
+.admin-portal .course-filter-fields,
+.admin-portal .learner-filter-fields,
+.admin-portal .analysis-filter-bar {
+  gap: 8px !important;
+}
+.admin-portal .course-filter-fields .search,
+.admin-portal .learner-filter-fields .search,
+.admin-portal .analysis-filter-bar .search,
+.admin-portal .performance-filter-panel .search {
+  height: 44px !important;
+  padding: 0 13px !important;
+  border: 1px solid #e3e9ef !important;
+  border-radius: 13px !important;
+  background: #fff !important;
+  color: #5b6775 !important;
+}
+.admin-portal .course-filter-fields input,
+.admin-portal .course-filter-fields select,
+.admin-portal .learner-filter-fields input,
+.admin-portal .learner-filter-fields select,
+.admin-portal .analysis-filter-bar input,
+.admin-portal .analysis-filter-bar select,
+.admin-portal .performance-filter-panel input,
+.admin-portal .performance-filter-panel select,
+.admin-portal .filters input,
+.admin-portal .filters select {
+  height: 44px !important;
+  border: 1px solid #e3e9ef !important;
+  border-radius: 13px !important;
+  background: #fff !important;
+  color: #4e5968 !important;
+  font-size: 12px !important;
+  outline: none !important;
+}
+.admin-portal .course-filter-fields input:focus,
+.admin-portal .course-filter-fields select:focus,
+.admin-portal .learner-filter-fields input:focus,
+.admin-portal .learner-filter-fields select:focus,
+.admin-portal .analysis-filter-bar input:focus,
+.admin-portal .analysis-filter-bar select:focus {
+  border-color: #8fc1ff !important;
+  box-shadow: 0 0 0 3px rgba(49, 130, 246, 0.1) !important;
+}
+.admin-portal .course-search-button {
+  height: 44px !important;
+  padding: 0 19px !important;
+  border: 0 !important;
+  border-radius: 13px !important;
+  background: var(--admin-blue) !important;
+  color: #fff !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  box-shadow: 0 5px 12px rgba(49, 130, 246, 0.17) !important;
+}
+.admin-portal .course-search-button:hover {
+  background: #1f73e8 !important;
+}
+.admin-portal .filter-reset {
+  height: 44px !important;
+  padding: 0 14px !important;
+  border: 1px solid #e1e7ed !important;
+  border-radius: 13px !important;
+  background: #fff !important;
+  color: #697586 !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  box-shadow: none !important;
+}
+.admin-portal .filter-reset:hover {
+  background: #f1f4f7 !important;
+  color: #333d4b !important;
+}
+
+/* Tables: lighter hierarchy and more breathing room */
+.admin-portal .table-wrap {
+  border-color: #e6ebf0 !important;
+  border-radius: 20px !important;
+}
+.admin-portal .table-wrap th {
+  height: 50px !important;
+  padding: 0 18px !important;
+  background: #f7f9fb !important;
+  color: #7d8998 !important;
+  font-size: 10px !important;
+  font-weight: 650 !important;
+  letter-spacing: 0.01em !important;
+}
+.admin-portal .table-wrap td {
+  padding: 17px 18px !important;
+  color: #4e5968 !important;
+  font-size: 12px !important;
+  line-height: 1.5 !important;
+}
+.admin-portal .table-wrap td b {
+  color: var(--ui-text) !important;
+  font-size: 12px !important;
+  font-weight: 650 !important;
+}
+.admin-portal .table-wrap td small {
+  color: #98a2ad !important;
+  font-size: 9px !important;
+}
+.admin-portal .table-wrap tbody tr:hover td {
+  background: #f8fbff !important;
+}
+.admin-portal .detail {
+  min-height: 34px !important;
+  padding: 0 12px !important;
+  border: 1px solid #dce6ef !important;
+  border-radius: 10px !important;
+  background: #fff !important;
+  color: #4b6f91 !important;
+  font-size: 10px !important;
+  font-weight: 650 !important;
+}
+.admin-portal .detail:hover {
+  border-color: #b9d6f7 !important;
+  background: var(--admin-blue-soft) !important;
+  color: #2369ad !important;
+}
+.admin-portal .performance-main-tabs {
+  gap: 24px !important;
+}
+.admin-portal .performance-main-tabs button {
+  height: 45px !important;
+  color: #8a95a2 !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+}
+.admin-portal .performance-main-tabs button.active {
+  color: #333d4b !important;
+  font-weight: 700 !important;
+}
+.admin-portal .performance-main-tabs button.active:after {
+  height: 2px !important;
+  background: var(--admin-blue) !important;
+}
+
+/* Meaningful chart palette: blue participation, green completion, coral attention */
+.admin-portal .chart-line.participation {
+  stroke: var(--admin-blue) !important;
+}
+.admin-portal .chart-dot.participation {
+  fill: var(--admin-blue) !important;
+}
+.admin-portal .chart-legend .learners:before {
+  background: var(--admin-blue) !important;
+}
+.admin-portal .chart-line.completion {
+  stroke: var(--admin-green) !important;
+}
+.admin-portal .chart-dot.completion {
+  fill: var(--admin-green) !important;
+}
+.admin-portal .chart-legend .completion:before {
+  background: var(--admin-green) !important;
+}
+.admin-portal .chart-legend .incomplete-legend:before {
+  background: var(--admin-coral) !important;
+}
+.admin-portal .progress.high span,
+.admin-portal .bar-chart .bar-high {
+  background: linear-gradient(180deg, #31b98a, #8bd7bb) !important;
+}
+.admin-portal .progress.middle span,
+.admin-portal .bar-chart .bar-middle {
+  background: linear-gradient(180deg, #4f94e8, #9fc8f5) !important;
+}
+.admin-portal .progress.low span,
+.admin-portal .bar-chart .bar-low {
+  background: linear-gradient(180deg, #e77970, #f4bbb6) !important;
+}
+.admin-portal .complete-segment {
+  background: linear-gradient(90deg, #20a675, #77cfad) !important;
+}
+.admin-portal .incomplete-segment {
+  background: linear-gradient(90deg, #efaaa4, #e66b63) !important;
+}
+.admin-portal .analysis-ranking-chart i {
+  background: linear-gradient(90deg, #3182f6, #74b4ff) !important;
+}
+.admin-portal .analysis-ranking-chart > button:nth-child(1) i,
+.admin-portal .analysis-ranking-chart > button:nth-child(2) i {
+  background: linear-gradient(90deg, #20a675, #79d4b2) !important;
+}
+.admin-portal .analysis-ranking-chart > button:nth-last-child(1) i {
+  background: linear-gradient(90deg, #e66b63, #f0a29c) !important;
+}
+.admin-portal .rate-cell i {
+  background: linear-gradient(90deg, #4f94e8, #8dc0f4) !important;
+}
+.admin-portal .survey-response-bar i {
+  background: linear-gradient(90deg, #765ac7, #ac9ae0) !important;
+}
+.admin-portal .popularity-bar i {
+  background: linear-gradient(90deg, #3182f6, #7bb7fb) !important;
+}
+.admin-portal .analysis-findings > div:nth-child(1) {
+  box-shadow: inset 0 3px var(--admin-blue);
+}
+.admin-portal .analysis-findings > div:nth-child(2) {
+  box-shadow: inset 0 3px var(--admin-green);
+}
+.admin-portal .analysis-findings > div:nth-child(3) {
+  box-shadow: inset 0 3px var(--admin-coral);
+}
+.admin-portal .analysis-findings > div:nth-child(4) {
+  box-shadow: inset 0 3px #8b75c9;
+}
+.admin-portal .analysis-findings span {
+  font-size: 10px !important;
+}
+.admin-portal .analysis-findings b {
+  font-size: 16px !important;
+  font-weight: 700 !important;
+}
+.admin-portal .analysis-findings small {
+  font-size: 10px !important;
+}
+.admin-portal .mini-trend-bars > div:nth-child(-n + 2) span {
+  background: linear-gradient(#a9c8e8, #d3e4f4) !important;
+}
+.admin-portal .mini-trend-bars > div:nth-child(n + 3):nth-child(-n + 4) span {
+  background: linear-gradient(#65a5e8, #aed0f2) !important;
+}
+.admin-portal .mini-trend-bars > div:nth-child(n + 5) span {
+  background: linear-gradient(#27ad7d, #91d9bf) !important;
+}
+.admin-portal .drawer-stat-row:nth-of-type(1) i {
+  background: #3182f6 !important;
+}
+.admin-portal .drawer-stat-row:nth-of-type(2) i {
+  background: #20a675 !important;
+}
+.admin-portal .drawer-stat-row:nth-of-type(3) i {
+  background: #8b75c9 !important;
+}
+.admin-portal .drawer-stat-row:nth-of-type(4) i {
+  background: #e66b63 !important;
+}
+
+html[data-theme="dark"] .admin-portal .course-filters,
+html[data-theme="dark"] .admin-portal .learner-filter-panel,
+html[data-theme="dark"] .admin-portal .analysis-filter-bar,
+html[data-theme="dark"] .admin-portal .performance-filter-panel,
+html[data-theme="dark"] .admin-portal .filters,
+html[data-theme="dark"] .admin-portal .period-bar {
+  border-color: var(--ui-line) !important;
+  background: var(--ui-surface-soft) !important;
+}
+html[data-theme="dark"] .admin-portal .course-filter-fields .search,
+html[data-theme="dark"] .admin-portal .learner-filter-fields .search,
+html[data-theme="dark"] .admin-portal .analysis-filter-bar .search,
+html[data-theme="dark"] .admin-portal select,
+html[data-theme="dark"] .admin-portal input {
+  border-color: var(--ui-line) !important;
+  background: var(--ui-surface) !important;
+  color: var(--ui-text) !important;
+}
+@media (max-width: 760px) {
+  .admin-portal > .main {
+    padding-top: 30px !important;
+  }
+  .admin-portal .page-heading h1 {
+    font-size: 26px !important;
+  }
+  .admin-portal .filter-title {
+    align-items: flex-start !important;
+    flex-direction: column !important;
+  }
+  .admin-portal .analysis-findings b {
+    white-space: normal !important;
+  }
+  .admin-portal .table-wrap {
+    border-radius: 16px !important;
+  }
+}
+
 /* Performance analysis, rankings and badge management */
 .performance-analysis-page,
 .reward-management-page {
@@ -7542,10 +7913,9 @@ html[data-theme="dark"] .question-editor-row {
 }
 .analysis-filter-bar {
   display: grid;
-  grid-template-columns: minmax(230px, 1.45fr) repeat(
-      3,
-      minmax(135px, 0.75fr)
-    ) auto;
+  grid-template-columns:
+    minmax(230px, 1.45fr) repeat(3, minmax(135px, 0.75fr))
+    auto;
   gap: 8px;
   padding: 14px;
   border: 1px solid var(--ui-line);
