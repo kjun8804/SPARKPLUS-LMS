@@ -262,3 +262,35 @@ button:not(:disabled):active{transform:scale(.98)}
 
 @media(max-width:1050px){.popular-courses{grid-template-columns:1fr}.ranking-admin-row{grid-template-columns:40px 1fr 90px 90px}.ranking-admin-row i,.ranking-admin-row em:nth-of-type(2){display:none}.reward-summary{grid-template-columns:1fr 1fr}.reward-summary button{grid-column:1/-1}.popular-admin-list>div{grid-template-columns:36px 1fr 55px}.popularity-bar{display:none}}
 @media(max-width:720px){.quiz-options,.admin-data-summary{grid-template-columns:1fr}.reward-summary{grid-template-columns:1fr}.ranking-admin-row{grid-template-columns:38px 1fr auto}.ranking-admin-row em{display:none}.popular-courses>button{grid-template-columns:28px 58px 1fr}}
+
+
+/* Hugeicons Stroke Rounded system */
+.hugeicons-icon{display:block;flex:0 0 auto}
+button>.hugeicons-icon,button>span>.hugeicons-icon,.title-with-icon>.hugeicons-icon{pointer-events:none}
+.main-nav .nav-button,.topbar-inner nav>button{display:inline-flex;align-items:center;gap:7px}
+.main-nav .nav-button .hugeicons-icon,.topbar-inner nav>button .hugeicons-icon{width:17px;height:17px;stroke-width:1.7}
+.dropdown button{display:flex;align-items:center;gap:8px}
+.primary,.secondary,.course-search-button,.filter-reset,.back-to-list,.add-lesson,.open-sidebar,
+.logout-button,.player-files button em,.filter-actions button{display:inline-flex!important;align-items:center;justify-content:center;gap:7px}
+.actions button,.remove-lesson,.drawer-head>button,.modal-close{display:inline-grid!important;place-items:center}
+.actions button .hugeicons-icon,.remove-lesson .hugeicons-icon,.drawer-head>button .hugeicons-icon{width:17px;height:17px}
+.search-wrap>.hugeicons-icon,.search>.hugeicons-icon{color:#8b95a1}
+.search-wrap,.search{display:flex;align-items:center;gap:8px}
+.quick-tags>span{display:inline-flex;align-items:center;gap:5px}
+.title-with-icon{display:inline-flex;align-items:center;gap:8px}
+.title-with-icon>.hugeicons-icon{color:#3182f6}
+.course-like .hugeicons-icon{transition:transform .18s}
+.course-like.liked .hugeicons-icon{transform:scale(1.08)}
+.popular-courses em,.popular-admin-list small{display:flex;align-items:center;gap:5px}
+.rank-medal,.admin-medal{display:grid;place-items:center}
+.medal-1{color:#d39a15}.medal-2{color:#89929e}.medal-3{color:#ad7042}
+.my-badge>span{display:grid!important;place-items:center;color:#d79514}
+.ai-quiz-head>span .hugeicons-icon{filter:drop-shadow(0 2px 4px rgba(0,0,0,.12))}
+.theme-toggle .hugeicons-icon{transition:transform .22s}
+.theme-toggle:hover .hugeicons-icon{transform:rotate(12deg)}
+.player-files button em{gap:5px}
+.player-actions button,.exit-classroom{gap:6px}
+.back-to-list{width:max-content}
+.admin-portal>.topbar .main-nav{display:flex;align-items:stretch}
+html[data-theme="dark"] .title-with-icon>.hugeicons-icon{color:#73adff}
+html[data-theme="dark"] .search-wrap>.hugeicons-icon,html[data-theme="dark"] .search>.hugeicons-icon{color:#9da7b1}
