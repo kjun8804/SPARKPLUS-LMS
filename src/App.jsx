@@ -205,7 +205,11 @@ var a = [
     ],
     learners: [
       `전체 학습자 관리`,
-      `임직원 정보와 개인별 학습 현황을 확인합니다.`,
+      `부서별 학습 현황과 소속 임직원의 학습 정보를 확인합니다.`,
+    ],
+    learnerDetail: [
+      `학습자 상세`,
+      `개인별 수강 과정과 학습 진행 정보를 확인합니다.`,
     ],
     performance: [
       `교육 성과 분석`,
@@ -304,7 +308,7 @@ function f({ logout: e }) {
                   onMouseLeave: () => e.items && u(null),
                   children: [
                     (0, i.jsx)(`button`, {
-                      className: `nav-button ${e.page === t || (e.page === `courses` && t === `content`) || e.items?.some((e) => e.page === t) ? `active` : ``}`,
+                      className: `nav-button ${e.page === t || (e.page === `courses` && t === `content`) || (e.page === `learners` && t === `learnerDetail`) || e.items?.some((e) => e.page === t) ? `active` : ``}`,
                       onClick: () =>
                         e.page ? B(e.page) : u(s === e.label ? null : e.label),
                       children: [
@@ -429,15 +433,17 @@ function f({ logout: e }) {
           t === `content` &&
             (0, i.jsx)(v, { selected: L, onBack: () => B(`courses`) }),
           t === `learners` &&
-            (0, i.jsx)(y, {
-              data: z,
-              query: d,
-              setQuery: f,
-              dept: m,
-              setDept: h,
-              position: g,
-              setPosition: O,
-              onSelect: A,
+            (0, i.jsx)(LearnerDepartmentHub, {
+              onSelect: (learner) => {
+                B(`learnerDetail`);
+                A(learner);
+              },
+            }),
+          t === `learnerDetail` &&
+            k &&
+            (0, i.jsx)(LearnerProfilePage, {
+              learner: k,
+              onBack: () => B(`learners`),
             }),
           t === `assignments` &&
             (0, i.jsx)(x, { onCreate: () => M(`교육과정 배정`) }),
@@ -453,7 +459,6 @@ function f({ logout: e }) {
           t === `profile` && (0, i.jsx)(E, {}),
         ],
       }),
-      k && (0, i.jsx)(b, { learner: k, onClose: () => A(null) }),
       j && (0, i.jsx)(D, { title: j, onClose: () => M(null) }),
     ],
   });
@@ -1384,6 +1389,527 @@ function v({ selected: e, onBack: t }) {
     </div>
   );
 }
+function LearnerDepartmentHub({ onSelect }) {
+  const [selectedDept, setSelectedDept] = r.useState(null);
+  const [query, setQuery] = r.useState(``);
+  const [position, setPosition] = r.useState(`전체 직급`);
+  const departmentMeta = [
+    {
+      name: `People팀`,
+      icon: UserGroupIcon,
+      tone: `blue`,
+      members: 24,
+      progress: 84,
+      completion: 78,
+      required: 3,
+    },
+    {
+      name: `개발팀`,
+      icon: Analytics01Icon,
+      tone: `violet`,
+      members: 54,
+      progress: 76,
+      completion: 69,
+      required: 8,
+    },
+    {
+      name: `마케팅팀`,
+      icon: ChartHistogramIcon,
+      tone: `coral`,
+      members: 38,
+      progress: 88,
+      completion: 83,
+      required: 4,
+    },
+    {
+      name: `세일즈팀`,
+      icon: RankingIcon,
+      tone: `green`,
+      members: 46,
+      progress: 71,
+      completion: 65,
+      required: 11,
+    },
+    {
+      name: `운영팀`,
+      icon: Settings02Icon,
+      tone: `amber`,
+      members: 57,
+      progress: 81,
+      completion: 75,
+      required: 7,
+    },
+    {
+      name: `공간디자인팀`,
+      icon: File01Icon,
+      tone: `sky`,
+      members: 29,
+      progress: 79,
+      completion: 72,
+      required: 5,
+    },
+  ];
+  const names = [
+    `김수민`,
+    `이지은`,
+    `박서준`,
+    `최하늘`,
+    `정유진`,
+    `김도윤`,
+    `윤서아`,
+    `오지훈`,
+    `한가람`,
+    `서민재`,
+    `조하은`,
+    `송현우`,
+    `강지수`,
+    `백승민`,
+    `임채원`,
+    `문태영`,
+    `장예린`,
+    `고은호`,
+    `유다인`,
+    `신재욱`,
+    `배서윤`,
+    `노준호`,
+    `홍예진`,
+    `안도현`,
+  ];
+  const positions = [`인턴`, `매니저`, `팀장`, `파트장`];
+  const employees = names.map((name, index) => {
+    const dept = departmentMeta[index % departmentMeta.length].name;
+    const progress = 48 + ((index * 13) % 51);
+    const courses = 3 + (index % 5);
+    return {
+      id: `SP${String(1024 + index).padStart(4, `0`)}`,
+      name,
+      dept,
+      position: positions[index % positions.length],
+      courses,
+      progress,
+      completed: Math.min(courses, Math.floor(progress / 20)),
+      status: `재직`,
+    };
+  });
+  if (!selectedDept)
+    return (
+      <section className="department-hub">
+        <div className="department-hub-intro">
+          <div>
+            <h2>부서를 선택해 주세요</h2>
+            <p>
+              부서별 학습 현황을 먼저 확인한 뒤 소속 학습자를 조회할 수
+              있습니다.
+            </p>
+          </div>
+          <span>
+            전체 학습자 <b>248명</b>
+          </span>
+        </div>
+        <div className="department-card-grid">
+          {departmentMeta.map((dept) => (
+            <button
+              className="department-card"
+              key={dept.name}
+              onClick={() => {
+                setSelectedDept(dept);
+                setQuery(``);
+                setPosition(`전체 직급`);
+              }}
+            >
+              <div className={`department-icon ${dept.tone}`}>
+                <Icon icon={dept.icon} size={22} />
+              </div>
+              <div className="department-card-title">
+                <h3>{dept.name}</h3>
+                <span>{dept.members}명</span>
+              </div>
+              <div className="department-card-metrics">
+                <div>
+                  <small>평균 진도율</small>
+                  <b>{dept.progress}%</b>
+                </div>
+                <div>
+                  <small>수료율</small>
+                  <b>{dept.completion}%</b>
+                </div>
+              </div>
+              <div className="department-progress">
+                <i style={{ width: `${dept.progress}%` }} />
+              </div>
+              <span className={dept.required > 7 ? `department-attention` : ``}>
+                {dept.required > 7 ? `관리 필요 ` : ``}
+                {dept.required}명
+              </span>
+              <Icon icon={ArrowRight01Icon} className="department-arrow" />
+            </button>
+          ))}
+        </div>
+      </section>
+    );
+  const deptEmployees = employees.filter(
+    (employee) =>
+      employee.dept === selectedDept.name &&
+      (!query ||
+        employee.name.includes(query) ||
+        employee.id.toLowerCase().includes(query.toLowerCase())) &&
+      (position === `전체 직급` || employee.position === position),
+  );
+  return (
+    <section className="department-detail-page">
+      <button className="department-back" onClick={() => setSelectedDept(null)}>
+        <Icon icon={ArrowLeft01Icon} />
+        `전체 부서`
+      </button>
+      <div className="department-detail-hero">
+        <div className={`department-icon large ${selectedDept.tone}`}>
+          <Icon icon={selectedDept.icon} size={27} />
+        </div>
+        <div>
+          <span>부서 학습 현황</span>
+          <h2>{selectedDept.name}</h2>
+          <p>
+            소속 학습자의 최근 6개월 교육 참여 데이터를 기준으로 집계했습니다.
+          </p>
+        </div>
+        <strong>
+          {selectedDept.members}
+          <small>명</small>
+        </strong>
+      </div>
+      <div className="department-summary-strip">
+        <div>
+          <span>평균 진도율</span>
+          <b>{selectedDept.progress}%</b>
+          <small>전월 대비 +3.2%p</small>
+        </div>
+        <div>
+          <span>수료율</span>
+          <b>{selectedDept.completion}%</b>
+          <small>전체 평균 대비 +1.8%p</small>
+        </div>
+        <div>
+          <span>수강 중인 과정</span>
+          <b>12개</b>
+          <small>필수교육 3개 포함</small>
+        </div>
+        <div>
+          <span>관리 필요 학습자</span>
+          <b className="attention-number">{selectedDept.required}명</b>
+          <small>진도율 50% 미만</small>
+        </div>
+      </div>
+      <div className="department-analysis-grid">
+        <article className="panel department-trend">
+          <div className="panel-head">
+            <div>
+              <h2>월별 평균 진도율</h2>
+              <p>3월부터 8월까지의 변화입니다.</p>
+            </div>
+          </div>
+          <div className="department-bars">
+            {[
+              selectedDept.progress - 18,
+              selectedDept.progress - 13,
+              selectedDept.progress - 11,
+              selectedDept.progress - 7,
+              selectedDept.progress - 4,
+              selectedDept.progress,
+            ].map((value, index) => (
+              <div key={index}>
+                <span style={{ height: `${value}%` }} />
+                <b>{value}%</b>
+                <small>{index + 3}월</small>
+              </div>
+            ))}
+          </div>
+        </article>
+        <article className="panel department-status">
+          <div className="panel-head">
+            <div>
+              <h2>학습 상태</h2>
+              <p>현재 배정된 교육 기준입니다.</p>
+            </div>
+          </div>
+          {[
+            [`수료`, selectedDept.completion, `green`],
+            [`수강 중`, Math.max(8, 92 - selectedDept.completion), `blue`],
+            [
+              `미수강`,
+              Math.max(
+                3,
+                100 -
+                  Math.max(8, 92 - selectedDept.completion) -
+                  selectedDept.completion,
+              ),
+              `coral`,
+            ],
+          ].map(([label, value, tone]) => (
+            <div className="department-status-row" key={label}>
+              <span>
+                <i className={tone} />
+                {label}
+              </span>
+              <b>{value}%</b>
+              <div>
+                <i className={tone} style={{ width: `${value}%` }} />
+              </div>
+            </div>
+          ))}
+        </article>
+      </div>
+      <div className="department-learners-head">
+        <div>
+          <h2>소속 학습자</h2>
+          <span>{deptEmployees.length}명</span>
+        </div>
+      </div>
+      <div className="learner-filter-panel compact-department-filter">
+        <div className="learner-filter-fields">
+          <div className="search">
+            <Icon icon={Search01Icon} />
+            <input
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="이름 또는 사번 검색"
+            />
+          </div>
+          <select
+            value={position}
+            onChange={(event) => setPosition(event.target.value)}
+          >
+            {[`전체 직급`, `인턴`, `매니저`, `파트장`, `팀장`].map((value) => (
+              <option key={value}>{value}</option>
+            ))}
+          </select>
+          <button
+            className="filter-reset"
+            onClick={() => {
+              setQuery(``);
+              setPosition(`전체 직급`);
+            }}
+          >
+            초기화
+          </button>
+        </div>
+      </div>
+      <div className="table-wrap learner-table department-learner-table">
+        <table>
+          <thead>
+            <tr>
+              <th>임직원</th>
+              <th>직급</th>
+              <th>수강 과정</th>
+              <th>평균 진도율</th>
+              <th>수료</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {deptEmployees.map((employee) => (
+              <tr key={employee.id}>
+                <td>
+                  <div className="person">
+                    <span>{employee.name[0]}</span>
+                    <div>
+                      <b>{employee.name}</b>
+                      <small>{employee.id}</small>
+                    </div>
+                  </div>
+                </td>
+                <td>{employee.position}</td>
+                <td>{employee.courses}개</td>
+                <td>
+                  <div className="table-progress">
+                    {d({ value: employee.progress })}
+                    <span>{employee.progress}%</span>
+                  </div>
+                </td>
+                <td>
+                  <b className="completed-count">{employee.completed}개</b>
+                </td>
+                <td>
+                  <button className="detail" onClick={() => onSelect(employee)}>
+                    자세히 보기
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  );
+}
+
+function LearnerProfilePage({ learner, onBack }) {
+  const learningCourses = a
+    .concat(a)
+    .slice(0, learner.courses)
+    .map((course, index) => ({
+      ...course,
+      learningProgress:
+        index < learner.completed
+          ? 100
+          : index === learner.completed
+            ? learner.progress
+            : 0,
+      state:
+        index < learner.completed
+          ? `수료`
+          : index === learner.completed
+            ? `수강 중`
+            : `미수강`,
+    }));
+  return (
+    <section className="learner-profile-page-full">
+      <button className="department-back" onClick={onBack}>
+        <Icon icon={ArrowLeft01Icon} />
+        학습자 목록으로
+      </button>
+      <div className="learner-profile-hero">
+        <div className="learner-profile-avatar">{learner.name[0]}</div>
+        <div className="learner-profile-identity">
+          <span>{learner.status}</span>
+          <h2>{learner.name}</h2>
+          <p>
+            {learner.dept} · {learner.position} · {learner.id}
+          </p>
+        </div>
+        <div className="learner-profile-contact">
+          <span>이메일</span>
+          <b>{learner.id.toLowerCase()}@sparkplus.co</b>
+          <span>입사일</span>
+          <b>2025.03.04</b>
+        </div>
+      </div>
+      <div className="learner-profile-summary">
+        <div>
+          <span>수강 과정</span>
+          <b>{learner.courses}개</b>
+        </div>
+        <div>
+          <span>수료 과정</span>
+          <b>{learner.completed}개</b>
+        </div>
+        <div>
+          <span>평균 진도율</span>
+          <b>{learner.progress}%</b>
+        </div>
+        <div>
+          <span>보유 뱃지</span>
+          <b>3개</b>
+        </div>
+      </div>
+      <div className="learner-profile-grid">
+        <article className="panel learner-progress-history">
+          <div className="panel-head">
+            <div>
+              <h2>학습 진도 추이</h2>
+              <p>최근 6개월 평균 진도율입니다.</p>
+            </div>
+          </div>
+          <div className="profile-line-chart">
+            <svg viewBox="0 0 560 180" preserveAspectRatio="none">
+              <defs>
+                <linearGradient id="learnerArea" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#3182f6" stopOpacity=".2" />
+                  <stop offset="100%" stopColor="#3182f6" stopOpacity="0" />
+                </linearGradient>
+              </defs>
+              <path
+                className="profile-area"
+                d={`M20,150 L124,128 L228,112 L332,94 L436,70 L540,${170 - learner.progress * 1.35} L540,170 L20,170 Z`}
+              />
+              <polyline
+                points={`20,150 124,128 228,112 332,94 436,70 540,${170 - learner.progress * 1.35}`}
+              />
+            </svg>
+            <div>
+              {[`3월`, `4월`, `5월`, `6월`, `7월`, `8월`].map((month) => (
+                <span key={month}>{month}</span>
+              ))}
+            </div>
+          </div>
+        </article>
+        <article className="panel learner-badges-panel">
+          <div className="panel-head">
+            <div>
+              <h2>획득 뱃지</h2>
+              <p>학습 성과로 받은 뱃지입니다.</p>
+            </div>
+          </div>
+          {[
+            [Medal01Icon, `이달의 TOP 3`, `gold`],
+            [Award01Icon, `수료 마스터`, `blue`],
+            [CheckmarkCircle02Icon, `필수교육 완료`, `green`],
+          ].map(([icon, label, tone]) => (
+            <div className="profile-badge-row" key={label}>
+              <span className={tone}>
+                <Icon icon={icon} />
+              </span>
+              <div>
+                <b>{label}</b>
+                <small>2026.08 획득</small>
+              </div>
+            </div>
+          ))}
+        </article>
+      </div>
+      <div className="learner-course-section">
+        <div>
+          <h2>수강 과정</h2>
+          <span>총 {learningCourses.length}개</span>
+        </div>
+        <div className="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>교육과정</th>
+                <th>교육 기간</th>
+                <th>진도율</th>
+                <th>학습 상태</th>
+                <th>최근 학습일</th>
+              </tr>
+            </thead>
+            <tbody>
+              {learningCourses.map((course, index) => (
+                <tr key={`${course.id}-${index}`}>
+                  <td>
+                    <b>{course.title}</b>
+                    <small>{course.category}</small>
+                  </td>
+                  <td>{course.period}</td>
+                  <td>
+                    <div className="rate-cell">
+                      <span>
+                        <i style={{ width: `${course.learningProgress}%` }} />
+                      </span>
+                      <b>{course.learningProgress}%</b>
+                    </div>
+                  </td>
+                  <td>
+                    <span
+                      className={`learning-state ${course.state === `수료` ? `complete` : course.state === `수강 중` ? `current` : `none`}`}
+                    >
+                      {course.state}
+                    </span>
+                  </td>
+                  <td>
+                    {course.state === `미수강`
+                      ? `—`
+                      : `2026.08.${String(8 - index).padStart(2, `0`)}`}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function y({
   data: e,
   query: t,
@@ -1779,6 +2305,7 @@ function PerformanceAnalysisV2() {
   const [dept, setDept] = r.useState(`전체 소속`);
   const [position, setPosition] = r.useState(`전체 직급`);
   const [sort, setSort] = r.useState(`수강 인원순`);
+  const [manageOnly, setManageOnly] = r.useState(false);
   const [page, setPage] = r.useState(1);
   const [selected, setSelected] = r.useState(null);
   const names = [
@@ -1837,7 +2364,8 @@ function PerformanceAnalysisV2() {
         (dept === `전체 소속` || item.dept === `전체` || item.dept === dept) &&
         (position === `전체 직급` ||
           item.position === `전체` ||
-          item.position === position),
+          item.position === position) &&
+        (!manageOnly || item.rate < 65),
     )
     .sort((a, b) =>
       sort === `수료율 높은순`
@@ -1860,6 +2388,7 @@ function PerformanceAnalysisV2() {
     setDept(`전체 소속`);
     setPosition(`전체 직급`);
     setSort(`수강 인원순`);
+    setManageOnly(false);
     setPage(1);
   };
   return (
@@ -1923,16 +2452,6 @@ function PerformanceAnalysisV2() {
           <small className="up">전월보다 3.8%p 상승</small>
         </div>
         <div>
-          <span>성과가 높은 과정</span>
-          <b>{chartRows[0]?.name || `-`}</b>
-          <small>수료율 {chartRows[0]?.rate || 0}%</small>
-        </div>
-        <div>
-          <span>관리 필요</span>
-          <b>{filtered.filter((item) => item.rate < 65).length}개 과정</b>
-          <small className="down">수료율 65% 미만</small>
-        </div>
-        <div>
           <span>가장 큰 소속 격차</span>
           <b>18.4%p</b>
           <small>개발팀 ↔ 세일즈팀</small>
@@ -1991,6 +2510,15 @@ function PerformanceAnalysisV2() {
           </button>
         </div>
         <div>
+          <button
+            className={manageOnly ? `manage-filter active` : `manage-filter`}
+            onClick={() => {
+              setManageOnly(!manageOnly);
+              setPage(1);
+            }}
+          >
+            관리 필요 과정
+          </button>
           <span>총 {filtered.length}개</span>
           <select
             value={sort}
