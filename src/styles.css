@@ -7029,6 +7029,40 @@ html[data-theme="dark"] .home-badge-main > span {
   }
 }
 
+/* Admin course cards reuse the exact user catalog card structure */
+.admin-course-card-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 16px !important;
+}
+.admin-course-user-copy {
+  min-width: 0;
+}
+.admin-course-user-copy .course-visual {
+  height: 148px !important;
+}
+.admin-course-user-copy .course-card-body {
+  padding: 20px !important;
+}
+.admin-course-user-copy .admin-course-meta {
+  justify-content: space-between;
+}
+.admin-course-user-copy .single-admin-action {
+  grid-template-columns: 1fr !important;
+}
+.admin-course-user-copy .single-admin-action .primary {
+  width: 100%;
+}
+@media (max-width: 1050px) {
+  .admin-course-card-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+@media (max-width: 700px) {
+  .admin-course-card-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
 /* Final admin scale system — match the spacious user experience */
 .admin-portal > .topbar {
   min-height: 82px !important;
