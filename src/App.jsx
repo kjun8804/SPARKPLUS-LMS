@@ -386,14 +386,15 @@ function f({ logout: e }) {
         ],
       }),
       (0, i.jsxs)(`main`, {
-        className: `main ${t === `home` ? `admin-home-main` : ``}`,
+        className: `main ${t === `home` ? `admin-home-main` : t === `courses` ? `admin-courses-main` : ``}`,
         children: [
           (0, i.jsxs)(`div`, {
-            className: `page-heading ${t === `home` ? `admin-home-heading home-welcome` : ``}`,
+            className: `page-heading ${t === `home` ? `admin-home-heading home-welcome` : t === `courses` ? `admin-course-heading home-welcome` : ``}`,
             children: [
               (0, i.jsxs)(`div`, {
                 children: [
                   t !== `home` &&
+                    t !== `courses` &&
                     (0, i.jsx)(`p`, { children: `SPARKPLUS LMS ADMIN` }),
                   (0, i.jsx)(`h1`, { children: l[t][0] }),
                   (0, i.jsx)(`span`, { children: l[t][1] }),
@@ -775,12 +776,25 @@ function CourseAdminGrid({ onEdit }) {
   const [query, setQuery] = r.useState(``);
   const [category, setCategory] = r.useState(`전체 분야`);
   const [status, setStatus] = r.useState(`전체 상태`);
-  const filtered = a.filter(
-    (course) =>
-      (!query || course.title.includes(query)) &&
-      (category === `전체 분야` || course.category === category) &&
-      (status === `전체 상태` || course.status === status),
-  );
+  const [sort, setSort] = r.useState(`최신 등록순`);
+  const [courses, setCourses] = r.useState(() => [...a]);
+  const [openMenu, setOpenMenu] = r.useState(null);
+  const filtered = courses
+    .filter(
+      (course) =>
+        (!query || course.title.includes(query)) &&
+        (category === `전체 분야` || course.category === category) &&
+        (status === `전체 상태` || course.status === status),
+    )
+    .sort((first, second) =>
+      sort === `최신 등록순` ? second.id - first.id : first.id - second.id,
+    );
+  const deleteCourse = (course) => {
+    if (confirm(`'${course.title}' 교육과정을 삭제하시겠습니까?`)) {
+      setCourses((current) => current.filter((item) => item.id !== course.id));
+      setOpenMenu(null);
+    }
+  };
   return (
     <section className="course-admin-grid-page">
       <div className="course-card-filter">
@@ -823,44 +837,101 @@ function CourseAdminGrid({ onEdit }) {
         </button>
       </div>
       <div className="course-admin-result">
-        <span>전체 교육과정</span>
-        <b>{filtered.length}개</b>
+        <div>
+          <span>전체 교육과정</span>
+          <b>{filtered.length}개</b>
+        </div>
+        <select
+          className="course-sort-select"
+          aria-label="교육과정 정렬"
+          value={sort}
+          onChange={(event) => setSort(event.target.value)}
+        >
+          <option>최신 등록순</option>
+          <option>오래된 등록순</option>
+        </select>
       </div>
       <div className="admin-course-card-grid">
         {filtered.map((course, index) => (
           <article
-            className="course-card toss-card admin-course-user-copy"
+            className="course-card toss-card admin-course-management-card"
             key={course.id}
+            role="button"
+            tabIndex={0}
+            onClick={() => onEdit(course)}
+            onKeyDown={(event) => {
+              if (event.key === `Enter` || event.key === ` `) onEdit(course);
+            }}
           >
-            <div className="visual-wrap">
+            <div className="visual-wrap admin-course-visual">
               <J
                 accent={[`blue`, `green`, `purple`, `red`][index % 4]}
                 label={course.category}
               />
               <span
-                className={`status-ribbon ${course.status === `종료` ? `danger` : course.status === `오픈 전` ? `muted` : ``}`}
+                className={`admin-course-status ${course.status === `운영 중` ? `running` : course.status === `오픈 전` ? `ready` : `closed`}`}
               >
                 {course.status}
               </span>
+              <div className="admin-course-menu-wrap">
+                <button
+                  type="button"
+                  className="admin-course-more"
+                  aria-label={`${course.title} 관리 메뉴`}
+                  aria-expanded={openMenu === course.id}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    setOpenMenu(openMenu === course.id ? null : course.id);
+                  }}
+                >
+                  ⋯
+                </button>
+                {openMenu === course.id && (
+                  <div className="admin-course-menu">
+                    <button
+                      type="button"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        setOpenMenu(null);
+                        onEdit(course);
+                      }}
+                    >
+                      <Icon icon={Edit02Icon} size={15} /> 수정
+                    </button>
+                    <button
+                      type="button"
+                      className="delete"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        deleteCourse(course);
+                      }}
+                    >
+                      <Icon icon={Delete02Icon} size={15} /> 삭제
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
             <div className="course-card-body">
               <div className="course-labels">
                 <span className="category-text">{course.category}</span>
               </div>
               <h2>{course.title}</h2>
-              <div className="card-meta admin-course-meta">
-                <span>▣ {course.period}</span>
-                <span>전체 학습자 {course.learners}명</span>
-              </div>
-              <div className="card-actions single-admin-action">
-                <button className="primary" onClick={() => onEdit(course)}>
-                  과정 관리
-                </button>
+              <div className="admin-course-period">{course.period}</div>
+              <div className="admin-course-metrics">
+                <span>수강 {course.learners}명</span>
+                <i aria-hidden="true" />
+                <span>수료율 {course.rate}%</span>
               </div>
             </div>
           </article>
         ))}
       </div>
+      {filtered.length === 0 && (
+        <div className="admin-course-empty">
+          조건에 맞는 교육과정이 없습니다.
+        </div>
+      )}
     </section>
   );
 }
