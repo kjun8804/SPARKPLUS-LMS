@@ -5935,21 +5935,27 @@ function LearningRewardsPage() {
               const index = badges.findIndex((item) => item.name === badge.name);
               return (
               <article className="fixed-badge-card" key={badge.name}>
-                <div className={`fixed-badge-icon ${badge.tone}`}>
-                  <Icon icon={badge.icon} size={25} />
-                </div>
-                <div className="badge-switch-wrap"><span>{enabled[index] ? `사용 중` : `사용 안 함`}</span>
-                  <button aria-label={`${badge.name} 활성화`} className={`rule-switch ${enabled[index] ? `on` : ``}`} onClick={() => setEnabled((current) => ({ ...current, [index]: !current[index] }))}><i /></button>
+                <div className="badge-card-head">
+                  <div className={`fixed-badge-icon ${badge.tone}`}>
+                    <Icon icon={badge.icon} size={25} />
+                  </div>
+                  <div className="badge-switch-wrap">
+                    <span>{enabled[index] ? `사용 중` : `사용 안 함`}</span>
+                    <button aria-label={`${badge.name} 활성화`} className={`rule-switch ${enabled[index] ? `on` : ``}`} onClick={() => setEnabled((current) => ({ ...current, [index]: !current[index] }))}><i /></button>
+                  </div>
                 </div>
                 <div className="fixed-badge-copy">
-                  <span>{badge.type}</span>
+                  <span className="badge-type-chip">{badge.type}</span>
                   <h3>{badge.name}</h3>
                   <p>{badge.condition}</p>
                 </div>
-                <div className="badge-card-footer">
-                  <button className="badge-people-button" onClick={() => setDetail({ type: `badgePeople`, ...badge })}><b>현재 획득 {badge.people}명</b><span>지급 현황 보기</span></button>
+                <div className="badge-card-meta">
+                  <b>현재 획득 <strong>{badge.people}명</strong></b>
                   <span className="auto-badge">자동 지급</span>
-                  <button className="badge-criteria-button" onClick={() => setDetail({ type: `badge`, ...badge })}>지급 기준 보기</button>
+                </div>
+                <div className="badge-card-actions">
+                  <button onClick={() => setDetail({ type: `badgePeople`, ...badge })}>지급 현황 보기</button>
+                  <button onClick={() => setDetail({ type: `badge`, ...badge })}>기준 보기/수정</button>
                 </div>
               </article>
             )})}
