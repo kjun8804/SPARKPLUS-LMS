@@ -386,15 +386,16 @@ function f({ logout: e }) {
         ],
       }),
       (0, i.jsxs)(`main`, {
-        className: `main ${t === `home` ? `admin-home-main` : t === `courses` ? `admin-courses-main` : ``}`,
+        className: `main ${t === `home` ? `admin-home-main` : t === `courses` ? `admin-courses-main` : t === `learners` ? `admin-learners-main` : ``}`,
         children: [
           (0, i.jsxs)(`div`, {
-            className: `page-heading ${t === `home` ? `admin-home-heading home-welcome` : t === `courses` ? `admin-course-heading home-welcome` : ``}`,
+            className: `page-heading ${t === `home` ? `admin-home-heading home-welcome` : t === `courses` ? `admin-course-heading home-welcome` : t === `learners` ? `admin-learner-heading home-welcome` : ``}`,
             children: [
               (0, i.jsxs)(`div`, {
                 children: [
                   t !== `home` &&
                     t !== `courses` &&
+                    t !== `learners` &&
                     (0, i.jsx)(`p`, { children: `SPARKPLUS LMS ADMIN` }),
                   (0, i.jsx)(`h1`, { children: l[t][0] }),
                   (0, i.jsx)(`span`, { children: l[t][1] }),
@@ -2114,7 +2115,7 @@ function v({ selected: e, onBack: t }) {
     </div>
   );
 }
-function LearnerDepartmentHub({ onSelect }) {
+function LegacyLearnerDepartmentHub({ onSelect }) {
   const [selectedDept, setSelectedDept] = r.useState(null);
   const [query, setQuery] = r.useState(``);
   const [position, setPosition] = r.useState(`전체 직급`);
@@ -2463,6 +2464,301 @@ function LearnerDepartmentHub({ onSelect }) {
           </tbody>
         </table>
       </div>
+    </section>
+  );
+}
+
+function LearnerDepartmentHub({ onSelect }) {
+  const departmentMeta = [
+    {
+      name: `People팀`,
+      icon: UserGroupIcon,
+      tone: `blue`,
+      members: 24,
+      progress: 84,
+      completion: 78,
+      required: 3,
+    },
+    {
+      name: `개발팀`,
+      icon: Analytics01Icon,
+      tone: `violet`,
+      members: 54,
+      progress: 76,
+      completion: 69,
+      required: 8,
+    },
+    {
+      name: `마케팅팀`,
+      icon: ChartHistogramIcon,
+      tone: `coral`,
+      members: 38,
+      progress: 88,
+      completion: 83,
+      required: 4,
+    },
+    {
+      name: `세일즈팀`,
+      icon: RankingIcon,
+      tone: `green`,
+      members: 46,
+      progress: 71,
+      completion: 65,
+      required: 11,
+    },
+    {
+      name: `운영팀`,
+      icon: Settings02Icon,
+      tone: `amber`,
+      members: 57,
+      progress: 81,
+      completion: 75,
+      required: 7,
+    },
+    {
+      name: `공간디자인팀`,
+      icon: File01Icon,
+      tone: `sky`,
+      members: 29,
+      progress: 79,
+      completion: 72,
+      required: 5,
+    },
+  ];
+  const names = [
+    `김수민`,
+    `이지은`,
+    `박서준`,
+    `최하늘`,
+    `정유진`,
+    `김도윤`,
+    `윤서아`,
+    `오지훈`,
+    `한가람`,
+    `서민재`,
+    `조하은`,
+    `송현우`,
+    `강지수`,
+    `백승민`,
+    `임채원`,
+    `문태영`,
+    `장예린`,
+    `고은호`,
+    `유다인`,
+    `신재욱`,
+    `배서윤`,
+    `노준호`,
+    `홍예진`,
+    `안도현`,
+  ];
+  const positions = [`인턴`, `매니저`, `팀장`, `파트장`];
+  const employees = names.map((name, index) => {
+    const dept = departmentMeta[index % departmentMeta.length].name;
+    const progress = 48 + ((index * 13) % 51);
+    const courses = 3 + (index % 5);
+    return {
+      id: `SP${String(1024 + index).padStart(4, `0`)}`,
+      name,
+      dept,
+      position: positions[index % positions.length],
+      courses,
+      progress,
+      completed: Math.min(courses, Math.floor(progress / 20)),
+      status: `재직`,
+      learningStatus:
+        progress >= 85 ? `수료` : progress < 60 ? `관리 필요` : `수강 중`,
+    };
+  });
+  const [selectedDept, setSelectedDept] = r.useState(null);
+  const [query, setQuery] = r.useState(``);
+  const [department, setDepartment] = r.useState(`전체 부서`);
+  const [position, setPosition] = r.useState(`전체 직급`);
+  const [learningStatus, setLearningStatus] = r.useState(`전체 학습 상태`);
+  const activeDepartment = selectedDept || department;
+  const filteredEmployees = employees.filter(
+    (employee) =>
+      (!query ||
+        employee.name.includes(query) ||
+        employee.dept.includes(query) ||
+        employee.id.toLowerCase().includes(query.toLowerCase())) &&
+      (activeDepartment === `전체 부서` ||
+        employee.dept === activeDepartment) &&
+      (position === `전체 직급` || employee.position === position) &&
+      (learningStatus === `전체 학습 상태` ||
+        employee.learningStatus === learningStatus),
+  );
+  const resetFilters = () => {
+    setQuery(``);
+    setDepartment(`전체 부서`);
+    setPosition(`전체 직급`);
+    setLearningStatus(`전체 학습 상태`);
+    setSelectedDept(null);
+  };
+
+  return (
+    <section className="department-hub learner-management-hub">
+      <div className="learner-management-filter">
+        <div className="search">
+          <Icon icon={Search01Icon} />
+          <input
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="이름 또는 부서 검색"
+          />
+        </div>
+        <select
+          value={department}
+          aria-label="부서"
+          onChange={(event) => {
+            setDepartment(event.target.value);
+            setSelectedDept(null);
+          }}
+        >
+          {[`전체 부서`, ...departmentMeta.map((dept) => dept.name)].map(
+            (value) => (
+              <option key={value}>{value}</option>
+            ),
+          )}
+        </select>
+        <select
+          value={position}
+          aria-label="직급"
+          onChange={(event) => setPosition(event.target.value)}
+        >
+          {[`전체 직급`, `인턴`, `매니저`, `파트장`, `팀장`].map((value) => (
+            <option key={value}>{value}</option>
+          ))}
+        </select>
+        <select
+          value={learningStatus}
+          aria-label="학습 상태"
+          onChange={(event) => setLearningStatus(event.target.value)}
+        >
+          {[`전체 학습 상태`, `관리 필요`, `수강 중`, `수료`].map((value) => (
+            <option key={value}>{value}</option>
+          ))}
+        </select>
+        <button className="filter-reset" onClick={resetFilters}>
+          <Icon icon={RefreshIcon} /> 초기화
+        </button>
+      </div>
+
+      <div className="department-hub-intro learner-department-head">
+        <div>
+          <h2>부서별 학습 현황</h2>
+          <p>부서별 학습 현황을 확인하고 소속 학습자를 관리할 수 있습니다.</p>
+        </div>
+        <span>
+          전체 학습자 <b>248명</b>
+        </span>
+      </div>
+
+      <div className="department-card-grid learner-department-grid">
+        {departmentMeta.map((dept) => (
+          <button
+            className={`department-card learner-department-card ${selectedDept === dept.name ? `selected` : ``}`}
+            key={dept.name}
+            onClick={() => {
+              setSelectedDept(dept.name);
+              setDepartment(`전체 부서`);
+            }}
+          >
+            <div className="learner-department-card-top">
+              <div className={`department-icon ${dept.tone}`}>
+                <Icon icon={dept.icon} size={19} />
+              </div>
+              <div className="department-card-title">
+                <h3>{dept.name}</h3>
+                <span>{dept.members}명</span>
+              </div>
+            </div>
+            <div className="learner-department-metrics">
+              <div>
+                <small>평균 진도율</small>
+                <b>{dept.progress}%</b>
+              </div>
+              <div>
+                <small>수료율</small>
+                <b>{dept.completion}%</b>
+              </div>
+              <div className={dept.required > 0 ? `needs-attention` : ``}>
+                <small>관리 필요</small>
+                <b>{dept.required}명</b>
+              </div>
+            </div>
+          </button>
+        ))}
+      </div>
+
+      <div className="learner-list-head">
+        <div>
+          <h2>{selectedDept ? `${selectedDept} 학습자` : `전체 학습자`}</h2>
+          <span>{filteredEmployees.length}명</span>
+        </div>
+        {selectedDept && (
+          <button onClick={() => setSelectedDept(null)}>전체 보기</button>
+        )}
+      </div>
+
+      <div className="table-wrap learner-table learner-management-table">
+        <table>
+          <thead>
+            <tr>
+              <th>이름</th>
+              <th>부서</th>
+              <th>직급</th>
+              <th>수강 중 과정</th>
+              <th>평균 진도율</th>
+              <th>수료 현황</th>
+              <th>관리</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredEmployees.map((employee) => (
+              <tr key={employee.id}>
+                <td>
+                  <div className="person">
+                    <span>{employee.name[0]}</span>
+                    <div>
+                      <b>{employee.name}</b>
+                      <small>{employee.id}</small>
+                    </div>
+                  </div>
+                </td>
+                <td>{employee.dept}</td>
+                <td>{employee.position}</td>
+                <td>{Math.max(0, employee.courses - employee.completed)}개</td>
+                <td>
+                  <div className="table-progress">
+                    {d({ value: employee.progress })}
+                    <span>{employee.progress}%</span>
+                  </div>
+                </td>
+                <td>
+                  <span
+                    className={`learner-state ${employee.learningStatus === `수료` ? `complete` : employee.learningStatus === `관리 필요` ? `attention` : `learning`}`}
+                  >
+                    {employee.learningStatus}
+                  </span>
+                  <small className="learner-completion-count">
+                    {employee.completed}/{employee.courses} 과정
+                  </small>
+                </td>
+                <td>
+                  <button className="detail" onClick={() => onSelect(employee)}>
+                    자세히 보기
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      {filteredEmployees.length === 0 && (
+        <div className="learner-management-empty">
+          조건에 맞는 학습자가 없습니다.
+        </div>
+      )}
     </section>
   );
 }
