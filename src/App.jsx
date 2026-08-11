@@ -5954,8 +5954,8 @@ function LearningRewardsPage() {
                   <span className="auto-badge">자동 지급</span>
                 </div>
                 <div className="badge-card-actions">
-                  <button onClick={() => setDetail({ type: `badgePeople`, ...badge })}>지급 현황 보기</button>
-                  <button onClick={() => setDetail({ type: `badge`, ...badge })}>기준 보기/수정</button>
+                  <button title={`${badge.name} 지급 현황`} onClick={() => setDetail({ type: `badgePeople`, ...badge })}>지급 현황 보기</button>
+                  <button title={`${badge.name} 지급 기준`} onClick={() => setDetail({ type: `badge`, ...badge })}>기준 보기/수정</button>
                 </div>
               </article>
             )})}
