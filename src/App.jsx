@@ -5039,6 +5039,438 @@ function StatisticsReportPage() {
   const [query, setQuery] = r.useState(``);
   const [dept, setDept] = r.useState(`전체 부서`);
   const [position, setPosition] = r.useState(`전체 직급`);
+  const [period, setPeriod] = r.useState(`최근 6개월`);
+  const [sort, setSort] = r.useState(`수료율 높은 순`);
+  const [detail, setDetail] = r.useState(null);
+  const [hoveredMonth, setHoveredMonth] = r.useState(null);
+  const courses = [
+    {
+      title: `개인정보보호 필수교육`,
+      learners: 214,
+      complete: 188,
+      incomplete: 26,
+      rate: 88,
+      score: 4.5,
+    },
+    {
+      title: `생성형 AI 업무 활용`,
+      learners: 126,
+      complete: 103,
+      incomplete: 23,
+      rate: 82,
+      score: 4.7,
+    },
+    {
+      title: `데이터 분석 기초 입문`,
+      learners: 84,
+      complete: 66,
+      incomplete: 18,
+      rate: 79,
+      score: 4.6,
+    },
+    {
+      title: `처음 맡는 팀장을 위한 리더십`,
+      learners: 32,
+      complete: 23,
+      incomplete: 9,
+      rate: 72,
+      score: 4.8,
+    },
+    {
+      title: `협업을 높이는 커뮤니케이션`,
+      learners: 68,
+      complete: 46,
+      incomplete: 22,
+      rate: 68,
+      score: 3.9,
+    },
+  ];
+  const months = [
+    { m: `3월`, rate: 58 },
+    { m: `4월`, rate: 62 },
+    { m: `5월`, rate: 66 },
+    { m: `6월`, rate: 69 },
+    { m: `7월`, rate: 73 },
+    { m: `8월`, rate: 78 },
+  ];
+  const departments = [
+    [`마케팅팀`, 88],
+    [`People팀`, 84],
+    [`운영팀`, 81],
+    [`개발팀`, 76],
+    [`세일즈팀`, 71],
+  ];
+  const visible = courses
+    .filter((item) => !query || item.title.includes(query))
+    .sort((a, b) =>
+      sort === `수료율 낮은 순`
+        ? a.rate - b.rate
+        : sort === `만족도 높은 순`
+          ? b.score - a.score
+          : sort === `만족도 낮은 순`
+            ? a.score - b.score
+            : sort === `참여 인원 많은 순`
+              ? b.learners - a.learners
+              : b.rate - a.rate,
+    );
+  const points = months.map((item, index) => ({
+    x: 62 + index * 104,
+    y: 250 - item.rate * 1.9,
+    ...item,
+  }));
+  const download = () => {
+    const csv = `교육과정,학습 현황,수료율,만족도\n${courses.map((course) => `${course.title},${course.complete}/${course.learners}명 수료,${course.rate}%,${course.score}/5`).join(`\n`)}`;
+    const link = document.createElement(`a`);
+    link.href = URL.createObjectURL(
+      new Blob([`\ufeff${csv}`], { type: `text/csv` }),
+    );
+    link.download = `SPARKPLUS_LMS_교육성과리포트.csv`;
+    link.click();
+    URL.revokeObjectURL(link.href);
+  };
+  const reset = () => {
+    setQuery(``);
+    setDept(`전체 부서`);
+    setPosition(`전체 직급`);
+    setPeriod(`최근 6개월`);
+  };
+  return (
+    <section className="results-section statistics-report-page statistics-report-v2">
+      <div className="report-actions">
+        <span>최근 업데이트 2026.08.10</span>
+        <button className="primary" onClick={download}>
+          <Icon icon={Download01Icon} />
+          리포트 다운로드
+        </button>
+      </div>
+      <div className="results-filter statistics-filter">
+        <div className="search">
+          <Icon icon={Search01Icon} />
+          <input
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="교육과정 검색"
+          />
+        </div>
+        <select value={dept} onChange={(event) => setDept(event.target.value)}>
+          {[`전체 부서`, `People팀`, `개발팀`, `마케팅팀`, `세일즈팀`].map(
+            (value) => (
+              <option key={value}>{value}</option>
+            ),
+          )}
+        </select>
+        <select
+          value={position}
+          onChange={(event) => setPosition(event.target.value)}
+        >
+          {[`전체 직급`, `인턴`, `매니저`, `파트장`, `팀장`].map((value) => (
+            <option key={value}>{value}</option>
+          ))}
+        </select>
+        <select
+          value={period}
+          onChange={(event) => setPeriod(event.target.value)}
+        >
+          {[`최근 6개월`, `최근 3개월`, `올해 전체`].map((value) => (
+            <option key={value}>{value}</option>
+          ))}
+        </select>
+        <button className="filter-reset" onClick={reset}>
+          <Icon icon={RefreshIcon} />
+          초기화
+        </button>
+      </div>
+      <div className="statistics-kpi-grid">
+        <div>
+          <span>평균 수료율</span>
+          <strong>78%</strong>
+          <small>전월 대비 +4.2%p</small>
+        </div>
+        <div>
+          <span>평균 만족도</span>
+          <strong>4.7 / 5</strong>
+          <small>5점 만점</small>
+        </div>
+        <div>
+          <span>교육 참여 인원</span>
+          <strong>248명</strong>
+          <small>이번 달 +18명</small>
+        </div>
+      </div>
+      <article className="results-card completion-trend-card">
+        <div className="results-card-head">
+          <div>
+            <h2>월별 수료율 추이</h2>
+            <p>최근 6개월 동안의 최종 수료율 변화입니다.</p>
+          </div>
+          <span className="single-legend">수료율</span>
+        </div>
+        <div className="completion-chart-wrap">
+          <svg viewBox="0 0 650 280" preserveAspectRatio="none">
+            <g className="report-y-labels">
+              {[100, 75, 50, 25, 0].map((value, index) => (
+                <text key={value} x="5" y={60 + index * 47}>
+                  {value}%
+                </text>
+              ))}
+            </g>
+            <g className="report-grid">
+              {[55, 102, 149, 196, 243].map((y) => (
+                <line key={y} x1="55" x2="600" y1={y} y2={y} />
+              ))}
+            </g>
+            <polyline
+              points={points.map((point) => `${point.x},${point.y}`).join(` `)}
+              className="report-line completion"
+            />
+            {points.map((point, index) => (
+              <g
+                key={point.m}
+                className="trend-point"
+                onMouseEnter={() => setHoveredMonth(index)}
+                onMouseLeave={() => setHoveredMonth(null)}
+              >
+                <circle
+                  cx={point.x}
+                  cy={point.y}
+                  r="13"
+                  className="trend-hit"
+                />
+                <circle cx={point.x} cy={point.y} r="5" className="trend-dot" />
+                {hoveredMonth === index && (
+                  <g className="trend-tooltip">
+                    <rect
+                      x={point.x - 36}
+                      y={point.y - 47}
+                      width="72"
+                      height="30"
+                      rx="8"
+                    />
+                    <text x={point.x} y={point.y - 28}>
+                      {point.m} {point.rate}%
+                    </text>
+                  </g>
+                )}
+              </g>
+            ))}
+          </svg>
+          <div className="report-months">
+            {months.map((item) => (
+              <span key={item.m}>{item.m}</span>
+            ))}
+          </div>
+        </div>
+      </article>
+      <div className="performance-focus-grid">
+        <article className="results-card department-rate-card">
+          <div className="results-card-head">
+            <div>
+              <h2>부서별 수료율</h2>
+              <p>주요 부서의 평균 수료율을 비교합니다.</p>
+            </div>
+            <button>전체 보기</button>
+          </div>
+          <div className="department-rate-list">
+            {departments.map(([name, value]) => (
+              <div className="dept-result-row" key={name}>
+                <span>{name}</span>
+                <div>
+                  <i style={{ width: `${value}%` }} />
+                </div>
+                <b>{value}%</b>
+              </div>
+            ))}
+          </div>
+        </article>
+        <article className="results-card attention-course-card">
+          <div className="results-card-head">
+            <div>
+              <h2>관리 필요 과정</h2>
+              <p>우선 확인이 필요한 교육과정입니다.</p>
+            </div>
+          </div>
+          <div className="attention-course-list">
+            {[courses[3], courses[4], courses[2]].map((course, index) => (
+              <button key={course.title} onClick={() => setDetail(course)}>
+                <div>
+                  <b>{course.title}</b>
+                  <span>
+                    수료율 {course.rate}%
+                    {course.score < 4.2 ? ` · 만족도 ${course.score}` : ``}
+                    {course.incomplete >= 18
+                      ? ` · 미수료 ${course.incomplete}명`
+                      : ``}
+                  </span>
+                </div>
+                <em>
+                  {index === 0
+                    ? `수료율 확인 필요`
+                    : index === 1
+                      ? `성과 확인 필요`
+                      : `미수료 확인`}
+                </em>
+                <i>›</i>
+              </button>
+            ))}
+          </div>
+        </article>
+      </div>
+      <div className="results-list-head">
+        <div>
+          <h2>과정별 성과 요약</h2>
+          <span>{visible.length}개 과정</span>
+        </div>
+        <select value={sort} onChange={(event) => setSort(event.target.value)}>
+          {[
+            `수료율 높은 순`,
+            `수료율 낮은 순`,
+            `만족도 높은 순`,
+            `만족도 낮은 순`,
+            `참여 인원 많은 순`,
+          ].map((value) => (
+            <option key={value}>{value}</option>
+          ))}
+        </select>
+      </div>
+      <div className="table-wrap results-table performance-summary-table">
+        <table>
+          <thead>
+            <tr>
+              <th>교육과정</th>
+              <th>학습 현황</th>
+              <th>수료율</th>
+              <th>만족도</th>
+              <th>상세</th>
+            </tr>
+          </thead>
+          <tbody>
+            {visible.map((item) => (
+              <tr key={item.title}>
+                <td>
+                  <b>{item.title}</b>
+                </td>
+                <td>
+                  <div className="learning-result-cell">
+                    <b>
+                      {item.complete} / {item.learners}명 수료
+                    </b>
+                    <span>미수료 {item.incomplete}명</span>
+                  </div>
+                </td>
+                <td>
+                  <b className="performance-rate">{item.rate}%</b>
+                </td>
+                <td>{item.score} / 5</td>
+                <td>
+                  <button
+                    className="analysis-button"
+                    onClick={() => setDetail(item)}
+                  >
+                    상세 보기
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      {detail && (
+        <PerformanceDetailDrawer
+          item={detail}
+          onClose={() => setDetail(null)}
+        />
+      )}
+    </section>
+  );
+}
+
+function PerformanceDetailDrawer({ item, onClose }) {
+  const trend = [58, 62, 66, 69, 73, item.rate];
+  return (
+    <ResultsDetailModal
+      title="과정 상세 성과"
+      subtitle={item.title}
+      onClose={onClose}
+    >
+      <div className="performance-detail-summary">
+        <div>
+          <span>현재 수료율</span>
+          <b>{item.rate}%</b>
+        </div>
+        <div>
+          <span>평균 만족도</span>
+          <b>{item.score} / 5</b>
+        </div>
+        <div>
+          <span>미수료</span>
+          <b>{item.incomplete}명</b>
+        </div>
+      </div>
+      <section className="performance-detail-section">
+        <h3>최근 수료율 변화</h3>
+        <div className="detail-trend-bars">
+          {trend.map((value, index) => (
+            <div key={index}>
+              <i>
+                <b style={{ height: `${value}%` }} />
+              </i>
+              <span>{index + 3}월</span>
+              <small>{value}%</small>
+            </div>
+          ))}
+        </div>
+      </section>
+      <section className="performance-detail-section">
+        <h3>부서별 수료 현황</h3>
+        <div className="department-rate-list compact">
+          {[
+            [`People팀`, Math.min(96, item.rate + 6)],
+            [`개발팀`, Math.max(55, item.rate - 4)],
+            [`마케팅팀`, Math.min(98, item.rate + 9)],
+            [`세일즈팀`, Math.max(52, item.rate - 7)],
+          ].map(([name, value]) => (
+            <div className="dept-result-row" key={name}>
+              <span>{name}</span>
+              <div>
+                <i style={{ width: `${value}%` }} />
+              </div>
+              <b>{value}%</b>
+            </div>
+          ))}
+        </div>
+      </section>
+      <section className="performance-detail-section survey-summary">
+        <h3>설문 결과 요약</h3>
+        <div>
+          <span>
+            응답률 <b>74%</b>
+          </span>
+          <span>
+            만족도 <b>{item.score} / 5</b>
+          </span>
+        </div>
+        <p>
+          {item.score < 4.2
+            ? `실습 시간과 교육 난이도에 대한 개선 의견이 반복되고 있습니다.`
+            : `실무 사례와 교육 구성에 대한 긍정 응답이 높게 나타났습니다.`}
+        </p>
+      </section>
+      <div className="analysis-insight attention">
+        <b>관리 인사이트</b>
+        <p>
+          {item.rate < 75
+            ? `수료율이 전체 평균보다 낮습니다. 미수료자 안내와 학습 기한 확인을 권장합니다.`
+            : `수료율은 안정적입니다. 부서별 격차가 큰 구간을 중심으로 학습 참여를 점검해 주세요.`}
+        </p>
+      </div>
+    </ResultsDetailModal>
+  );
+}
+
+function LegacyStatisticsReportPage() {
+  const [query, setQuery] = r.useState(``);
+  const [dept, setDept] = r.useState(`전체 부서`);
+  const [position, setPosition] = r.useState(`전체 직급`);
   const [period, setPeriod] = r.useState(`최근 3개월`);
   const [sort, setSort] = r.useState(`수료율 높은 순`);
   const [detail, setDetail] = r.useState(null);
