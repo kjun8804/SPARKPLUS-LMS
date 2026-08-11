@@ -12449,8 +12449,14 @@ html[data-theme="dark"] .admin-course-more {
   gap: 18px !important;
 }
 .learner-department-card.department-card {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  justify-content: flex-start !important;
+  gap: 0 !important;
   min-height: 0 !important;
-  padding: 22px !important;
+  height: 188px !important;
+  padding: 24px !important;
   border: 1px solid var(--ui-line) !important;
   border-radius: 22px !important;
   background: var(--ui-surface) !important;
@@ -12471,6 +12477,8 @@ html[data-theme="dark"] .admin-course-more {
   display: flex;
   align-items: center;
   gap: 12px;
+  width: 100%;
+  min-width: 0;
 }
 .learner-department-card .department-icon {
   width: 38px !important;
@@ -12488,26 +12496,38 @@ html[data-theme="dark"] .admin-course-more {
   gap: 12px;
 }
 .learner-department-card .department-card-title h3 {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
   margin: 0 !important;
   color: var(--ui-text) !important;
   font-size: 15px !important;
   font-weight: 700 !important;
+  line-height: 1.4 !important;
+  text-overflow: ellipsis;
+  white-space: nowrap !important;
+  word-break: keep-all !important;
 }
 .learner-department-card .department-card-title span {
+  flex: 0 0 auto;
   color: var(--ui-sub) !important;
   font-size: 11px !important;
   font-weight: 600 !important;
+  white-space: nowrap !important;
 }
 .learner-department-metrics {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 0;
+  gap: 0 !important;
+  width: 100%;
+  min-width: 0;
   margin-top: 20px;
   padding-top: 18px;
   border-top: 1px solid var(--ui-line);
 }
 .learner-department-metrics > div {
-  padding: 0 13px;
+  min-width: 0;
+  padding: 0 14px;
   border-left: 1px solid var(--ui-line);
 }
 .learner-department-metrics > div:first-child {
@@ -12522,12 +12542,16 @@ html[data-theme="dark"] .admin-course-more {
   margin-bottom: 8px;
   color: var(--ui-sub);
   font-size: 9px;
-  white-space: nowrap;
+  line-height: 1.4;
+  white-space: nowrap !important;
+  word-break: keep-all !important;
 }
 .learner-department-metrics b {
   color: var(--ui-text);
   font-size: 17px;
   font-weight: 730;
+  line-height: 1.2;
+  white-space: nowrap !important;
 }
 .learner-department-metrics .needs-attention b {
   color: #e45f55;
