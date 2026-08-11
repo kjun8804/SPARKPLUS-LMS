@@ -221,7 +221,7 @@ var a = [
       `설문 결과`,
       `교육과정별 설문 응답과 만족도 결과를 확인합니다.`,
     ],
-    rewards: [`학습 리워드`, `학습 랭킹과 뱃지 지급 현황을 관리합니다.`],
+    rewards: [`학습 리워드`, `학습 포인트를 기반으로 랭킹과 뱃지 지급 현황을 관리합니다.`],
     assignments: [
       `교육 배정 관리`,
       `개인·부서·직급별 교육과정을 배정하고 필수 여부를 설정합니다.`,
@@ -5753,6 +5753,7 @@ function LearningRewardsPage() {
   const [period, setPeriod] = r.useState(`2026년 8월`);
   const [dept, setDept] = r.useState(`전체 부서`);
   const [detail, setDetail] = r.useState(null);
+  const [badgeFilter, setBadgeFilter] = r.useState(`전체`);
   const [enabled, setEnabled] = r.useState({
     0: true,
     1: true,
@@ -5762,9 +5763,9 @@ function LearningRewardsPage() {
     5: true,
   });
   const ranking = [
-    [`김지수`, `People팀`, 1280, 8, 6, 5],
-    [`이지은`, `마케팅팀`, 1160, 7, 6, 4],
-    [`박서준`, `개발팀`, 1090, 6, 7, 4],
+    [`이지은`, `마케팅팀`, 1280, 8, 6, 5],
+    [`정유진`, `운영팀`, 1160, 7, 6, 4],
+    [`김지수`, `People팀`, 1040, 6, 7, 3],
     [`정유진`, `운영팀`, 960, 6, 5, 3],
     [`최하늘`, `세일즈팀`, 890, 5, 4, 3],
   ].map((x, i) => ({
@@ -5791,12 +5792,12 @@ function LearningRewardsPage() {
     completedCourses: item[4],
   }));
   const badges = [
-    [`이달의 학습왕`, `월간 학습 포인트 1위`, 8],
-    [`이달의 TOP3`, `월간 학습 포인트 상위 3명`, 24],
-    [`올해의 러닝 챔피언`, `연간 학습 포인트 1위`, 1],
-    [`완주왕`, `교육과정 10개 이상 수료`, 42],
-    [`꾸준한 학습자`, `4주 연속 학습 기록 달성`, 67],
-    [`퀴즈 마스터`, `퀴즈 5회 연속 90점 이상`, 31],
+    { name: `이달의 학습왕`, condition: `월간 학습 포인트 1위`, people: 8, type: `랭킹형`, icon: Medal01Icon, tone: `gold` },
+    { name: `이달의 TOP3`, condition: `월간 학습 포인트 2~3위`, people: 24, type: `랭킹형`, icon: RankingIcon, tone: `silver` },
+    { name: `올해의 러닝 챔피언`, condition: `연간 학습 포인트 TOP3`, people: 3, type: `랭킹형`, icon: SparklesIcon, tone: `bronze` },
+    { name: `완주왕`, condition: `교육과정 5개 이상 수료`, people: 42, type: `성취형`, icon: CheckmarkCircle02Icon, tone: `blue` },
+    { name: `꾸준한 학습자`, condition: `4주 연속 학습 활동 달성`, people: 67, type: `성취형`, icon: Award01Icon, tone: `violet` },
+    { name: `퀴즈 마스터`, condition: `퀴즈 10회 이상 완료`, people: 31, type: `성취형`, icon: Quiz01Icon, tone: `green` },
   ];
   const filteredRanking = ranking.filter(
     (item) => dept === `전체 부서` || item.dept === dept,
@@ -5819,21 +5820,11 @@ function LearningRewardsPage() {
       </div>
       {tab === `ranking` ? (
         <>
-          <div className="reward-ranking-scope">
-            <button
-              className={rankingScope === `individual` ? `active` : ``}
-              onClick={() => setRankingScope(`individual`)}
-            >
-              개인 랭킹
-            </button>
-            <button
-              className={rankingScope === `department` ? `active` : ``}
-              onClick={() => setRankingScope(`department`)}
-            >
-              부서 랭킹
-            </button>
-          </div>
           <div className="reward-toolbar">
+            <div className="reward-ranking-scope">
+              <button className={rankingScope === `individual` ? `active` : ``} onClick={() => setRankingScope(`individual`)}>개인 랭킹</button>
+              <button className={rankingScope === `department` ? `active` : ``} onClick={() => setRankingScope(`department`)}>부서 랭킹</button>
+            </div>
             <div className="ranking-type">
               <button
                 className={range === `월간 랭킹` ? `active` : ``}
@@ -5867,9 +5858,15 @@ function LearningRewardsPage() {
                 ))}
               </select>
             )}
+            <button className="point-rule-button" onClick={() => setDetail({ type: `pointRules` })}>
+              포인트 기준 보기
+            </button>
           </div>
           {rankingScope === `individual` ? (
-            <div className="table-wrap results-table reward-table">
+            <>
+            <RewardTopThree items={filteredRanking.slice(0, 3)} type="individual" />
+            <div className="reward-list-heading"><div><h2>전체 개인 랭킹</h2><p>학습 활동으로 적립한 포인트 순위입니다.</p></div><span>{filteredRanking.length}명</span></div>
+            <div className="table-wrap results-table reward-table reward-ranking-table">
               <table>
                 <thead>
                   <tr>
@@ -5878,7 +5875,6 @@ function LearningRewardsPage() {
                     <th>부서</th>
                     <th>학습 포인트</th>
                     <th>수료 과정 수</th>
-                    <th>퀴즈 완료 수</th>
                     <th>획득 뱃지</th>
                     <th>상세</th>
                   </tr>
@@ -5903,7 +5899,6 @@ function LearningRewardsPage() {
                         <strong>{item.point.toLocaleString()}P</strong>
                       </td>
                       <td>{item.courses}개</td>
-                      <td>{item.tests}회</td>
                       <td>{item.badges}개</td>
                       <td>
                         <button
@@ -5918,11 +5913,9 @@ function LearningRewardsPage() {
                 </tbody>
               </table>
             </div>
+            </>
           ) : (
-            <DepartmentRankingTable
-              departments={departmentRanking}
-              period={period}
-            />
+            <><RewardTopThree items={departmentRanking.slice(0, 3)} type="department" /><DepartmentRankingTable departments={departmentRanking} period={period} /></>
           )}
         </>
       ) : (
@@ -5932,83 +5925,59 @@ function LearningRewardsPage() {
               <h2>지급 뱃지</h2>
               <p>사전에 정의된 뱃지의 조건과 자동 지급 여부를 관리합니다.</p>
             </div>
-            <span>
-              활성 뱃지 {Object.values(enabled).filter(Boolean).length}개
-            </span>
+            <span>활성 {Object.values(enabled).filter(Boolean).length}개</span>
+          </div>
+          <div className="badge-filter-tabs">
+            {[`전체`, `랭킹형`, `성취형`].map((item) => <button key={item} className={badgeFilter === item ? `active` : ``} onClick={() => setBadgeFilter(item)}>{item}</button>)}
           </div>
           <div className="fixed-badge-grid">
-            {badges.map((badge, index) => (
-              <article className="fixed-badge-card" key={badge[0]}>
-                <div className="fixed-badge-icon">
-                  <Icon icon={index < 3 ? Medal01Icon : Award01Icon} />
+            {badges.filter((badge) => badgeFilter === `전체` || badge.type === badgeFilter).map((badge) => {
+              const index = badges.findIndex((item) => item.name === badge.name);
+              return (
+              <article className="fixed-badge-card" key={badge.name}>
+                <div className={`fixed-badge-icon ${badge.tone}`}>
+                  <Icon icon={badge.icon} size={25} />
+                </div>
+                <div className="badge-switch-wrap"><span>{enabled[index] ? `사용 중` : `사용 안 함`}</span>
+                  <button aria-label={`${badge.name} 활성화`} className={`rule-switch ${enabled[index] ? `on` : ``}`} onClick={() => setEnabled((current) => ({ ...current, [index]: !current[index] }))}><i /></button>
                 </div>
                 <div className="fixed-badge-copy">
-                  <h3>{badge[0]}</h3>
-                  <p>{badge[1]}</p>
-                  <span>현재 획득 {badge[2]}명 · 자동 지급</span>
+                  <span>{badge.type}</span>
+                  <h3>{badge.name}</h3>
+                  <p>{badge.condition}</p>
                 </div>
-                <button
-                  className={`rule-switch ${enabled[index] ? `on` : ``}`}
-                  onClick={() =>
-                    setEnabled((current) => ({
-                      ...current,
-                      [index]: !current[index],
-                    }))
-                  }
-                >
-                  <i />
-                </button>
-                <button
-                  className="badge-criteria-button"
-                  onClick={() =>
-                    setDetail({
-                      type: `badge`,
-                      name: badge[0],
-                      condition: badge[1],
-                      people: badge[2],
-                    })
-                  }
-                >
-                  기준 보기/수정
-                </button>
+                <div className="badge-card-footer">
+                  <button className="badge-people-button" onClick={() => setDetail({ type: `badgePeople`, ...badge })}><b>현재 획득 {badge.people}명</b><span>지급 현황 보기</span></button>
+                  <span className="auto-badge">자동 지급</span>
+                  <button className="badge-criteria-button" onClick={() => setDetail({ type: `badge`, ...badge })}>지급 기준 보기</button>
+                </div>
               </article>
-            ))}
+            )})}
           </div>
         </>
       )}
       {detail && (
         <ResultsDetailModal
-          title={
-            detail.type === `points` ? `포인트 적립 내역` : `뱃지 지급 기준`
-          }
-          subtitle={detail.type === `points` ? detail.name : detail.name}
+          title={detail.type === `points` ? `포인트 적립 내역` : detail.type === `pointRules` ? `포인트 지급 기준` : detail.type === `badgePeople` ? `뱃지 획득 현황` : `뱃지 지급 기준`}
+          subtitle={detail.name || `학습 활동별 적립 포인트를 확인하세요.`}
           onClose={() => setDetail(null)}
         >
           {detail.type === `points` ? (
-            <div className="point-history">
-              {[
-                [`차시 학습 완료`, `+20P`],
-                [`과정 수료`, `+100P`],
-                [`퀴즈 완료`, `+50P`],
-                [`설문 제출`, `+10P`],
-              ].map((x) => (
-                <div key={x[0]}>
-                  <span>{x[0]}</span>
-                  <b>{x[1]}</b>
-                </div>
-              ))}
-            </div>
+            <><div className="point-detail-summary"><div><span>이번 달 포인트</span><b>{detail.point.toLocaleString()}P</b></div><div><span>이번 달 순위</span><b>{detail.rank}위</b></div><div><span>획득 뱃지</span><b>{detail.badges}개</b></div></div>
+            <div className="point-history actual-history">{[[`08.10`, `데이터 분석 기초 입문`, `과정 수료`, `+100P`],[`08.10`, `데이터 분석 기초 입문 · 5차시`, `차시 학습 완료`, `+20P`],[`08.08`, `개인정보보호 필수교육`, `퀴즈 완료`, `+50P`],[`08.08`, `개인정보보호 필수교육`, `설문 제출`, `+10P`]].map((x, index) => <div key={`${x[0]}-${index}`}><time>{x[0]}</time><span><b>{x[1]}</b><small>{x[2]}</small></span><strong>{x[3]}</strong></div>)}</div></>
+          ) : detail.type === `pointRules` ? (
+            <div className="point-rule-list">{[[`차시 학습 완료`, `+20P`],[`과정 수료`, `+100P`],[`퀴즈 완료`, `+50P`],[`설문 제출`, `+10P`]].map((x) => <div key={x[0]}><span>{x[0]}</span><b>{x[1]}</b></div>)}</div>
+          ) : detail.type === `badgePeople` ? (
+            <div className="badge-recipient-list">{[[`김지수`, `People팀`, `2026.07`],[`이지은`, `마케팅팀`, `2026.06`],[`정유진`, `운영팀`, `2026.05`]].map((x) => <div key={x[0]}><span className="recipient-avatar">{x[0][0]}</span><b>{x[0]}</b><span>{x[1]}</span><time>{x[2]}</time></div>)}</div>
           ) : (
             <>
               <div className="badge-condition-editor">
+                <label>지급 방식<input value="자동 지급" readOnly /></label>
                 <label>
                   지급 조건
                   <input defaultValue={detail.condition} />
                 </label>
-                <label>
-                  현재 획득 인원
-                  <input value={`${detail.people}명`} readOnly />
-                </label>
+                <label>상태<input value={enabled[badges.findIndex((badge) => badge.name === detail.name)] ? `활성화` : `비활성화`} readOnly /></label>
               </div>
               <div className="results-note">
                 조건 변경 시 다음 자동 지급 시점부터 새로운 기준이 적용됩니다.
@@ -6018,6 +5987,32 @@ function LearningRewardsPage() {
         </ResultsDetailModal>
       )}
     </section>
+  );
+}
+
+function RewardTopThree({ items, type }) {
+  return (
+    <div className="reward-top-section">
+      <div className="reward-section-title">
+        <div>
+          <span>{type === `individual` ? `이번 달의 학습 리더` : `이번 달의 우수 학습 부서`}</span>
+          <h2>TOP 3</h2>
+        </div>
+        <p>{type === `individual` ? `활발하게 학습한 구성원을 확인하세요.` : `부서원 1인당 평균 포인트 기준입니다.`}</p>
+      </div>
+      <div className="reward-podium-grid">
+        {items.map((item, index) => (
+          <article className={`reward-podium-card rank-${index + 1}`} key={item.name || item.dept}>
+            <span className="podium-medal"><Icon icon={Medal01Icon} size={24} /></span>
+            <div className="podium-rank">{index + 1}위</div>
+            <h3>{type === `individual` ? item.name : item.dept}</h3>
+            <p>{type === `individual` ? item.dept : `참여 ${item.members}명`}</p>
+            <strong>{(type === `individual` ? item.point : item.averagePoint).toLocaleString()}P</strong>
+            <small>{type === `individual` ? `학습 포인트` : `1인당 평균`}</small>
+          </article>
+        ))}
+      </div>
+    </div>
   );
 }
 
