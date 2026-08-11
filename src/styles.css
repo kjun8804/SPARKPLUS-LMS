@@ -14294,6 +14294,73 @@ html[data-theme="dark"] .learner-department-card .department-icon {
   font-size: 10px;
   line-height: 1.6;
 }
+.reward-ranking-scope {
+  display: flex;
+  width: max-content;
+  gap: 20px;
+  border-bottom: 1px solid var(--ui-line);
+}
+.reward-ranking-scope button {
+  position: relative;
+  height: 42px;
+  padding: 0 2px;
+  color: var(--ui-sub);
+  font-size: 12px;
+  font-weight: 600;
+}
+.reward-ranking-scope button.active {
+  color: var(--ui-text);
+  font-weight: 720;
+}
+.reward-ranking-scope button.active:after {
+  position: absolute;
+  right: 0;
+  bottom: -1px;
+  left: 0;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--ui-text);
+  content: "";
+}
+.department-ranking-note {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 14px;
+  padding: 14px 17px;
+  border-radius: 13px;
+  background: var(--ui-surface-soft);
+}
+.department-ranking-note b,
+.department-ranking-note span {
+  display: block;
+}
+.department-ranking-note b {
+  color: var(--ui-text);
+  font-size: 11px;
+}
+.department-ranking-note span,
+.department-ranking-note small {
+  margin-top: 4px;
+  color: var(--ui-sub);
+  font-size: 9px;
+}
+.department-ranking-table td > small {
+  display: block;
+  margin-top: 4px;
+  color: #8b95a1;
+  font-size: 8px;
+}
+.department-ranking-table td > strong {
+  font-size: 12px;
+}
+.department-ranking-table tr.top-department td:first-child {
+  border-left: 2px solid #7c91a3;
+}
+.department-ranking-table tr.top-department {
+  background: color-mix(in srgb, var(--ui-surface-soft) 55%, transparent);
+}
 @media (max-width: 700px) {
   .survey-kpi-grid {
     grid-template-columns: 1fr;
