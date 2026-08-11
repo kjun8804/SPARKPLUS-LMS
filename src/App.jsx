@@ -389,7 +389,7 @@ function f({ logout: e }) {
         className: `main`,
         children: [
           (0, i.jsxs)(`div`, {
-            className: `page-heading`,
+            className: `page-heading ${t === `home` ? `admin-home-heading` : ``}`,
             children: [
               (0, i.jsxs)(`div`, {
                 children: [
@@ -467,239 +467,201 @@ function f({ logout: e }) {
   });
 }
 function p({ onGo: e }) {
-  let t = [
-      { month: `3월`, learners: 118, completion: 65 },
-      { month: `4월`, learners: 146, completion: 69 },
-      { month: `5월`, learners: 137, completion: 71 },
-      { month: `6월`, learners: 182, completion: 74 },
-      { month: `7월`, learners: 205, completion: 76 },
-      { month: `8월`, learners: 228, completion: 78 },
-    ],
-    n = t.map((e, t) => `${38 + t * 98},${210 - e.learners * 0.66}`).join(` `),
-    r = t
-      .map((e, t) => `${38 + t * 98},${210 - e.completion * 1.72}`)
-      .join(` `);
-  return (0, i.jsxs)(i.Fragment, {
-    children: [
-      (0, i.jsx)(`section`, {
-        className: `admin-summary`,
-        "aria-label": `교육 운영 요약`,
-        children: [
-          [`운영 중인 과정`, `12`, `이번 달 3개 증가`],
-          [`전체 학습자`, `248명`, `재직자 기준`],
-          [`평균 수료율`, `78%`, `전월 대비 4.2% 상승`],
-          [`미수료 대상`, `21명`, `확인 필요`],
-        ].map((e, t) =>
-          (0, i.jsxs)(
-            `div`,
-            {
-              className: t === 3 ? `needs-check` : ``,
-              children: [
-                (0, i.jsx)(`span`, { children: e[0] }),
-                (0, i.jsx)(`strong`, { children: e[1] }),
-                (0, i.jsx)(`small`, { children: e[2] }),
-              ],
-            },
-            e[0],
-          ),
-        ),
-      }),
-      (0, i.jsxs)(`section`, {
-        className: `admin-insight-grid`,
-        children: [
-          (0, i.jsxs)(`article`, {
-            className: `panel trend-panel`,
-            children: [
-              (0, i.jsxs)(`div`, {
-                className: `panel-head`,
-                children: [
-                  (0, i.jsxs)(`div`, {
-                    children: [
-                      (0, i.jsx)(`h2`, { children: `학습 참여 및 수료 추이` }),
-                      (0, i.jsx)(`p`, {
-                        children: `최근 6개월 동안의 월별 교육 성과입니다.`,
-                      }),
-                    ],
-                  }),
-                  (0, i.jsxs)(`div`, {
-                    className: `chart-legend`,
-                    children: [
-                      (0, i.jsx)(`span`, {
-                        className: `learners`,
-                        children: `학습 참여`,
-                      }),
-                      (0, i.jsx)(`span`, {
-                        className: `completion`,
-                        children: `수료율`,
-                      }),
-                    ],
-                  }),
-                ],
-              }),
-              (0, i.jsxs)(`div`, {
-                className: `line-chart`,
-                role: `img`,
-                "aria-label": `3월부터 8월까지 학습 참여 인원과 수료율 상승 그래프`,
-                children: [
-                  (0, i.jsxs)(`div`, {
-                    className: `chart-axis`,
-                    children: [
-                      (0, i.jsx)(`span`, { children: `250` }),
-                      (0, i.jsx)(`span`, { children: `200` }),
-                      (0, i.jsx)(`span`, { children: `150` }),
-                      (0, i.jsx)(`span`, { children: `100` }),
-                      (0, i.jsx)(`span`, { children: `50` }),
-                      (0, i.jsx)(`span`, { children: `0` }),
-                    ],
-                  }),
-                  (0, i.jsxs)(`svg`, {
-                    viewBox: `0 0 566 226`,
-                    preserveAspectRatio: `none`,
-                    "aria-hidden": `true`,
-                    children: [
-                      [30, 66, 102, 138, 174, 210].map((e) =>
-                        (0, i.jsx)(
-                          `line`,
-                          {
-                            x1: `38`,
-                            x2: `528`,
-                            y1: e,
-                            y2: e,
-                            className: `grid-line`,
-                          },
-                          e,
-                        ),
-                      ),
-                      (0, i.jsx)(`polyline`, {
-                        points: n,
-                        className: `chart-line participation`,
-                      }),
-                      (0, i.jsx)(`polyline`, {
-                        points: r,
-                        className: `chart-line completion`,
-                      }),
-                      t.map((e, t) =>
-                        (0, i.jsxs)(
-                          `g`,
-                          {
-                            children: [
-                              (0, i.jsx)(`circle`, {
-                                cx: 38 + t * 98,
-                                cy: 210 - e.learners * 0.66,
-                                r: `4`,
-                                className: `chart-dot participation`,
-                              }),
-                              (0, i.jsx)(`circle`, {
-                                cx: 38 + t * 98,
-                                cy: 210 - e.completion * 1.72,
-                                r: `4`,
-                                className: `chart-dot completion`,
-                              }),
-                            ],
-                          },
-                          e.month,
-                        ),
-                      ),
-                    ],
-                  }),
-                  (0, i.jsx)(`div`, {
-                    className: `chart-months`,
-                    children: t.map((e) =>
-                      (0, i.jsx)(`span`, { children: e.month }, e.month),
-                    ),
-                  }),
-                ],
-              }),
-              (0, i.jsxs)(`div`, {
-                className: `chart-foot`,
-                children: [
-                  (0, i.jsxs)(`span`, {
-                    children: [
-                      `8월 학습 참여 `,
-                      (0, i.jsx)(`b`, { children: `228명` }),
-                    ],
-                  }),
-                  (0, i.jsxs)(`span`, {
-                    children: [
-                      `8월 수료율 `,
-                      (0, i.jsx)(`b`, { children: `78%` }),
-                    ],
-                  }),
-                  (0, i.jsx)(`small`, {
-                    children: `전월보다 참여 23명, 수료율 2% 상승`,
-                  }),
-                ],
-              }),
-            ],
-          }),
-          (0, i.jsxs)(`article`, {
-            className: `panel attention-panel`,
-            children: [
-              (0, i.jsx)(`div`, {
-                className: `panel-head`,
-                children: (0, i.jsxs)(`div`, {
-                  children: [
-                    (0, i.jsx)(`h2`, { children: `관리 필요 항목` }),
-                    (0, i.jsx)(`p`, {
-                      children: `우선 확인이 필요한 업무입니다.`,
-                    }),
-                  ],
-                }),
-              }),
-              (0, i.jsxs)(`button`, {
-                className: `task`,
-                onClick: () => e(`performance`),
-                children: [
-                  (0, i.jsx)(`span`, { className: `task-num`, children: `21` }),
-                  (0, i.jsxs)(`span`, {
-                    children: [
-                      (0, i.jsx)(`b`, { children: `미수료자 확인` }),
-                      (0, i.jsx)(`small`, { children: `필수교육 기한 임박` }),
-                    ],
-                  }),
-                  (0, i.jsx)(`em`, { children: `→` }),
-                ],
-              }),
-              (0, i.jsxs)(`button`, {
-                className: `task`,
-                onClick: () => e(`performance`),
-                children: [
-                  (0, i.jsx)(`span`, {
-                    className: `task-num blue`,
-                    children: `3`,
-                  }),
-                  (0, i.jsxs)(`span`, {
-                    children: [
-                      (0, i.jsx)(`b`, { children: `설문 마감 예정` }),
-                      (0, i.jsx)(`small`, { children: `이번 주 마감` }),
-                    ],
-                  }),
-                  (0, i.jsx)(`em`, { children: `→` }),
-                ],
-              }),
-              (0, i.jsxs)(`button`, {
-                className: `task`,
-                onClick: () => e(`notices`),
-                children: [
-                  (0, i.jsx)(`span`, {
-                    className: `task-num gray`,
-                    children: `2`,
-                  }),
-                  (0, i.jsxs)(`span`, {
-                    children: [
-                      (0, i.jsx)(`b`, { children: `공지 임시저장` }),
-                      (0, i.jsx)(`small`, { children: `게시 전 검토 필요` }),
-                    ],
-                  }),
-                  (0, i.jsx)(`em`, { children: `→` }),
-                ],
-              }),
-            ],
-          }),
-        ],
-      }),
-    ],
-  });
+  const data = [
+    { month: `3월`, progress: 61, completion: 58 },
+    { month: `4월`, progress: 66, completion: 62 },
+    { month: `5월`, progress: 69, completion: 65 },
+    { month: `6월`, progress: 72, completion: 69 },
+    { month: `7월`, progress: 75, completion: 73 },
+    { month: `8월`, progress: 79, completion: 78 },
+  ];
+  const [hovered, setHovered] = (0, r.useState)(null);
+  const x = (index) => 54 + index * 96;
+  const y = (value) => 214 - value * 1.82;
+  const progressLine = data
+    .map((item, index) => `${x(index)},${y(item.progress)}`)
+    .join(` `);
+  const completionLine = data
+    .map((item, index) => `${x(index)},${y(item.completion)}`)
+    .join(` `);
+
+  const tasks = [
+    {
+      title: `학습 지연자`,
+      count: 14,
+      detail: `진도율이 낮거나 최근 학습 기록이 없는 학습자`,
+      tone: `delay`,
+      page: `learners`,
+    },
+    {
+      title: `수료 처리 대기`,
+      count: 7,
+      detail: `수료 기준 충족 후 최종 처리를 기다리는 학습자`,
+      tone: `waiting`,
+      page: `performance`,
+    },
+    {
+      title: `설문 마감 예정`,
+      count: 3,
+      detail: `7일 이내 응답이 마감되는 설문`,
+      tone: `survey`,
+      page: `performance`,
+    },
+  ];
+
+  return (
+    <>
+      <section
+        className="admin-summary admin-home-kpis"
+        aria-label="교육 운영 요약"
+      >
+        {[
+          [`운영 중인 과정`, `12`, `이번 달 +2`],
+          [`전체 학습자`, `248명`, `이번 달 +8명`],
+          [`평균 진도율`, `79%`, `지난달 대비 +4.0%`],
+          [`평균 수료율`, `78%`, `지난달 대비 +4.2%`],
+        ].map(([label, value, note]) => (
+          <div key={label}>
+            <span>{label}</span>
+            <strong>{value}</strong>
+            <small>{note}</small>
+          </div>
+        ))}
+      </section>
+
+      <section className="admin-insight-grid admin-home-insights">
+        <article className="panel trend-panel admin-home-trend">
+          <div className="panel-head admin-chart-head">
+            <div>
+              <h2>학습 진행 및 수료 추이</h2>
+              <p>월별 평균 진도율과 수료율의 변화를 확인하세요.</p>
+            </div>
+            <select aria-label="조회 기간" defaultValue="최근 6개월">
+              <option>최근 6개월</option>
+              <option>최근 3개월</option>
+              <option>최근 1년</option>
+            </select>
+          </div>
+
+          <div className="admin-chart-legend" aria-label="그래프 범례">
+            <span className="progress-legend">평균 진도율</span>
+            <span className="completion-legend">수료율</span>
+          </div>
+
+          <div
+            className="admin-progress-chart"
+            role="img"
+            aria-label="최근 6개월 평균 진도율과 수료율 라인 그래프"
+          >
+            <div className="admin-chart-y-axis">
+              {[100, 75, 50, 25, 0].map((value) => (
+                <span key={value}>{value}%</span>
+              ))}
+            </div>
+            <div className="admin-chart-canvas">
+              <svg
+                viewBox="0 0 588 230"
+                preserveAspectRatio="none"
+                aria-hidden="true"
+              >
+                {[32, 77.5, 123, 168.5, 214].map((lineY) => (
+                  <line
+                    key={lineY}
+                    x1="54"
+                    x2="534"
+                    y1={lineY}
+                    y2={lineY}
+                    className="grid-line"
+                  />
+                ))}
+                <polyline
+                  points={progressLine}
+                  className="admin-chart-line progress-line"
+                />
+                <polyline
+                  points={completionLine}
+                  className="admin-chart-line completion-line"
+                />
+                {data.map((item, index) => (
+                  <g key={item.month}>
+                    <circle
+                      cx={x(index)}
+                      cy={y(item.progress)}
+                      r="5"
+                      className="admin-chart-dot progress-dot"
+                    />
+                    <circle
+                      cx={x(index)}
+                      cy={y(item.completion)}
+                      r="5"
+                      className="admin-chart-dot completion-dot"
+                    />
+                  </g>
+                ))}
+              </svg>
+              <div className="admin-chart-hover-zones">
+                {data.map((item, index) => (
+                  <button
+                    key={item.month}
+                    type="button"
+                    aria-label={`${item.month} 평균 진도율 ${item.progress}%, 수료율 ${item.completion}%`}
+                    onMouseEnter={() => setHovered(index)}
+                    onMouseLeave={() => setHovered(null)}
+                    onFocus={() => setHovered(index)}
+                    onBlur={() => setHovered(null)}
+                  >
+                    {hovered === index && (
+                      <span className="admin-chart-tooltip">
+                        <b>{item.month}</b>
+                        <em>
+                          <i className="progress-color" />
+                          평균 진도율 <strong>{item.progress}%</strong>
+                        </em>
+                        <em>
+                          <i className="completion-color" />
+                          수료율 <strong>{item.completion}%</strong>
+                        </em>
+                      </span>
+                    )}
+                  </button>
+                ))}
+              </div>
+              <div className="admin-chart-months">
+                {data.map((item) => (
+                  <span key={item.month}>{item.month}</span>
+                ))}
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <article className="panel attention-panel admin-home-attention">
+          <div className="panel-head">
+            <div>
+              <h2>관리 필요 항목</h2>
+              <p>우선 확인이 필요한 업무만 모았어요.</p>
+            </div>
+          </div>
+          <div className="admin-attention-list">
+            {tasks.map((task) => (
+              <button
+                key={task.title}
+                className="task"
+                onClick={() => e(task.page)}
+              >
+                <span className={`task-num ${task.tone}`}>{task.count}</span>
+                <span>
+                  <b>{task.title}</b>
+                  <small>{task.detail}</small>
+                </span>
+                <em aria-hidden="true">→</em>
+              </button>
+            ))}
+          </div>
+        </article>
+      </section>
+    </>
+  );
 }
 function m({ learner: e = !1 }) {
   return (0, i.jsxs)(`div`, {
