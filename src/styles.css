@@ -11815,3 +11815,220 @@ html[data-theme="dark"] .performance-bars .completion-bar {
     border-radius: 0 !important;
   }
 }
+
+/* Final admin home alignment: directly follows the user home design system */
+.admin-portal > .main.admin-home-main {
+  width: min(1240px, calc(100% - 64px)) !important;
+  max-width: 1240px !important;
+  padding: 54px 0 80px !important;
+}
+.admin-home-heading.home-welcome {
+  display: block !important;
+  margin: 0 0 42px !important;
+  padding: 0 !important;
+}
+.admin-home-heading.home-welcome > div:first-child > h1 {
+  margin: 0 !important;
+  color: var(--ui-text) !important;
+  font-family:
+    "Pretendard Variable",
+    Pretendard,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    "Noto Sans KR",
+    sans-serif !important;
+  font-size: 38px !important;
+  font-weight: 720 !important;
+  line-height: 1.27 !important;
+  letter-spacing: -0.045em !important;
+}
+.admin-home-heading.home-welcome > div:first-child > span {
+  display: block !important;
+  margin: 10px 0 0 !important;
+  color: var(--ui-sub) !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  line-height: 1.6 !important;
+  letter-spacing: -0.01em !important;
+}
+.admin-home-kpis.admin-summary {
+  display: grid !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  gap: 18px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+}
+.admin-home-kpis.admin-summary > div,
+.admin-home-kpis.admin-summary > div:first-child {
+  min-height: 180px !important;
+  padding: 28px 28px 26px !important;
+  border: 1px solid var(--ui-line) !important;
+  border-radius: 26px !important;
+  background: var(--ui-surface) !important;
+  box-shadow: 0 8px 30px rgba(0, 27, 55, 0.055) !important;
+  text-align: left !important;
+}
+.admin-home-kpis.admin-summary span {
+  display: block !important;
+  color: var(--ui-sub) !important;
+  font-size: 13px !important;
+  font-weight: 650 !important;
+}
+.admin-home-kpis.admin-summary strong {
+  display: block !important;
+  margin: 18px 0 16px !important;
+  color: var(--ui-text) !important;
+  font-size: 42px !important;
+  font-weight: 750 !important;
+  line-height: 1 !important;
+  letter-spacing: -0.045em !important;
+}
+.admin-home-kpis.admin-summary small {
+  display: block !important;
+  color: #8b95a1 !important;
+  font-size: 11px !important;
+  font-weight: 550 !important;
+}
+.admin-home-insights.admin-insight-grid {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1.72fr) minmax(330px, 0.72fr) !important;
+  gap: 18px !important;
+  margin-top: 18px !important;
+}
+.admin-home-insights.admin-insight-grid > .panel {
+  min-height: 438px !important;
+  padding: 28px !important;
+  border: 1px solid var(--ui-line) !important;
+  border-radius: 26px !important;
+  background: var(--ui-surface) !important;
+  box-shadow: 0 8px 30px rgba(0, 27, 55, 0.055) !important;
+}
+.admin-home-trend .admin-chart-head {
+  align-items: flex-start !important;
+  margin-bottom: 8px !important;
+}
+.admin-home-trend .panel-head h2,
+.admin-home-attention .panel-head h2 {
+  margin: 0 !important;
+  color: var(--ui-text) !important;
+  font-size: 18px !important;
+  font-weight: 700 !important;
+  line-height: 1.4 !important;
+}
+.admin-home-trend .panel-head p,
+.admin-home-attention .panel-head p {
+  margin: 4px 0 0 !important;
+  color: var(--ui-sub) !important;
+  font-size: 11px !important;
+  line-height: 1.5 !important;
+}
+.admin-home-trend .admin-chart-head select {
+  height: 40px !important;
+  border-radius: 12px !important;
+}
+.admin-home-trend .admin-chart-legend {
+  justify-content: flex-start !important;
+  gap: 20px !important;
+  margin: 12px 0 2px 42px !important;
+}
+.admin-home-trend .admin-progress-chart {
+  height: 306px !important;
+  margin-top: 0 !important;
+}
+.admin-home-trend .admin-chart-canvas svg {
+  height: 266px !important;
+}
+.admin-home-trend .admin-chart-y-axis {
+  padding-bottom: 35px !important;
+  color: #8b95a1 !important;
+  font-size: 11px !important;
+}
+.admin-home-attention .panel-head {
+  margin-bottom: 13px !important;
+}
+.admin-home-attention .admin-attention-list {
+  display: block !important;
+  border-top: 1px solid var(--ui-line);
+}
+.admin-home-attention .task {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto 18px !important;
+  align-items: center !important;
+  gap: 14px !important;
+  width: 100% !important;
+  min-height: 99px !important;
+  padding: 18px 2px !important;
+  border: 0 !important;
+  border-bottom: 1px solid var(--ui-line) !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  text-align: left !important;
+  transform: none !important;
+}
+.admin-home-attention .task:hover {
+  background: transparent !important;
+}
+.admin-home-attention .task > span {
+  min-width: 0;
+}
+.admin-home-attention .task b {
+  display: block !important;
+  margin: 0 0 7px !important;
+  color: var(--ui-text) !important;
+  font-size: 13px !important;
+  font-weight: 680 !important;
+}
+.admin-home-attention .task.delay b,
+.admin-home-attention .task.delay > strong {
+  color: #e45f55 !important;
+}
+.admin-home-attention .task small {
+  display: -webkit-box !important;
+  overflow: hidden !important;
+  color: var(--ui-sub) !important;
+  font-size: 10px !important;
+  line-height: 1.5 !important;
+  white-space: normal !important;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+.admin-home-attention .task > strong {
+  color: var(--ui-text) !important;
+  font-size: 15px !important;
+  font-weight: 720 !important;
+  white-space: nowrap;
+}
+.admin-home-attention .task > em {
+  color: #8b95a1 !important;
+  font-size: 17px !important;
+  font-style: normal !important;
+}
+
+html[data-theme="dark"] .admin-home-kpis.admin-summary > div,
+html[data-theme="dark"] .admin-home-insights.admin-insight-grid > .panel {
+  box-shadow: none !important;
+}
+
+@media (max-width: 1050px) {
+  .admin-home-kpis.admin-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+  .admin-home-insights.admin-insight-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+@media (max-width: 700px) {
+  .admin-portal > .main.admin-home-main {
+    width: min(100% - 32px, 1240px) !important;
+    padding-top: 38px !important;
+  }
+  .admin-home-heading.home-welcome > div:first-child > h1 {
+    font-size: 32px !important;
+  }
+  .admin-home-kpis.admin-summary {
+    grid-template-columns: 1fr !important;
+  }
+}
