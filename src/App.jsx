@@ -386,14 +386,15 @@ function f({ logout: e }) {
         ],
       }),
       (0, i.jsxs)(`main`, {
-        className: `main`,
+        className: `main ${t === `home` ? `admin-home-main` : ``}`,
         children: [
           (0, i.jsxs)(`div`, {
-            className: `page-heading ${t === `home` ? `admin-home-heading` : ``}`,
+            className: `page-heading ${t === `home` ? `admin-home-heading home-welcome` : ``}`,
             children: [
               (0, i.jsxs)(`div`, {
                 children: [
-                  (0, i.jsx)(`p`, { children: `SPARKPLUS LMS ADMIN` }),
+                  t !== `home` &&
+                    (0, i.jsx)(`p`, { children: `SPARKPLUS LMS ADMIN` }),
                   (0, i.jsx)(`h1`, { children: l[t][0] }),
                   (0, i.jsx)(`span`, { children: l[t][1] }),
                 ],
@@ -516,10 +517,10 @@ function p({ onGo: e }) {
         aria-label="교육 운영 요약"
       >
         {[
-          [`운영 중인 과정`, `12`, `이번 달 +2`],
-          [`전체 학습자`, `248명`, `이번 달 +8명`],
-          [`평균 진도율`, `79%`, `지난달 대비 +4.0%`],
-          [`평균 수료율`, `78%`, `지난달 대비 +4.2%`],
+          [`운영 중인 과정`, `12`, `지난달 대비 +2개`],
+          [`전체 학습자`, `248명`, `지난달 대비 +8명`],
+          [`평균 진도율`, `79%`, `지난달 대비 +4.0%p`],
+          [`평균 수료율`, `78%`, `지난달 대비 +4.2%p`],
         ].map(([label, value, note]) => (
           <div key={label}>
             <span>{label}</span>
@@ -639,21 +640,21 @@ function p({ onGo: e }) {
           <div className="panel-head">
             <div>
               <h2>관리 필요 항목</h2>
-              <p>우선 확인이 필요한 업무만 모았어요.</p>
+              <p>확인이 필요한 관리 항목을 확인하세요.</p>
             </div>
           </div>
           <div className="admin-attention-list">
             {tasks.map((task) => (
               <button
                 key={task.title}
-                className="task"
+                className={`task ${task.tone}`}
                 onClick={() => e(task.page)}
               >
-                <span className={`task-num ${task.tone}`}>{task.count}</span>
                 <span>
                   <b>{task.title}</b>
                   <small>{task.detail}</small>
                 </span>
+                <strong>{task.count}명</strong>
                 <em aria-hidden="true">→</em>
               </button>
             ))}
