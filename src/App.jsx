@@ -189,7 +189,7 @@ var a = [
       page: `completionAdmin`,
       items: [
         { label: `수료 관리`, page: `completionAdmin` },
-        { label: `설문·평가`, page: `assessmentAdmin` },
+        { label: `설문 결과`, page: `assessmentAdmin` },
         { label: `통계·리포트`, page: `performance` },
         { label: `학습 리워드`, page: `rewards` },
       ],
@@ -219,8 +219,8 @@ var a = [
       `교육과정별 학습자의 수료 현황을 확인하고 수료 처리 상태를 관리합니다.`,
     ],
     assessmentAdmin: [
-      `설문·평가`,
-      `교육과정별 설문 응답과 평가 결과를 확인합니다.`,
+      `설문 결과`,
+      `교육과정별 설문 응답과 만족도 결과를 확인합니다.`,
     ],
     performance: [
       `통계·리포트`,
@@ -961,6 +961,39 @@ function youtubeEmbedUrl(url) {
     : ``;
 }
 
+const createDefaultSurveyQuestions = () => [
+  {
+    id: 1,
+    question: `교육 내용이 실무에 도움이 되었나요?`,
+    type: `5점 척도`,
+    required: true,
+    lowLabel: `매우 그렇지 않다`,
+    highLabel: `매우 그렇다`,
+    options: [],
+  },
+  {
+    id: 2,
+    question: `가장 도움이 된 교육 요소를 선택해 주세요.`,
+    type: `단일 선택`,
+    required: true,
+    options: [`실무 사례`, `강의 설명`, `실습`, `교육 자료`],
+  },
+  {
+    id: 3,
+    question: `앞으로 더 다뤘으면 하는 내용을 선택해 주세요.`,
+    type: `복수 선택`,
+    required: false,
+    options: [`실무 사례`, `심화 이론`, `실습`, `Q&A`],
+  },
+  {
+    id: 4,
+    question: `교육에서 좋았던 점이나 개선 의견을 작성해 주세요.`,
+    type: `주관식`,
+    required: false,
+    options: [],
+  },
+];
+
 function CourseEditorV2({ selected, onBack }) {
   const defaultDates = {
     1: [`2026-08-01`, `2026-09-30`],
@@ -1060,9 +1093,15 @@ function CourseEditorV2({ selected, onBack }) {
     curriculumSummary: `기초 개념부터 실무 적용까지 단계적으로 학습합니다.`,
     lessons: selected.curriculum || baseLessons,
     surveyEnabled: true,
-    surveyTitle: `과정 만족도 설문`,
+    surveyTitle: `${selected.title} 만족도 조사`,
+    surveyStartDate: `2026-08-01`,
+    surveyEndDate: `2026-08-10`,
+    surveyDescription: `교육 내용과 운영에 대한 의견을 들려주세요. 응답 내용은 향후 교육 개선에 활용됩니다.`,
+    surveyAnonymous: true,
+    surveyQuestions: selected.surveyQuestions || createDefaultSurveyQuestions(),
   });
   const [editingIndex, setEditingIndex] = r.useState(null);
+  const [surveyPreview, setSurveyPreview] = r.useState(false);
   const update = (key, value) =>
     setForm((current) => ({ ...current, [key]: value }));
   const updateLesson = (key, value) =>
@@ -1105,6 +1144,48 @@ function CourseEditorV2({ selected, onBack }) {
         itemIndex === index ? { ...item, [key]: value } : item,
       ),
     );
+  const updateSurveyQuestion = (index, key, value) =>
+    setForm((current) => ({
+      ...current,
+      surveyQuestions: current.surveyQuestions.map((question, itemIndex) =>
+        itemIndex === index ? { ...question, [key]: value } : question,
+      ),
+    }));
+  const addSurveyQuestion = () =>
+    setForm((current) => ({
+      ...current,
+      surveyQuestions: [
+        ...current.surveyQuestions,
+        {
+          id: Date.now(),
+          question: `새 설문 문항`,
+          type: `5점 척도`,
+          required: false,
+          lowLabel: `매우 그렇지 않다`,
+          highLabel: `매우 그렇다`,
+          options: [],
+        },
+      ],
+    }));
+  const removeSurveyQuestion = (index) =>
+    setForm((current) => ({
+      ...current,
+      surveyQuestions: current.surveyQuestions.filter(
+        (_, itemIndex) => itemIndex !== index,
+      ),
+    }));
+  const moveSurveyQuestion = (index, direction) => {
+    const nextIndex = index + direction;
+    if (nextIndex < 0 || nextIndex >= form.surveyQuestions.length) return;
+    setForm((current) => {
+      const surveyQuestions = [...current.surveyQuestions];
+      [surveyQuestions[index], surveyQuestions[nextIndex]] = [
+        surveyQuestions[nextIndex],
+        surveyQuestions[index],
+      ];
+      return { ...current, surveyQuestions };
+    });
+  };
   const save = () => {
     if (confirm(`변경한 교육과정 정보를 저장하시겠습니까?`)) {
       Object.assign(selected, {
@@ -1334,25 +1415,102 @@ function CourseEditorV2({ selected, onBack }) {
         <div className="editor-section-head">
           <div>
             <span>03</span>
-            <h3>과정 설문</h3>
+            <h3>수료 후 설문</h3>
           </div>
-          <label className="setting-switch-label">
-            <span>수강 완료 후 설문 노출</span>
+          <div className="survey-editor-actions">
             <button
-              className={form.surveyEnabled ? `rule-switch on` : `rule-switch`}
-              onClick={() => update(`surveyEnabled`, !form.surveyEnabled)}
+              className="secondary"
+              onClick={() => setSurveyPreview(true)}
             >
-              <i />
+              미리보기
             </button>
+            <label className="setting-switch-label">
+              <span>수강 완료 후 노출</span>
+              <button
+                className={
+                  form.surveyEnabled ? `rule-switch on` : `rule-switch`
+                }
+                onClick={() => update(`surveyEnabled`, !form.surveyEnabled)}
+              >
+                <i />
+              </button>
+            </label>
+          </div>
+        </div>
+        <div className="survey-basic-grid">
+          <label className="wide">
+            설문명
+            <input
+              value={form.surveyTitle}
+              onChange={(event) => update(`surveyTitle`, event.target.value)}
+            />
+          </label>
+          <label>
+            연결 교육과정
+            <input value={form.title} disabled />
+          </label>
+          <div className="survey-date-input">
+            <label>
+              설문 시작일
+              <input
+                type="date"
+                value={form.surveyStartDate}
+                onChange={(event) =>
+                  update(`surveyStartDate`, event.target.value)
+                }
+              />
+            </label>
+            <span>–</span>
+            <label>
+              설문 종료일
+              <input
+                type="date"
+                min={form.surveyStartDate}
+                value={form.surveyEndDate}
+                onChange={(event) =>
+                  update(`surveyEndDate`, event.target.value)
+                }
+              />
+            </label>
+          </div>
+          <label className="wide">
+            설문 안내 문구
+            <textarea
+              rows="3"
+              value={form.surveyDescription}
+              onChange={(event) =>
+                update(`surveyDescription`, event.target.value)
+              }
+            />
+          </label>
+          <label className="survey-anonymous">
+            <input
+              type="checkbox"
+              checked={form.surveyAnonymous}
+              onChange={(event) =>
+                update(`surveyAnonymous`, event.target.checked)
+              }
+            />
+            익명으로 응답받기
           </label>
         </div>
-        <label>
-          설문 제목
-          <input
-            value={form.surveyTitle}
-            onChange={(event) => update(`surveyTitle`, event.target.value)}
-          />
-        </label>
+        <div className="survey-question-editor-list">
+          {form.surveyQuestions.map((question, index) => (
+            <SurveyQuestionEditor
+              key={question.id}
+              question={question}
+              index={index}
+              total={form.surveyQuestions.length}
+              onUpdate={updateSurveyQuestion}
+              onRemove={removeSurveyQuestion}
+              onMove={moveSurveyQuestion}
+            />
+          ))}
+        </div>
+        <button className="add-question" onClick={addSurveyQuestion}>
+          <Icon icon={Add01Icon} />
+          문항 추가
+        </button>
       </section>
       <div className="course-editor-final-actions">
         <button className="danger-outline" onClick={remove}>
@@ -1546,6 +1704,336 @@ function CourseEditorV2({ selected, onBack }) {
           </aside>
         </div>
       )}
+      {surveyPreview && (
+        <div
+          className="survey-preview-overlay"
+          onMouseDown={(event) =>
+            event.target === event.currentTarget && setSurveyPreview(false)
+          }
+        >
+          <div className="survey-preview-modal">
+            <div className="survey-preview-head">
+              <div>
+                <span>학습자 화면 미리보기</span>
+                <h2>{form.surveyTitle}</h2>
+              </div>
+              <button onClick={() => setSurveyPreview(false)}>×</button>
+            </div>
+            <SurveyFormView survey={form} mode="response" />
+            <div className="survey-preview-footer">
+              <button
+                className="secondary"
+                onClick={() => setSurveyPreview(false)}
+              >
+                닫기
+              </button>
+              <button
+                className="primary"
+                onClick={() => alert(`미리보기에서는 제출되지 않습니다.`)}
+              >
+                설문 제출
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function SurveyQuestionEditor({
+  question,
+  index,
+  total,
+  onUpdate,
+  onRemove,
+  onMove,
+}) {
+  const hasOptions = [`단일 선택`, `복수 선택`].includes(question.type);
+  const updateOption = (optionIndex, value) =>
+    onUpdate(
+      index,
+      `options`,
+      question.options.map((option, i) => (i === optionIndex ? value : option)),
+    );
+  return (
+    <article className="survey-question-editor">
+      <div className="survey-question-editor-head">
+        <b>Q{index + 1}</b>
+        <div>
+          <button
+            disabled={index === 0}
+            onClick={() => onMove(index, -1)}
+            aria-label="위로 이동"
+          >
+            ↑
+          </button>
+          <button
+            disabled={index === total - 1}
+            onClick={() => onMove(index, 1)}
+            aria-label="아래로 이동"
+          >
+            ↓
+          </button>
+          <button
+            className="delete"
+            onClick={() => onRemove(index)}
+            aria-label="문항 삭제"
+          >
+            <Icon icon={Delete02Icon} />
+          </button>
+        </div>
+      </div>
+      <div className="survey-question-editor-fields">
+        <label className="wide">
+          질문
+          <input
+            value={question.question}
+            onChange={(event) =>
+              onUpdate(index, `question`, event.target.value)
+            }
+          />
+        </label>
+        <label>
+          문항 유형
+          <select
+            value={question.type}
+            onChange={(event) => onUpdate(index, `type`, event.target.value)}
+          >
+            {[`5점 척도`, `단일 선택`, `복수 선택`, `주관식`].map((type) => (
+              <option key={type}>{type}</option>
+            ))}
+          </select>
+        </label>
+        <label className="required-check">
+          <input
+            type="checkbox"
+            checked={question.required}
+            onChange={(event) =>
+              onUpdate(index, `required`, event.target.checked)
+            }
+          />
+          필수 응답
+        </label>
+      </div>
+      {question.type === `5점 척도` && (
+        <div className="scale-label-editor">
+          <label>
+            1점 설명
+            <input
+              value={question.lowLabel || ``}
+              onChange={(event) =>
+                onUpdate(index, `lowLabel`, event.target.value)
+              }
+            />
+          </label>
+          <div>☆ ☆ ☆ ☆ ☆</div>
+          <label>
+            5점 설명
+            <input
+              value={question.highLabel || ``}
+              onChange={(event) =>
+                onUpdate(index, `highLabel`, event.target.value)
+              }
+            />
+          </label>
+        </div>
+      )}
+      {hasOptions && (
+        <div className="survey-option-editor">
+          {(question.options || []).map((option, optionIndex) => (
+            <div key={optionIndex}>
+              <span>{question.type === `단일 선택` ? `○` : `□`}</span>
+              <input
+                value={option}
+                onChange={(event) =>
+                  updateOption(optionIndex, event.target.value)
+                }
+              />
+              <button
+                onClick={() =>
+                  onUpdate(
+                    index,
+                    `options`,
+                    question.options.filter((_, i) => i !== optionIndex),
+                  )
+                }
+              >
+                ×
+              </button>
+            </div>
+          ))}
+          <button
+            onClick={() =>
+              onUpdate(index, `options`, [
+                ...(question.options || []),
+                `새 선택지`,
+              ])
+            }
+          >
+            + 선택지 추가
+          </button>
+        </div>
+      )}
+      {question.type === `주관식` && (
+        <textarea
+          className="survey-textarea-preview"
+          rows="3"
+          disabled
+          placeholder="학습자가 의견을 입력하는 영역입니다."
+        />
+      )}
+    </article>
+  );
+}
+
+function SurveyFormView({ survey, mode = `response`, results = null }) {
+  return (
+    <div className={`shared-survey-form ${mode}`}>
+      <div className="shared-survey-intro">
+        <p>{survey.surveyDescription || survey.description}</p>
+        <span>
+          {survey.surveyAnonymous !== false ? `익명 응답` : `기명 응답`} ·
+          별표(*)는 필수 문항입니다.
+        </span>
+      </div>
+      <div className="shared-survey-questions">
+        {survey.surveyQuestions.map((question, index) => (
+          <SurveyQuestionView
+            key={question.id || index}
+            question={question}
+            index={index}
+            mode={mode}
+            result={results?.[index]}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function SurveyQuestionView({ question, index, mode, result }) {
+  const responseMode = mode === `response`;
+  return (
+    <section className="shared-survey-question">
+      <h3>
+        <span>Q{index + 1}.</span> {question.question}{" "}
+        {question.required && <i>*</i>}
+      </h3>
+      {question.type === `5점 척도` &&
+        (responseMode ? (
+          <div className="survey-star-response">
+            <div>
+              {[1, 2, 3, 4, 5].map((score) => (
+                <label key={score}>
+                  <input type="radio" name={`survey-star-${index}`} />
+                  <span>☆</span>
+                  <small>{score}</small>
+                </label>
+              ))}
+            </div>
+            <p>
+              <span>1점 {question.lowLabel}</span>
+              <span>5점 {question.highLabel}</span>
+            </p>
+          </div>
+        ) : (
+          <SurveyScaleResult result={result} />
+        ))}
+      {[`단일 선택`, `복수 선택`].includes(question.type) &&
+        (responseMode ? (
+          <div className="survey-choice-response">
+            {question.options.map((option) => (
+              <label key={option}>
+                <input
+                  type={question.type === `단일 선택` ? `radio` : `checkbox`}
+                  name={`survey-choice-${index}`}
+                />
+                {option}
+              </label>
+            ))}
+          </div>
+        ) : (
+          <SurveyChoiceResult result={result} type={question.type} />
+        ))}
+      {question.type === `주관식` &&
+        (responseMode ? (
+          <textarea rows="5" placeholder="의견을 입력해 주세요." />
+        ) : (
+          <SurveyTextResult result={result} />
+        ))}
+    </section>
+  );
+}
+
+function SurveyScaleResult({ result }) {
+  return (
+    <div className="survey-question-result">
+      <div className="survey-average-stars">
+        <span>
+          ★★★★<i>☆</i>
+        </span>
+        <b>{result.average} / 5</b>
+        <small>{result.responses}명 응답</small>
+      </div>
+      <div className="survey-distribution-list">
+        {result.distribution.map((item) => (
+          <SurveyDistributionRow key={item.label} item={item} />
+        ))}
+      </div>
+    </div>
+  );
+}
+function SurveyChoiceResult({ result, type }) {
+  return (
+    <div className="survey-distribution-list choice">
+      {result.distribution.map((item) => (
+        <SurveyDistributionRow
+          key={item.label}
+          item={{
+            ...item,
+            label: `${type === `단일 선택` ? `○` : `□`} ${item.label}`,
+          }}
+        />
+      ))}
+      {type === `복수 선택` && (
+        <small className="multiple-note">
+          복수 선택 문항으로 비율 합계가 100%를 초과할 수 있습니다.
+        </small>
+      )}
+    </div>
+  );
+}
+function SurveyDistributionRow({ item }) {
+  return (
+    <div className="survey-distribution-row">
+      <div>
+        <span>{item.label}</span>
+        <b>
+          {item.count}명 · {item.percent}%
+        </b>
+      </div>
+      <i>
+        <b style={{ width: `${Math.min(item.percent, 100)}%` }} />
+      </i>
+    </div>
+  );
+}
+function SurveyTextResult({ result }) {
+  const [showAll, setShowAll] = r.useState(false);
+  return (
+    <div className="survey-text-results">
+      <span>응답 {result.responses}개</span>
+      <div>
+        {result.comments
+          .slice(0, showAll ? result.comments.length : 4)
+          .map((comment, index) => (
+            <p key={`${comment}-${index}`}>“{comment}”</p>
+          ))}
+      </div>
+      <button onClick={() => setShowAll(!showAll)}>
+        {showAll ? `대표 답변만 보기` : `전체 답변 보기`}
+      </button>
     </div>
   );
 }
@@ -3756,6 +4244,310 @@ function CompletionConditionList({ conditions }) {
 }
 
 function SurveyAssessmentPage() {
+  const [query, setQuery] = r.useState(``);
+  const [dept, setDept] = r.useState(`전체 부서`);
+  const [surveyStatus, setSurveyStatus] = r.useState(`전체 상태`);
+  const [period, setPeriod] = r.useState(`최근 3개월`);
+  const [sort, setSort] = r.useState(`최근 설문순`);
+  const [detail, setDetail] = r.useState(null);
+  const surveys = [
+    {
+      course: `신입사원 온보딩`,
+      title: `신입사원 온보딩 만족도 조사`,
+      dept: `전체 부서`,
+      period: `08.01 ~ 08.10`,
+      fullPeriod: `2026.08.01 ~ 2026.08.10`,
+      people: 137,
+      target: 217,
+      rate: 63,
+      score: 4.8,
+      status: `응답 독려 필요`,
+    },
+    {
+      course: `개인정보보호 필수교육`,
+      title: `개인정보보호 교육 만족도 조사`,
+      dept: `전체 부서`,
+      period: `07.20 ~ 08.12`,
+      fullPeriod: `2026.07.20 ~ 2026.08.12`,
+      people: 204,
+      target: 224,
+      rate: 91,
+      score: 4.5,
+      status: `응답 수집 중`,
+    },
+    {
+      course: `처음 맡는 팀장을 위한 리더십`,
+      title: `리더십 과정 만족도 조사`,
+      dept: `People팀`,
+      period: `07.15 ~ 07.31`,
+      fullPeriod: `2026.07.15 ~ 2026.07.31`,
+      people: 28,
+      target: 36,
+      rate: 78,
+      score: 4.7,
+      status: `마감`,
+    },
+    {
+      course: `생성형 AI 업무 활용`,
+      title: `생성형 AI 교육 만족도 조사`,
+      dept: `개발팀`,
+      period: `08.03 ~ 08.15`,
+      fullPeriod: `2026.08.03 ~ 2026.08.15`,
+      people: 96,
+      target: 133,
+      rate: 72,
+      score: 4.6,
+      status: `응답 수집 중`,
+    },
+  ];
+  const visible = surveys
+    .filter(
+      (item) =>
+        (!query || item.course.includes(query) || item.title.includes(query)) &&
+        (dept === `전체 부서` ||
+          item.dept === dept ||
+          item.dept === `전체 부서`) &&
+        (surveyStatus === `전체 상태` || item.status === surveyStatus),
+    )
+    .sort((a, b) =>
+      sort === `응답률 높은 순`
+        ? b.rate - a.rate
+        : sort === `응답률 낮은 순`
+          ? a.rate - b.rate
+          : sort === `만족도 높은 순`
+            ? b.score - a.score
+            : sort === `만족도 낮은 순`
+              ? a.score - b.score
+              : 0,
+    );
+  const reset = () => {
+    setQuery(``);
+    setDept(`전체 부서`);
+    setSurveyStatus(`전체 상태`);
+    setPeriod(`최근 3개월`);
+    setSort(`최근 설문순`);
+  };
+  return (
+    <section className="results-section assessment-page survey-results-only-page">
+      <div className="assessment-kpi-grid">
+        <AssessmentKpi
+          label="설문 진행 과정"
+          value="4개"
+          note="현재 운영 기준"
+        />
+        <AssessmentKpi label="평균 응답률" value="74%" note="전체 과정 평균" />
+        <AssessmentKpi label="평균 만족도" value="4.6 / 5" note="응답자 기준" />
+        <AssessmentKpi
+          label="응답 독려 필요"
+          value="1개"
+          note="우선 확인"
+          attention
+        />
+      </div>
+      <div className="results-filter survey-results-filter">
+        <div className="search">
+          <Icon icon={Search01Icon} />
+          <input
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="교육과정 검색"
+          />
+        </div>
+        <select value={dept} onChange={(event) => setDept(event.target.value)}>
+          {[`전체 부서`, `People팀`, `개발팀`, `마케팅팀`, `세일즈팀`].map(
+            (value) => (
+              <option key={value}>{value}</option>
+            ),
+          )}
+        </select>
+        <select
+          value={surveyStatus}
+          onChange={(event) => setSurveyStatus(event.target.value)}
+        >
+          {[`전체 상태`, `응답 수집 중`, `응답 독려 필요`, `마감`].map(
+            (value) => (
+              <option key={value}>{value}</option>
+            ),
+          )}
+        </select>
+        <select
+          value={period}
+          onChange={(event) => setPeriod(event.target.value)}
+        >
+          {[`최근 3개월`, `최근 6개월`, `올해 전체`].map((value) => (
+            <option key={value}>{value}</option>
+          ))}
+        </select>
+        <select value={sort} onChange={(event) => setSort(event.target.value)}>
+          {[
+            `최근 설문순`,
+            `응답률 높은 순`,
+            `응답률 낮은 순`,
+            `만족도 높은 순`,
+            `만족도 낮은 순`,
+          ].map((value) => (
+            <option key={value}>{value}</option>
+          ))}
+        </select>
+        <button className="filter-reset" onClick={reset}>
+          <Icon icon={RefreshIcon} />
+          초기화
+        </button>
+      </div>
+      <div className="results-list-head">
+        <div>
+          <h2>과정별 설문 결과</h2>
+          <span>{visible.length}개 과정</span>
+        </div>
+        <small>{period}</small>
+      </div>
+      <div className="table-wrap results-table survey-results-table">
+        <table>
+          <thead>
+            <tr>
+              <th>교육과정</th>
+              <th>설문 기간</th>
+              <th>응답 현황</th>
+              <th>응답률</th>
+              <th>평균 만족도</th>
+              <th>상태</th>
+              <th>상세</th>
+            </tr>
+          </thead>
+          <tbody>
+            {visible.map((item) => (
+              <tr key={item.course}>
+                <td>
+                  <b>{item.course}</b>
+                </td>
+                <td>{item.period}</td>
+                <td>
+                  <b className="response-count">
+                    {item.people} / {item.target}명
+                  </b>
+                </td>
+                <td>
+                  <ResultProgress value={item.rate} />
+                </td>
+                <td>
+                  <b className="survey-score">★ {item.score} / 5</b>
+                </td>
+                <td>
+                  <AssessmentState value={item.status} />
+                </td>
+                <td>
+                  <button
+                    className="analysis-button"
+                    onClick={() => setDetail(item)}
+                  >
+                    상세 보기
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      {detail && (
+        <SurveyResultDrawer item={detail} onClose={() => setDetail(null)} />
+      )}
+    </section>
+  );
+}
+
+function SurveyResultDrawer({ item, onClose }) {
+  const questions = createDefaultSurveyQuestions();
+  const results = [
+    {
+      average: 4.6,
+      responses: item.people,
+      distribution: [
+        { label: `★★★★★`, count: 82, percent: 60 },
+        { label: `★★★★☆`, count: 35, percent: 26 },
+        { label: `★★★☆☆`, count: 14, percent: 10 },
+        { label: `★★☆☆☆`, count: 4, percent: 3 },
+        { label: `★☆☆☆☆`, count: 2, percent: 1 },
+      ],
+    },
+    {
+      distribution: [
+        { label: `실무 사례`, count: 82, percent: 60 },
+        { label: `강의 설명`, count: 31, percent: 23 },
+        { label: `실습`, count: 17, percent: 12 },
+        { label: `교육 자료`, count: 7, percent: 5 },
+      ],
+    },
+    {
+      distribution: [
+        { label: `실무 사례`, count: 91, percent: 66 },
+        { label: `심화 이론`, count: 48, percent: 35 },
+        { label: `실습`, count: 77, percent: 56 },
+        { label: `Q&A`, count: 34, percent: 25 },
+      ],
+    },
+    {
+      responses: 94,
+      comments: [
+        `실무 사례가 구체적이어서 좋았습니다.`,
+        `실습 시간이 조금 더 있었으면 좋겠습니다.`,
+        `교육 자료를 다시 볼 수 있으면 좋겠습니다.`,
+        `업무에 적용할 수 있는 예시가 유용했습니다.`,
+        `후속 심화 과정도 개설되면 좋겠습니다.`,
+        `질의응답 시간이 더 길었으면 합니다.`,
+      ],
+    },
+  ];
+  const survey = {
+    surveyDescription: `교육 내용과 운영에 대한 의견을 들려주세요. 응답 내용은 향후 교육 개선에 활용됩니다.`,
+    surveyAnonymous: true,
+    surveyQuestions: questions,
+  };
+  return (
+    <ResultsDetailModal
+      title="설문 결과 상세"
+      subtitle={item.title}
+      onClose={onClose}
+    >
+      <div className="survey-result-summary">
+        <div>
+          <span>설문 기간</span>
+          <b>{item.fullPeriod}</b>
+        </div>
+        <div>
+          <span>응답</span>
+          <b>
+            {item.people} / {item.target}명
+          </b>
+        </div>
+        <div>
+          <span>응답률</span>
+          <b>{item.rate}%</b>
+        </div>
+        <div>
+          <span>전체 평균 만족도</span>
+          <b>{item.score} / 5</b>
+        </div>
+        <div>
+          <span>미응답</span>
+          <b>{item.target - item.people}명</b>
+        </div>
+      </div>
+      <SurveyFormView survey={survey} mode="result" results={results} />
+      <div
+        className={`survey-management-insight ${item.rate < 70 ? `attention` : ``}`}
+      >
+        <b>{item.rate < 70 ? `응답 독려 필요` : `개선 의견 확인`}</b>
+        <p>
+          {item.rate < 70
+            ? `현재 응답률이 ${item.rate}%입니다. 미응답자를 대상으로 설문 참여 안내를 권장합니다.`
+            : `전체 만족도는 높지만 ‘실습 시간이 부족하다’는 의견이 반복적으로 확인됩니다.`}
+        </p>
+      </div>
+    </ResultsDetailModal>
+  );
+}
+
+function LegacySurveyAssessmentPage() {
   const [tab, setTab] = r.useState(`survey`);
   const [query, setQuery] = r.useState(``);
   const [dept, setDept] = r.useState(`전체 부서`);
