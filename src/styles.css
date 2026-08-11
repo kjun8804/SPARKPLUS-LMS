@@ -12347,7 +12347,7 @@ html[data-theme="dark"] .admin-course-more {
   }
 }
 
-/* Administrator learner management — department overview with people table */
+/* Administrator learner management — stable department cards and people table */
 .admin-portal > .main.admin-learners-main {
   width: min(1240px, calc(100% - 64px)) !important;
   max-width: 1240px !important;
