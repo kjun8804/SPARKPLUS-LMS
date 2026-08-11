@@ -11816,7 +11816,7 @@ html[data-theme="dark"] .performance-bars .completion-bar {
   }
 }
 
-/* Final admin home alignment: user design system, fixed six-month trend */
+/* Final admin home alignment: user design system and fixed trend range */
 .admin-portal > .main.admin-home-main {
   width: min(1240px, calc(100% - 64px)) !important;
   max-width: 1240px !important;
