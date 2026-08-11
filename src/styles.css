@@ -13979,6 +13979,22 @@ html[data-theme="dark"] .learner-department-card .department-icon {
   padding: 0 15px;
   border-radius: 10px;
 }
+.survey-kpi-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.survey-kpi-grid > div {
+  min-height: 108px;
+  padding: 19px 22px;
+}
+.survey-kpi-grid strong {
+  margin: 10px 0 6px;
+  font-size: 25px;
+}
+@media (max-width: 700px) {
+  .survey-kpi-grid {
+    grid-template-columns: 1fr;
+  }
+}
 .report-actions {
   display: flex;
   align-items: center;
