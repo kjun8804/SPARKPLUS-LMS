@@ -4329,20 +4329,10 @@ function SurveyAssessmentPage() {
   };
   return (
     <section className="results-section assessment-page survey-results-only-page">
-      <div className="assessment-kpi-grid">
-        <AssessmentKpi
-          label="설문 진행 과정"
-          value="4개"
-          note="현재 운영 기준"
-        />
+      <div className="assessment-kpi-grid survey-kpi-grid">
+        <AssessmentKpi label="전체 설문" value="4개" note="현재 운영 기준" />
         <AssessmentKpi label="평균 응답률" value="74%" note="전체 과정 평균" />
         <AssessmentKpi label="평균 만족도" value="4.6 / 5" note="응답자 기준" />
-        <AssessmentKpi
-          label="응답 독려 필요"
-          value="1개"
-          note="우선 확인"
-          attention
-        />
       </div>
       <div className="results-filter survey-results-filter">
         <div className="search">
