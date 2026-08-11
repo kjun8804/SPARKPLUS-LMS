@@ -3760,35 +3760,44 @@ function SurveyAssessmentPage() {
   const [query, setQuery] = r.useState(``);
   const [dept, setDept] = r.useState(`전체 부서`);
   const [period, setPeriod] = r.useState(`최근 3개월`);
+  const [sort, setSort] = r.useState(`응답률 높은 순`);
   const [detail, setDetail] = r.useState(null);
   const surveys = [
     {
       course: `신입사원 온보딩`,
       dept: `전체 부서`,
       people: 137,
+      target: 217,
       rate: 63,
       score: 4.8,
+      status: `응답 독려 필요`,
     },
     {
       course: `개인정보보호 필수교육`,
       dept: `전체 부서`,
       people: 204,
+      target: 224,
       rate: 91,
       score: 4.5,
+      status: `정상`,
     },
     {
       course: `처음 맡는 팀장을 위한 리더십`,
       dept: `People팀`,
       people: 28,
+      target: 36,
       rate: 78,
       score: 4.7,
+      status: `응답 수집 중`,
     },
     {
       course: `생성형 AI 업무 활용`,
       dept: `개발팀`,
       people: 96,
+      target: 133,
       rate: 72,
       score: 4.6,
+      status: `마감`,
     },
   ];
   const assessments = [
@@ -3796,58 +3805,133 @@ function SurveyAssessmentPage() {
       course: `신입사원 온보딩`,
       dept: `전체 부서`,
       people: 178,
+      target: 217,
       score: 76,
-      change: -1.4,
       pass: 82,
+      status: `보완 필요`,
+      highest: 100,
+      lowest: 42,
     },
     {
       course: `개인정보보호 필수교육`,
       dept: `전체 부서`,
       people: 218,
+      target: 224,
       score: 88,
-      change: 3.2,
       pass: 94,
+      status: `정상`,
+      highest: 100,
+      lowest: 61,
     },
     {
       course: `처음 맡는 팀장을 위한 리더십`,
       dept: `People팀`,
       people: 31,
+      target: 36,
       score: 81,
-      change: 2.1,
       pass: 87,
+      status: `진행 중`,
+      highest: 98,
+      lowest: 55,
     },
     {
       course: `생성형 AI 업무 활용`,
       dept: `개발팀`,
       people: 112,
+      target: 133,
       score: 79,
-      change: 4.0,
       pass: 85,
+      status: `진행 중`,
+      highest: 100,
+      lowest: 48,
     },
   ];
   const source = tab === `survey` ? surveys : assessments;
-  const filtered = source.filter(
-    (item) =>
-      (!query || item.course.includes(query)) &&
-      (dept === `전체 부서` || item.dept === dept || item.dept === `전체 부서`),
-  );
+  const filtered = source
+    .filter(
+      (item) =>
+        (!query || item.course.includes(query)) &&
+        (dept === `전체 부서` ||
+          item.dept === dept ||
+          item.dept === `전체 부서`),
+    )
+    .sort((a, b) => {
+      if (tab !== `survey`) return 0;
+      if (sort === `응답률 낮은 순`) return a.rate - b.rate;
+      if (sort === `만족도 높은 순`) return b.score - a.score;
+      if (sort === `만족도 낮은 순`) return a.score - b.score;
+      return b.rate - a.rate;
+    });
+  const switchTab = (next) => {
+    setTab(next);
+    setDetail(null);
+  };
   return (
     <section className="results-section assessment-page">
       <div className="results-tabs">
         <button
           className={tab === `survey` ? `active` : ``}
-          onClick={() => setTab(`survey`)}
+          onClick={() => switchTab(`survey`)}
         >
           설문 결과
         </button>
         <button
           className={tab === `assessment` ? `active` : ``}
-          onClick={() => setTab(`assessment`)}
+          onClick={() => switchTab(`assessment`)}
         >
           평가 결과
         </button>
       </div>
-      <div className="results-filter four-fields">
+      <div className="assessment-kpi-grid">
+        {tab === `survey` ? (
+          <>
+            <AssessmentKpi
+              label="진행/대상 설문"
+              value="4개 과정"
+              note="현재 운영 기준"
+            />
+            <AssessmentKpi
+              label="평균 응답률"
+              value="74%"
+              note="전체 과정 평균"
+            />
+            <AssessmentKpi
+              label="평균 만족도"
+              value="4.6 / 5"
+              note="응답자 기준"
+            />
+            <AssessmentKpi
+              label="응답 독려 필요"
+              value="1개"
+              note="우선 확인"
+              attention
+            />
+          </>
+        ) : (
+          <>
+            <AssessmentKpi
+              label="총 응시 인원"
+              value="539명"
+              note="선택 기간 누적"
+            />
+            <AssessmentKpi
+              label="평균 점수"
+              value="81점"
+              note="전체 과정 평균"
+            />
+            <AssessmentKpi label="평균 통과율" value="87%" note="응시자 기준" />
+            <AssessmentKpi
+              label="미응시 인원"
+              value="84명"
+              note="안내 필요"
+              attention
+            />
+          </>
+        )}
+      </div>
+      <div
+        className={`results-filter assessment-filter ${tab === `survey` ? `five-fields` : `four-fields`}`}
+      >
         <div className="search">
           <Icon icon={Search01Icon} />
           <input
@@ -3868,12 +3952,29 @@ function SurveyAssessmentPage() {
             <option key={v}>{v}</option>
           ))}
         </select>
+        {tab === `survey` && (
+          <select
+            value={sort}
+            onChange={(e) => setSort(e.target.value)}
+            aria-label="설문 결과 정렬"
+          >
+            {[
+              `응답률 높은 순`,
+              `응답률 낮은 순`,
+              `만족도 높은 순`,
+              `만족도 낮은 순`,
+            ].map((v) => (
+              <option key={v}>{v}</option>
+            ))}
+          </select>
+        )}
         <button
           className="filter-reset"
           onClick={() => {
             setQuery(``);
             setDept(`전체 부서`);
             setPeriod(`최근 3개월`);
+            setSort(`응답률 높은 순`);
           }}
         >
           <Icon icon={RefreshIcon} />
@@ -3894,19 +3995,19 @@ function SurveyAssessmentPage() {
               {tab === `survey` ? (
                 <>
                   <th>교육과정</th>
-                  <th>응답 인원</th>
+                  <th>응답 현황</th>
                   <th>응답률</th>
-                  <th>만족도</th>
-                  <th>답변</th>
+                  <th>평균 만족도</th>
+                  <th>상태</th>
                   <th>상세</th>
                 </>
               ) : (
                 <>
                   <th>교육과정</th>
-                  <th>응시 인원</th>
+                  <th>응시 현황</th>
                   <th>평균 점수</th>
-                  <th>이전 회차 대비</th>
-                  <th>결과</th>
+                  <th>통과율</th>
+                  <th>상태</th>
                   <th>상세</th>
                 </>
               )}
@@ -3918,20 +4019,21 @@ function SurveyAssessmentPage() {
                 <td>
                   <b>{item.course}</b>
                 </td>
-                <td>{item.people}명</td>
+                <td>
+                  <b className="response-count">
+                    {item.people} / {item.target}명
+                  </b>
+                </td>
                 {tab === `survey` ? (
                   <>
-                    <td>{item.rate}%</td>
+                    <td>
+                      <ResultProgress value={item.rate} />
+                    </td>
                     <td>
                       <b>{item.score} / 5</b>
                     </td>
                     <td>
-                      <button
-                        className="text-action"
-                        onClick={() => setDetail({ ...item, mode: `answers` })}
-                      >
-                        답변 조회
-                      </button>
+                      <AssessmentState value={item.status} />
                     </td>
                   </>
                 ) : (
@@ -3939,28 +4041,20 @@ function SurveyAssessmentPage() {
                     <td>
                       <b>{item.score}점</b>
                     </td>
-                    <td className={item.change >= 0 ? `positive` : `negative`}>
-                      {item.change >= 0 ? `+` : ``}
-                      {item.change}점
+                    <td>
+                      <ResultProgress value={item.pass} />
                     </td>
                     <td>
-                      <button
-                        className="text-action"
-                        onClick={() =>
-                          setDetail({ ...item, mode: `participants` })
-                        }
-                      >
-                        응시 결과
-                      </button>
+                      <AssessmentState value={item.status} />
                     </td>
                   </>
                 )}
                 <td>
                   <button
                     className="analysis-button"
-                    onClick={() => setDetail({ ...item, mode: `analysis` })}
+                    onClick={() => setDetail(item)}
                   >
-                    분석 보기
+                    상세 분석
                   </button>
                 </td>
               </tr>
@@ -3974,47 +4068,188 @@ function SurveyAssessmentPage() {
           subtitle={detail.course}
           onClose={() => setDetail(null)}
         >
-          <div className="modal-kpis">
-            {tab === `survey` ? (
-              <>
-                <div>
-                  <span>응답 인원</span>
-                  <b>{detail.people}명</b>
-                </div>
-                <div>
-                  <span>응답률</span>
-                  <b>{detail.rate}%</b>
-                </div>
-                <div>
-                  <span>평균 만족도</span>
-                  <b>{detail.score}/5</b>
-                </div>
-              </>
-            ) : (
-              <>
-                <div>
-                  <span>응시 인원</span>
-                  <b>{detail.people}명</b>
-                </div>
-                <div>
-                  <span>평균 점수</span>
-                  <b>{detail.score}점</b>
-                </div>
-                <div>
-                  <span>통과율</span>
-                  <b>{detail.pass}%</b>
-                </div>
-              </>
-            )}
-          </div>
-          <div className="results-note">
-            {tab === `survey`
-              ? `대표 응답: 실무 사례가 구체적이어서 업무에 바로 적용하기 좋았습니다.`
-              : `미응시자 안내와 오답률이 높은 문항의 보충 학습을 권장합니다.`}
-          </div>
+          {tab === `survey` ? (
+            <SurveyAnalysisDetail item={detail} />
+          ) : (
+            <AssessmentAnalysisDetail item={detail} />
+          )}
         </ResultsDetailModal>
       )}
     </section>
+  );
+}
+
+function AssessmentKpi({ label, value, note, attention = false }) {
+  return (
+    <div className={attention ? `attention` : ``}>
+      <span>{label}</span>
+      <strong>{value}</strong>
+      <small>{note}</small>
+    </div>
+  );
+}
+
+function ResultProgress({ value }) {
+  return (
+    <div className="assessment-progress">
+      <i>
+        <b style={{ width: `${value}%` }} />
+      </i>
+      <span>{value}%</span>
+    </div>
+  );
+}
+
+function AssessmentState({ value }) {
+  const attention = [`응답 독려 필요`, `보완 필요`].includes(value);
+  const done = [`정상`, `마감`].includes(value);
+  return (
+    <span
+      className={`assessment-state ${attention ? `attention` : done ? `done` : `collecting`}`}
+    >
+      {value}
+    </span>
+  );
+}
+
+function AnalysisBar({ label, value, suffix = `/ 5` }) {
+  const width = suffix === `/ 5` ? value * 20 : value;
+  return (
+    <div className="analysis-bar-row">
+      <div>
+        <span>{label}</span>
+        <b>
+          {value} {suffix}
+        </b>
+      </div>
+      <i>
+        <b style={{ width: `${width}%` }} />
+      </i>
+    </div>
+  );
+}
+
+function SurveyAnalysisDetail({ item }) {
+  const [showAll, setShowAll] = r.useState(false);
+  const comments = [
+    `실무 사례가 구체적이어서 좋았습니다.`,
+    `실습 시간이 조금 더 있었으면 좋겠습니다.`,
+    `교육 자료를 다시 볼 수 있으면 좋겠습니다.`,
+    `업무에 적용할 수 있는 예시가 유용했습니다.`,
+    `후속 심화 과정도 개설되면 좋겠습니다.`,
+  ];
+  return (
+    <div className="analysis-detail-body">
+      <div className="analysis-summary-strip">
+        <div>
+          <span>응답</span>
+          <b>
+            {item.people} / {item.target}명
+          </b>
+        </div>
+        <div>
+          <span>응답률</span>
+          <b>{item.rate}%</b>
+        </div>
+        <div>
+          <span>평균 만족도</span>
+          <b>{item.score} / 5</b>
+        </div>
+      </div>
+      <section className="analysis-detail-section">
+        <h3>문항별 결과</h3>
+        <AnalysisBar label="교육 내용이 실무에 도움이 되었나요?" value={4.8} />
+        <AnalysisBar label="교육 난이도는 적절했나요?" value={4.5} />
+        <AnalysisBar label="강의 구성에 만족하나요?" value={4.7} />
+      </section>
+      <section className="analysis-detail-section">
+        <h3>응답 분포</h3>
+        <AnalysisBar label="매우 만족" value={62} suffix="%" />
+        <AnalysisBar label="만족" value={28} suffix="%" />
+        <AnalysisBar label="보통" value={8} suffix="%" />
+        <AnalysisBar label="불만족" value={2} suffix="%" />
+      </section>
+      <section className="analysis-detail-section">
+        <div className="analysis-section-head">
+          <h3>주관식 의견</h3>
+          <span>{item.people}개 응답</span>
+        </div>
+        <div className="comment-list">
+          {comments.slice(0, showAll ? 5 : 3).map((comment) => (
+            <p key={comment}>“{comment}”</p>
+          ))}
+        </div>
+        <button className="show-comments" onClick={() => setShowAll(!showAll)}>
+          {showAll ? `대표 의견만 보기` : `전체 의견 보기`}
+        </button>
+      </section>
+      <div className={`analysis-insight ${item.rate < 70 ? `attention` : ``}`}>
+        <b>관리 인사이트</b>
+        <p>
+          {item.rate < 70
+            ? `응답률이 ${item.rate}%로 낮습니다. 미응답자를 대상으로 설문 참여 안내를 권장합니다.`
+            : `평균 만족도는 높지만 ‘실습 시간’ 관련 보완 의견이 반복되고 있습니다.`}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function AssessmentAnalysisDetail({ item }) {
+  return (
+    <div className="analysis-detail-body">
+      <div className="analysis-summary-strip four">
+        <div>
+          <span>응시</span>
+          <b>
+            {item.people} / {item.target}명
+          </b>
+        </div>
+        <div>
+          <span>평균 점수</span>
+          <b>{item.score}점</b>
+        </div>
+        <div>
+          <span>통과율</span>
+          <b>{item.pass}%</b>
+        </div>
+        <div>
+          <span>미응시</span>
+          <b>{item.target - item.people}명</b>
+        </div>
+      </div>
+      <section className="analysis-detail-section score-range">
+        <h3>점수 요약</h3>
+        <div>
+          <span>
+            최고점 <b>{item.highest}점</b>
+          </span>
+          <span>
+            최저점 <b>{item.lowest}점</b>
+          </span>
+        </div>
+      </section>
+      <section className="analysis-detail-section">
+        <h3>점수 분포</h3>
+        <AnalysisBar label="90점 이상" value={32} suffix="%" />
+        <AnalysisBar label="80–89점" value={38} suffix="%" />
+        <AnalysisBar label="70–79점" value={20} suffix="%" />
+        <AnalysisBar label="70점 미만" value={10} suffix="%" />
+      </section>
+      <section className="analysis-detail-section">
+        <h3>문항별 정답률</h3>
+        <AnalysisBar label="1. 개인정보 처리 원칙" value={92} suffix="%" />
+        <AnalysisBar label="2. 생성형 AI 정보 검증" value={78} suffix="%" />
+        <AnalysisBar label="3. 업무 적용 사례 판단" value={54} suffix="%" />
+      </section>
+      <div className="analysis-insight attention">
+        <b>관리 인사이트</b>
+        <p>
+          3번 문항의 정답률이 54%로 가장 낮습니다. 관련 차시의 보충 학습과
+          미응시자 안내를 권장합니다.
+        </p>
+      </div>
+    </div>
   );
 }
 
