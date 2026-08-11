@@ -535,13 +535,8 @@ function p({ onGo: e }) {
           <div className="panel-head admin-chart-head">
             <div>
               <h2>학습 진행 및 수료 추이</h2>
-              <p>월별 평균 진도율과 수료율의 변화를 확인하세요.</p>
+              <p>최근 6개월의 평균 진도율과 수료율 변화를 확인하세요.</p>
             </div>
-            <select aria-label="조회 기간" defaultValue="최근 6개월">
-              <option>최근 6개월</option>
-              <option>최근 3개월</option>
-              <option>최근 1년</option>
-            </select>
           </div>
 
           <div className="admin-chart-legend" aria-label="그래프 범례">
