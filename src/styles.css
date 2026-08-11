@@ -11881,7 +11881,7 @@ html[data-theme="dark"] .performance-bars .completion-bar {
   display: block !important;
   margin: 18px 0 16px !important;
   color: var(--ui-text) !important;
-  font-size: 42px !important;
+  font-size: 34px !important;
   font-weight: 750 !important;
   line-height: 1 !important;
   letter-spacing: -0.045em !important;
