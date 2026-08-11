@@ -190,7 +190,6 @@ var a = [
       items: [
         { label: `수료 관리`, page: `completionAdmin` },
         { label: `설문 결과`, page: `assessmentAdmin` },
-        { label: `통계·리포트`, page: `performance` },
         { label: `학습 리워드`, page: `rewards` },
       ],
     },
@@ -221,10 +220,6 @@ var a = [
     assessmentAdmin: [
       `설문 결과`,
       `교육과정별 설문 응답과 만족도 결과를 확인합니다.`,
-    ],
-    performance: [
-      `통계·리포트`,
-      `전체 교육 운영 결과를 통계적으로 확인하고 성과를 비교합니다.`,
     ],
     rewards: [`학습 리워드`, `학습 랭킹과 뱃지 지급 현황을 관리합니다.`],
     assignments: [
@@ -397,22 +392,19 @@ function f({ logout: e }) {
         ],
       }),
       (0, i.jsxs)(`main`, {
-        className: `main ${t === `home` ? `admin-home-main` : t === `courses` ? `admin-courses-main` : t === `learners` ? `admin-learners-main` : [`completionAdmin`, `assessmentAdmin`, `performance`, `rewards`].includes(t) ? `admin-results-main` : ``}`,
+        className: `main ${t === `home` ? `admin-home-main` : t === `courses` ? `admin-courses-main` : t === `learners` ? `admin-learners-main` : [`completionAdmin`, `assessmentAdmin`, `rewards`].includes(t) ? `admin-results-main` : ``}`,
         children: [
           (0, i.jsxs)(`div`, {
-            className: `page-heading ${t === `home` ? `admin-home-heading home-welcome` : t === `courses` ? `admin-course-heading home-welcome` : t === `learners` ? `admin-learner-heading home-welcome` : [`completionAdmin`, `assessmentAdmin`, `performance`, `rewards`].includes(t) ? `admin-results-heading home-welcome` : ``}`,
+            className: `page-heading ${t === `home` ? `admin-home-heading home-welcome` : t === `courses` ? `admin-course-heading home-welcome` : t === `learners` ? `admin-learner-heading home-welcome` : [`completionAdmin`, `assessmentAdmin`, `rewards`].includes(t) ? `admin-results-heading home-welcome` : ``}`,
             children: [
               (0, i.jsxs)(`div`, {
                 children: [
                   t !== `home` &&
                     t !== `courses` &&
                     t !== `learners` &&
-                    ![
-                      `completionAdmin`,
-                      `assessmentAdmin`,
-                      `performance`,
-                      `rewards`,
-                    ].includes(t) &&
+                    ![`completionAdmin`, `assessmentAdmin`, `rewards`].includes(
+                      t,
+                    ) &&
                     (0, i.jsx)(`p`, { children: `SPARKPLUS LMS ADMIN` }),
                   (0, i.jsx)(`h1`, { children: l[t][0] }),
                   (0, i.jsx)(`span`, { children: l[t][1] }),
@@ -467,7 +459,6 @@ function f({ logout: e }) {
             (0, i.jsx)(x, { onCreate: () => M(`교육과정 배정`) }),
           t === `completionAdmin` && (0, i.jsx)(CompletionManagementPage, {}),
           t === `assessmentAdmin` && (0, i.jsx)(SurveyAssessmentPage, {}),
-          t === `performance` && (0, i.jsx)(StatisticsReportPage, {}),
           t === `rewards` && (0, i.jsx)(LearningRewardsPage, {}),
           t === `completion` && (0, i.jsx)(S, { tab: N, setTab: P }),
           t === `surveys` && (0, i.jsx)(C, {}),
@@ -5757,6 +5748,7 @@ function LegacyStatisticsReportPage() {
 
 function LearningRewardsPage() {
   const [tab, setTab] = r.useState(`ranking`);
+  const [rankingScope, setRankingScope] = r.useState(`individual`);
   const [range, setRange] = r.useState(`월간 랭킹`);
   const [period, setPeriod] = r.useState(`2026년 8월`);
   const [dept, setDept] = r.useState(`전체 부서`);
@@ -5784,13 +5776,27 @@ function LearningRewardsPage() {
     tests: x[4],
     badges: x[5],
   }));
+  const departmentRanking = [
+    [`People팀`, 840, 24, 82, 18],
+    [`마케팅팀`, 790, 31, 78, 15],
+    [`개발팀`, 720, 46, 74, 21],
+    [`운영팀`, 680, 38, 71, 13],
+    [`세일즈팀`, 640, 29, 68, 11],
+  ].map((item, index) => ({
+    rank: index + 1,
+    dept: item[0],
+    averagePoint: item[1],
+    members: item[2],
+    completionRate: item[3],
+    completedCourses: item[4],
+  }));
   const badges = [
     [`이달의 학습왕`, `월간 학습 포인트 1위`, 8],
     [`이달의 TOP3`, `월간 학습 포인트 상위 3명`, 24],
     [`올해의 러닝 챔피언`, `연간 학습 포인트 1위`, 1],
     [`완주왕`, `교육과정 10개 이상 수료`, 42],
     [`꾸준한 학습자`, `4주 연속 학습 기록 달성`, 67],
-    [`퀴즈 마스터`, `평가 5회 연속 90점 이상`, 31],
+    [`퀴즈 마스터`, `퀴즈 5회 연속 90점 이상`, 31],
   ];
   const filteredRanking = ranking.filter(
     (item) => dept === `전체 부서` || item.dept === dept,
@@ -5813,6 +5819,20 @@ function LearningRewardsPage() {
       </div>
       {tab === `ranking` ? (
         <>
+          <div className="reward-ranking-scope">
+            <button
+              className={rankingScope === `individual` ? `active` : ``}
+              onClick={() => setRankingScope(`individual`)}
+            >
+              개인 랭킹
+            </button>
+            <button
+              className={rankingScope === `department` ? `active` : ``}
+              onClick={() => setRankingScope(`department`)}
+            >
+              부서 랭킹
+            </button>
+          </div>
           <div className="reward-toolbar">
             <div className="ranking-type">
               <button
@@ -5833,68 +5853,77 @@ function LearningRewardsPage() {
                 <option key={v}>{v}</option>
               ))}
             </select>
-            <select value={dept} onChange={(e) => setDept(e.target.value)}>
-              {[
-                `전체 부서`,
-                `People팀`,
-                `개발팀`,
-                `마케팅팀`,
-                `세일즈팀`,
-                `운영팀`,
-              ].map((v) => (
-                <option key={v}>{v}</option>
-              ))}
-            </select>
-          </div>
-          <div className="table-wrap results-table reward-table">
-            <table>
-              <thead>
-                <tr>
-                  <th>순위</th>
-                  <th>학습자</th>
-                  <th>부서</th>
-                  <th>학습 포인트</th>
-                  <th>수료 과정 수</th>
-                  <th>평가 통과 수</th>
-                  <th>획득 뱃지</th>
-                  <th>상세</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredRanking.map((item) => (
-                  <tr key={item.rank}>
-                    <td>
-                      <span className={`rank-number top-${item.rank}`}>
-                        {item.rank <= 3 ? (
-                          <Icon icon={Medal01Icon} size={18} />
-                        ) : (
-                          item.rank
-                        )}
-                      </span>
-                    </td>
-                    <td>
-                      <b>{item.name}</b>
-                    </td>
-                    <td>{item.dept}</td>
-                    <td>
-                      <strong>{item.point.toLocaleString()}P</strong>
-                    </td>
-                    <td>{item.courses}개</td>
-                    <td>{item.tests}회</td>
-                    <td>{item.badges}개</td>
-                    <td>
-                      <button
-                        className="analysis-button"
-                        onClick={() => setDetail({ type: `points`, ...item })}
-                      >
-                        상세 보기
-                      </button>
-                    </td>
-                  </tr>
+            {rankingScope === `individual` && (
+              <select value={dept} onChange={(e) => setDept(e.target.value)}>
+                {[
+                  `전체 부서`,
+                  `People팀`,
+                  `개발팀`,
+                  `마케팅팀`,
+                  `세일즈팀`,
+                  `운영팀`,
+                ].map((v) => (
+                  <option key={v}>{v}</option>
                 ))}
-              </tbody>
-            </table>
+              </select>
+            )}
           </div>
+          {rankingScope === `individual` ? (
+            <div className="table-wrap results-table reward-table">
+              <table>
+                <thead>
+                  <tr>
+                    <th>순위</th>
+                    <th>학습자</th>
+                    <th>부서</th>
+                    <th>학습 포인트</th>
+                    <th>수료 과정 수</th>
+                    <th>퀴즈 완료 수</th>
+                    <th>획득 뱃지</th>
+                    <th>상세</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredRanking.map((item) => (
+                    <tr key={item.rank}>
+                      <td>
+                        <span className={`rank-number top-${item.rank}`}>
+                          {item.rank <= 3 ? (
+                            <Icon icon={Medal01Icon} size={18} />
+                          ) : (
+                            item.rank
+                          )}
+                        </span>
+                      </td>
+                      <td>
+                        <b>{item.name}</b>
+                      </td>
+                      <td>{item.dept}</td>
+                      <td>
+                        <strong>{item.point.toLocaleString()}P</strong>
+                      </td>
+                      <td>{item.courses}개</td>
+                      <td>{item.tests}회</td>
+                      <td>{item.badges}개</td>
+                      <td>
+                        <button
+                          className="analysis-button"
+                          onClick={() => setDetail({ type: `points`, ...item })}
+                        >
+                          상세 보기
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <DepartmentRankingTable
+              departments={departmentRanking}
+              period={period}
+            />
+          )}
         </>
       ) : (
         <>
@@ -5960,7 +5989,7 @@ function LearningRewardsPage() {
               {[
                 [`차시 학습 완료`, `+20P`],
                 [`과정 수료`, `+100P`],
-                [`평가 통과`, `+50P`],
+                [`퀴즈 완료`, `+50P`],
                 [`설문 제출`, `+10P`],
               ].map((x) => (
                 <div key={x[0]}>
@@ -5989,6 +6018,63 @@ function LearningRewardsPage() {
         </ResultsDetailModal>
       )}
     </section>
+  );
+}
+
+function DepartmentRankingTable({ departments, period }) {
+  return (
+    <div className="department-ranking-wrap">
+      <div className="department-ranking-note">
+        <div>
+          <b>부서원 1인당 평균 학습 포인트 기준</b>
+          <span>부서 규모와 관계없이 학습 참여도를 공정하게 비교합니다.</span>
+        </div>
+        <small>{period}</small>
+      </div>
+      <div className="table-wrap results-table reward-table department-ranking-table">
+        <table>
+          <thead>
+            <tr>
+              <th>순위</th>
+              <th>부서</th>
+              <th>평균 학습 포인트</th>
+              <th>소속 인원</th>
+              <th>수료율</th>
+              <th>이번 달 수료</th>
+            </tr>
+          </thead>
+          <tbody>
+            {departments.map((item) => (
+              <tr
+                key={item.dept}
+                className={item.rank <= 3 ? `top-department` : ``}
+              >
+                <td>
+                  <span className={`rank-number top-${item.rank}`}>
+                    {item.rank <= 3 ? (
+                      <Icon icon={Medal01Icon} size={18} />
+                    ) : (
+                      item.rank
+                    )}
+                  </span>
+                </td>
+                <td>
+                  <b>{item.dept}</b>
+                  {item.rank <= 3 && <small>TOP {item.rank}</small>}
+                </td>
+                <td>
+                  <strong>{item.averagePoint.toLocaleString()}P</strong>
+                  <small>1인당 평균</small>
+                </td>
+                <td>{item.members}명</td>
+                <td>{item.completionRate}%</td>
+                <td>{item.completedCourses}개 과정</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
   );
 }
 
