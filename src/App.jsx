@@ -267,6 +267,7 @@ function f({ logout: e }) {
     [j, M] = (0, r.useState)(null),
     [N, P] = (0, r.useState)(`전체`),
     [F, I] = (0, r.useState)(!1),
+    [noticeCreateSignal, setNoticeCreateSignal] = (0, r.useState)(0),
     [L, R] = (0, r.useState)(a[0]),
     z = (0, r.useMemo)(
       () =>
@@ -392,17 +393,17 @@ function f({ logout: e }) {
         ],
       }),
       (0, i.jsxs)(`main`, {
-        className: `main ${t === `home` ? `admin-home-main` : t === `courses` ? `admin-courses-main` : t === `learners` ? `admin-learners-main` : [`completionAdmin`, `assessmentAdmin`, `rewards`].includes(t) ? `admin-results-main` : ``}`,
+        className: `main ${t === `home` ? `admin-home-main` : t === `courses` ? `admin-courses-main` : t === `learners` ? `admin-learners-main` : [`completionAdmin`, `assessmentAdmin`, `rewards`, `notices`].includes(t) ? `admin-results-main` : ``}`,
         children: [
           (0, i.jsxs)(`div`, {
-            className: `page-heading ${t === `home` ? `admin-home-heading home-welcome` : t === `courses` ? `admin-course-heading home-welcome` : t === `learners` ? `admin-learner-heading home-welcome` : [`completionAdmin`, `assessmentAdmin`, `rewards`].includes(t) ? `admin-results-heading home-welcome` : ``}`,
+            className: `page-heading ${t === `home` ? `admin-home-heading home-welcome` : t === `courses` ? `admin-course-heading home-welcome` : t === `learners` ? `admin-learner-heading home-welcome` : [`completionAdmin`, `assessmentAdmin`, `rewards`, `notices`].includes(t) ? `admin-results-heading home-welcome` : ``}`,
             children: [
               (0, i.jsxs)(`div`, {
                 children: [
                   t !== `home` &&
                     t !== `courses` &&
                     t !== `learners` &&
-                    ![`completionAdmin`, `assessmentAdmin`, `rewards`].includes(
+                    ![`completionAdmin`, `assessmentAdmin`, `rewards`, `notices`].includes(
                       t,
                     ) &&
                     (0, i.jsx)(`p`, { children: `SPARKPLUS LMS ADMIN` }),
@@ -422,7 +423,7 @@ function f({ logout: e }) {
               t === `notices` &&
                 (0, i.jsx)(`button`, {
                   className: `primary`,
-                  onClick: () => M(`공지사항 등록`),
+                  onClick: () => setNoticeCreateSignal((value) => value + 1),
                   children: [
                     (0, i.jsx)(Icon, { icon: Add01Icon }),
                     `공지사항 등록`,
@@ -466,7 +467,7 @@ function f({ logout: e }) {
           t === `rankings` && (0, i.jsx)(Qe, { type: `ranking` }),
           t === `engagement` && (0, i.jsx)(Qe, { type: `engagement` }),
           t === `quizAdmin` && (0, i.jsx)(Qe, { type: `quiz` }),
-          t === `notices` && (0, i.jsx)(T, { onEdit: (e) => M(`${e} 수정`) }),
+          t === `notices` && (0, i.jsx)(T, { createSignal: noticeCreateSignal }),
           t === `profile` && (0, i.jsx)(E, {}),
         ],
       }),
@@ -7925,93 +7926,121 @@ function w() {
     ],
   });
 }
-function T({ onEdit: e }) {
-  return (0, i.jsxs)(`section`, {
-    className: `panel`,
-    children: [
-      (0, i.jsxs)(`div`, {
-        className: `filters`,
-        children: [
-          (0, i.jsxs)(`div`, {
-            className: `search`,
-            children: [
-              (0, i.jsx)(Icon, { icon: Search01Icon }),
-              (0, i.jsx)(`input`, { placeholder: `공지사항 제목 검색` }),
-            ],
-          }),
-          (0, i.jsx)(`select`, {
-            children: (0, i.jsx)(`option`, { children: `전체 분류` }),
-          }),
-          (0, i.jsx)(`button`, { className: `secondary`, children: `검색` }),
-          (0, i.jsx)(`button`, { className: `ghost`, children: `초기화` }),
-        ],
-      }),
-      (0, i.jsx)(`div`, {
-        className: `table-wrap`,
-        children: (0, i.jsxs)(`table`, {
-          children: [
-            (0, i.jsx)(`thead`, {
-              children: (0, i.jsxs)(`tr`, {
-                children: [
-                  (0, i.jsx)(`th`, { children: `번호` }),
-                  (0, i.jsx)(`th`, { children: `분류` }),
-                  (0, i.jsx)(`th`, { children: `제목` }),
-                  (0, i.jsx)(`th`, { children: `등록일` }),
-                  (0, i.jsx)(`th`, { children: `조회수` }),
-                  (0, i.jsx)(`th`, { children: `관리` }),
-                ],
-              }),
-            }),
-            (0, i.jsx)(`tbody`, {
-              children: s.map((t, n) =>
-                (0, i.jsxs)(
-                  `tr`,
-                  {
-                    children: [
-                      (0, i.jsx)(`td`, { children: s.length - n }),
-                      (0, i.jsx)(`td`, {
-                        children: (0, i.jsx)(u, {
-                          tone: t.category === `필수` ? `red` : `gray`,
-                          children: t.category,
-                        }),
-                      }),
-                      (0, i.jsx)(`td`, {
-                        children: (0, i.jsx)(`b`, { children: t.title }),
-                      }),
-                      (0, i.jsx)(`td`, { children: t.date }),
-                      (0, i.jsx)(`td`, { children: t.views }),
-                      (0, i.jsx)(`td`, {
-                        children: (0, i.jsxs)(`div`, {
-                          className: `actions`,
-                          children: [
-                            (0, i.jsx)(`button`, {
-                              onClick: () => e(t.title),
-                              title: `수정`,
-                              children: (0, i.jsx)(Icon, { icon: Edit02Icon }),
-                            }),
-                            (0, i.jsx)(`button`, {
-                              className: `danger`,
-                              onClick: () =>
-                                confirm(`이 공지사항을 삭제하시겠습니까?`),
-                              title: `삭제`,
-                              children: (0, i.jsx)(Icon, {
-                                icon: Cancel01Icon,
-                              }),
-                            }),
-                          ],
-                        }),
-                      }),
-                    ],
-                  },
-                  t.id,
-                ),
-              ),
-            }),
-          ],
-        }),
-      }),
-    ],
+const adminNoticeSeed = [
+  { id: 101, category: `필수 안내`, title: `2026년 하반기 법정필수교육 수강 안내`, target: `전체 임직원`, start: `2026.08.05`, end: `2026.08.31`, status: `게시 중`, views: 186, important: true, content: `2026년 하반기 법정필수교육 일정을 안내드립니다. 모든 임직원은 교육 기간 내 필수 과정을 수료해 주세요.`, file: `2026_하반기_법정필수교육_안내.pdf` },
+  { id: 102, category: `시스템 안내`, title: `LMS 서비스 정기 점검 안내`, target: `전체 임직원`, start: `2026.08.18`, end: `2026.08.25`, status: `게시 예정`, views: 0, important: true, content: `안정적인 서비스 제공을 위해 LMS 정기 점검을 진행합니다. 점검 시간에는 학습 진도 저장이 일시적으로 제한될 수 있습니다.`, file: `` },
+  { id: 103, category: `교육 안내`, title: `신규 리더십 과정 오픈 안내`, target: `파트장 이상`, start: `2026.08.01`, end: `2026.09.15`, status: `게시 중`, views: 121, important: false, content: `신임 리더를 위한 리더십 과정이 새롭게 오픈되었습니다. 대상자는 교육과정 조회에서 상세 내용을 확인해 주세요.`, file: `리더십과정_안내.pdf` },
+  { id: 104, category: `교육 안내`, title: `데이터 분석 기초 과정 학습 일정 안내`, target: `데이터 분석 기초 입문 수강자`, start: `2026.08.03`, end: `2026.08.30`, status: `게시 중`, views: 84, important: false, content: `데이터 분석 기초 입문 과정의 학습 일정과 주요 안내사항을 확인해 주세요.`, file: `` },
+  { id: 105, category: `일반 공지`, title: `8월 학습 우수자 발표`, target: `전체 임직원`, start: `2026.08.08`, end: `2026.08.31`, status: `게시 중`, views: 203, important: false, content: `8월 학습 우수자를 안내드립니다. 선정된 구성원에게는 개별적으로 리워드 지급 일정을 안내할 예정입니다.`, file: `` },
+  { id: 106, category: `교육 안내`, title: `People팀 온보딩 교육 안내`, target: `People팀`, start: `2026.07.01`, end: `2026.07.31`, status: `종료`, views: 57, important: false, content: `People팀 신규 입사자를 위한 온보딩 교육 안내입니다.`, file: `` },
+  { id: 107, category: `시스템 안내`, title: `모바일 학습 환경 개선 안내`, target: `전체 임직원`, start: `2026.08.20`, end: ``, status: `임시저장`, views: 0, important: false, content: `모바일 학습 환경 개선 사항을 안내드립니다.`, file: `` },
+];
+
+function emptyNoticeForm() {
+  return { id: null, category: `필수 안내`, title: ``, targetType: `전체 임직원`, departments: [], course: `데이터 분석 기초 입문`, start: `2026-08-11`, end: `2026-08-31`, noEnd: false, important: false, content: ``, file: `` };
+}
+
+function T({ createSignal }) {
+  const [notices, setNotices] = r.useState(() => {
+    try { return JSON.parse(localStorage.getItem(`sparkplus-admin-notices`)) || adminNoticeSeed; } catch { return adminNoticeSeed; }
   });
+  const [query, setQuery] = r.useState(``);
+  const [category, setCategory] = r.useState(`전체 분류`);
+  const [status, setStatus] = r.useState(`전체 상태`);
+  const [openMenu, setOpenMenu] = r.useState(null);
+  const [form, setForm] = r.useState(null);
+  const [preview, setPreview] = r.useState(null);
+  const [viewing, setViewing] = r.useState(null);
+  const initialSignal = r.useRef(createSignal);
+  r.useEffect(() => {
+    if (createSignal !== initialSignal.current) {
+      initialSignal.current = createSignal;
+      setForm(emptyNoticeForm());
+    }
+  }, [createSignal]);
+  r.useEffect(() => {
+    localStorage.setItem(`sparkplus-admin-notices`, JSON.stringify(notices));
+    window.dispatchEvent(new CustomEvent(`sparkplus-notices-updated`));
+  }, [notices]);
+  const visible = notices.filter((notice) =>
+    (!query || notice.title.toLowerCase().includes(query.toLowerCase())) &&
+    (category === `전체 분류` || notice.category === category) &&
+    (status === `전체 상태` || notice.status === status)
+  );
+  const counts = notices.reduce((result, notice) => ({ ...result, [notice.status]: (result[notice.status] || 0) + 1 }), {});
+  const targetLabel = (draft) => draft.targetType === `부서 선택` ? (draft.departments.length > 1 ? `${draft.departments[0]} 외 ${draft.departments.length - 1}개 부서` : draft.departments[0] || `부서 미선택`) : draft.targetType === `교육과정 수강자` ? `${draft.course} 수강자` : `전체 임직원`;
+  const saveNotice = (publish) => {
+    if (!form.title.trim()) return alert(`공지사항 제목을 입력해 주세요.`);
+    if (!form.content.trim()) return alert(`공지 내용을 입력해 주세요.`);
+    const next = { ...form, id: form.id || Date.now(), target: targetLabel(form), status: publish ? (`2026-08-11` < form.start ? `게시 예정` : `게시 중`) : `임시저장`, views: form.views || 0 };
+    setNotices((current) => form.id ? current.map((item) => item.id === form.id ? next : item) : [next, ...current]);
+    setForm(null);
+  };
+  const editNotice = (notice) => setForm({ ...emptyNoticeForm(), ...notice, targetType: notice.targetType || (notice.target.includes(`수강자`) ? `교육과정 수강자` : notice.target.includes(`팀`) ? `부서 선택` : `전체 임직원`), departments: notice.departments || (notice.target.endsWith(`팀`) ? [notice.target] : []) });
+  const removeNotice = (notice) => {
+    if (confirm(`‘${notice.title}’ 공지사항을 삭제하시겠습니까?\n삭제 후에는 복구할 수 없습니다.`)) setNotices((current) => current.filter((item) => item.id !== notice.id));
+  };
+  return (
+    <section className="admin-notice-page">
+      <div className="notice-admin-summary">
+        <div><h2>전체 공지 {notices.length}건</h2><p>공지 게시 상태와 노출 대상을 한눈에 확인하세요.</p></div>
+        <div className="notice-summary-chips"><span>게시 중 {counts[`게시 중`] || 0}</span><span>예약 {counts[`게시 예정`] || 0}</span><span>종료 {counts[`종료`] || 0}</span><span>임시저장 {counts[`임시저장`] || 0}</span></div>
+      </div>
+      <div className="notice-admin-filters">
+        <label className="search"><Icon icon={Search01Icon} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="공지사항 제목 검색" /></label>
+        <select value={category} onChange={(event) => setCategory(event.target.value)}>{[`전체 분류`, `필수 안내`, `교육 안내`, `시스템 안내`, `일반 공지`].map((item) => <option key={item}>{item}</option>)}</select>
+        <select value={status} onChange={(event) => setStatus(event.target.value)}>{[`전체 상태`, `게시 중`, `게시 예정`, `종료`, `임시저장`].map((item) => <option key={item}>{item}</option>)}</select>
+        <button onClick={() => { setQuery(``); setCategory(`전체 분류`); setStatus(`전체 상태`); }}>초기화</button>
+      </div>
+      <div className="notice-admin-table-wrap">
+        <table className="notice-admin-table">
+          <thead><tr><th>분류</th><th>제목</th><th>게시 대상</th><th>게시 기간</th><th>상태</th><th>조회수</th><th>관리</th></tr></thead>
+          <tbody>{visible.map((notice) => <tr key={notice.id}>
+            <td><span className={`notice-category-badge ${notice.important ? `important` : ``}`}>{notice.category}</span></td>
+            <td><button className="notice-title-button" onClick={() => setViewing(notice)}>{notice.important && <span>중요</span>}<b>{notice.title}</b></button></td>
+            <td>{notice.target}</td>
+            <td><span className="notice-period">{notice.start?.slice(5).replaceAll(`.`, `/`).replaceAll(`-`, `/`)} ~ {notice.end ? notice.end.slice(5).replaceAll(`.`, `/`).replaceAll(`-`, `/`) : `계속`}</span></td>
+            <td><span className={`notice-status-badge status-${notice.status.replaceAll(` `, `-`)}`}>{notice.status}</span></td>
+            <td>{notice.views.toLocaleString()}</td>
+            <td className="notice-menu-cell"><button className="notice-more-button" onClick={() => setOpenMenu(openMenu === notice.id ? null : notice.id)} aria-label="공지 관리 메뉴">⋯</button>{openMenu === notice.id && <div className="notice-row-menu">
+              <button onClick={() => { notice.status === `임시저장` || notice.status === `게시 예정` ? setPreview(notice) : setViewing(notice); setOpenMenu(null); }}>{notice.status === `임시저장` || notice.status === `게시 예정` ? `미리보기` : `공지 보기`}</button>
+              <button onClick={() => { editNotice(notice); setOpenMenu(null); }}>수정</button>
+              {notice.status === `게시 중` ? <button onClick={() => { setNotices((current) => current.map((item) => item.id === notice.id ? { ...item, status: `종료` } : item)); setOpenMenu(null); }}>게시 종료</button> : notice.status !== `종료` && <button onClick={() => { setNotices((current) => current.map((item) => item.id === notice.id ? { ...item, status: `게시 중` } : item)); setOpenMenu(null); }}>게시</button>}
+              <button className="danger" onClick={() => { removeNotice(notice); setOpenMenu(null); }}>삭제</button>
+            </div>}</td>
+          </tr>)}</tbody>
+        </table>
+        {visible.length === 0 && <div className="notice-admin-empty">조건에 맞는 공지사항이 없습니다.</div>}
+      </div>
+      {form && <NoticeEditorModal form={form} setForm={setForm} onClose={() => setForm(null)} onPreview={() => setPreview({ ...form, target: targetLabel(form), status: `미리보기`, views: 0 })} onDraft={() => saveNotice(false)} onPublish={() => saveNotice(true)} />}
+      {preview && <NoticeReadingModal notice={preview} preview onClose={() => setPreview(null)} />}
+      {viewing && <NoticeReadingModal notice={viewing} onClose={() => setViewing(null)} onEdit={() => { editNotice(viewing); setViewing(null); }} onEnd={viewing.status === `게시 중` ? () => { setNotices((current) => current.map((item) => item.id === viewing.id ? { ...item, status: `종료` } : item)); setViewing(null); } : null} />}
+    </section>
+  );
+}
+
+function NoticeEditorModal({ form, setForm, onClose, onPreview, onDraft, onPublish }) {
+  const update = (key, value) => setForm((current) => ({ ...current, [key]: value }));
+  const departments = [`People팀`, `개발팀`, `마케팅팀`, `세일즈팀`, `운영팀`, `공간디자인팀`];
+  return <div className="overlay center" onMouseDown={onClose}><section className="notice-editor-modal" onMouseDown={(event) => event.stopPropagation()}>
+    <header><div><span>{form.id ? `공지 수정` : `새 공지`}</span><h2>{form.id ? `공지사항 수정` : `공지사항 등록`}</h2><p>노출 대상과 게시 기간을 설정해 정확한 안내를 전달하세요.</p></div><button onClick={onClose}><Icon icon={Cancel01Icon} /></button></header>
+    <div className="notice-editor-scroll">
+      <div className="notice-form-section"><h3>기본 정보</h3><div className="notice-form-grid"><label className="full">공지 제목<input value={form.title} onChange={(event) => update(`title`, event.target.value)} placeholder="공지사항 제목을 입력해주세요" /></label><label>공지 분류<select value={form.category} onChange={(event) => update(`category`, event.target.value)}>{[`필수 안내`, `교육 안내`, `시스템 안내`, `일반 공지`].map((item) => <option key={item}>{item}</option>)}</select></label><label className="check-label"><input type="checkbox" checked={form.important} onChange={(event) => update(`important`, event.target.checked)} />중요 공지로 상단 고정</label></div></div>
+      <div className="notice-form-section"><h3>게시 대상</h3><div className="notice-target-options">{[`전체 임직원`, `부서 선택`, `교육과정 수강자`].map((item) => <label key={item}><input type="radio" name="target" checked={form.targetType === item} onChange={() => update(`targetType`, item)} />{item}</label>)}</div>{form.targetType === `부서 선택` && <div className="department-checks">{departments.map((item) => <label key={item}><input type="checkbox" checked={form.departments.includes(item)} onChange={() => update(`departments`, form.departments.includes(item) ? form.departments.filter((value) => value !== item) : [...form.departments, item])} />{item}</label>)}</div>}{form.targetType === `교육과정 수강자` && <select className="notice-course-select" value={form.course} onChange={(event) => update(`course`, event.target.value)}>{a.map((course) => <option key={course.id}>{course.title}</option>)}</select>}</div>
+      <div className="notice-form-section"><h3>게시 기간</h3><div className="notice-date-grid"><label>게시 시작<input type="date" value={form.start} onChange={(event) => update(`start`, event.target.value)} /></label><label>게시 종료<input type="date" value={form.end} disabled={form.noEnd} onChange={(event) => update(`end`, event.target.value)} /></label></div><label className="check-label inline"><input type="checkbox" checked={form.noEnd} onChange={(event) => update(`noEnd`, event.target.checked)} />종료일 없이 계속 게시</label></div>
+      <div className="notice-form-section"><h3>공지 내용</h3><div className="notice-editor-toolbar"><button type="button"><b>B</b></button><button type="button">목록</button><button type="button"><Icon icon={File01Icon} size={15} /> 링크</button></div><textarea value={form.content} onChange={(event) => update(`content`, event.target.value)} placeholder="임직원에게 안내할 내용을 입력해주세요" /></div>
+      <div className="notice-form-section"><h3>첨부파일</h3><label className="notice-file-upload"><Icon icon={Add01Icon} /><span>{form.file || `파일 첨부`}</span><input type="file" onChange={(event) => update(`file`, event.target.files?.[0]?.name || ``)} /></label></div>
+    </div>
+    <footer><button className="notice-preview-button" onClick={onPreview}>미리보기</button><div><button className="secondary" onClick={onDraft}>임시저장</button><button className="primary" onClick={onPublish}>게시하기</button></div></footer>
+  </section></div>;
+}
+
+function NoticeReadingModal({ notice, preview = false, onClose, onEdit, onEnd }) {
+  return <div className="overlay center" onMouseDown={onClose}><article className="notice-reading-modal" onMouseDown={(event) => event.stopPropagation()}>
+    <header><span>{preview ? `사용자 화면 미리보기` : `공지 보기`}</span><button onClick={onClose}><Icon icon={Cancel01Icon} /></button></header>
+    <div className="notice-reading-content"><div className="notice-reading-badges"><span>{notice.category}</span>{notice.important && <span className="important">중요</span>}</div><h1>{notice.title || `제목 없는 공지`}</h1><div className="notice-reading-meta"><span>게시 기간 {notice.start} ~ {notice.noEnd || !notice.end ? `계속` : notice.end}</span><span>게시 대상 {notice.target || `전체 임직원`}</span><span>조회 {notice.views || 0}</span></div><div className="notice-reading-body">{(notice.content || `공지 내용이 입력되지 않았습니다.`).split(`\n`).map((line, index) => <p key={index}>{line || <br />}</p>)}</div>{notice.file && <div className="notice-reading-file"><b>첨부파일</b><button><Icon icon={File01Icon} /><span>{notice.file}</span><Icon icon={Download01Icon} /></button></div>}</div>
+    {!preview && <footer>{onEdit && <button className="secondary" onClick={onEdit}>수정</button>}{onEnd && <button className="primary" onClick={onEnd}>게시 종료</button>}</footer>}
+  </article></div>;
 }
 function E() {
   let [e, t] = (0, r.useState)(`정보`);
@@ -8391,6 +8420,15 @@ var O = [
       file: ``,
     },
   ];
+function getUserNoticeData() {
+  try {
+    const managed = JSON.parse(localStorage.getItem(`sparkplus-admin-notices`)) || [];
+    const published = managed
+      .filter((notice) => notice.status === `게시 중` && (notice.target === `전체 임직원` || notice.target?.includes(`People팀`) || notice.target?.includes(`수강자`)))
+      .map((notice) => ({ ...notice, writer: `LMS 관리자`, date: (notice.start || `2026-08-11`).replaceAll(`-`, `.`) }));
+    return [...published, ...j.filter((notice) => !published.some((item) => item.title === notice.title))].sort((left, right) => Number(right.important) - Number(left.important) || right.date.localeCompare(left.date));
+  } catch { return j; }
+}
 function M() {
   let [theme, setTheme] = (0, r.useState)(
     () => localStorage.getItem(`sparkplus-theme`) || `light`,
@@ -8423,7 +8461,8 @@ function M() {
     [B, V] = (0, r.useState)(!0),
     [H, W] = (0, r.useState)(!1),
     [G, q] = (0, r.useState)(38),
-    [J, Y] = (0, r.useState)(1);
+    [J, Y] = (0, r.useState)(1),
+    [userNotices, setUserNotices] = (0, r.useState)(getUserNoticeData);
   ((0, r.useEffect)(() => {
     let e = localStorage.getItem(`sparkplus-lms-courses`);
     if (e) {
@@ -8439,7 +8478,16 @@ function M() {
     (0, r.useEffect)(() => {
       e !== `login` &&
         localStorage.setItem(`sparkplus-lms-courses`, JSON.stringify(h));
-    }, [h, e]));
+    }, [h, e]),
+    (0, r.useEffect)(() => {
+      const refreshNotices = () => setUserNotices(getUserNoticeData());
+      window.addEventListener(`sparkplus-notices-updated`, refreshNotices);
+      window.addEventListener(`storage`, refreshNotices);
+      return () => {
+        window.removeEventListener(`sparkplus-notices-updated`, refreshNotices);
+        window.removeEventListener(`storage`, refreshNotices);
+      };
+    }, []));
   let Z = h.find((e) => e.id === _) ?? h[0],
     Q = h.filter((e) => e.enrolled),
     le = (0, r.useMemo)(
@@ -8516,7 +8564,7 @@ function M() {
                 (t(`login`), z(!1));
               },
             }),
-            e === `userDashboard` && (0, i.jsx)(L, { courses: Q, go: $ }),
+            e === `userDashboard` && (0, i.jsx)(L, { courses: Q, go: $, notices: userNotices }),
             e === `adminDashboard` && (0, i.jsx)(U, { go: $ }),
             e === `catalog` &&
               (0, i.jsx)(K, {
@@ -8584,11 +8632,12 @@ function M() {
                 videoProgress: G,
                 saveProgress: fe,
               }),
-            e === `noticeList` && (0, i.jsx)(ie, { go: $ }),
+            e === `noticeList` && (0, i.jsx)(ie, { go: $, notices: userNotices }),
             e === `noticeDetail` &&
               (0, i.jsx)(ae, {
-                notice: j.find((e) => e.id === J) ?? j[0],
+                notice: userNotices.find((e) => e.id === J) ?? userNotices[0] ?? j[0],
                 go: $,
+                notices: userNotices,
               }),
             (e === `profile` || e === `password`) &&
               (0, i.jsx)(oe, {
@@ -8912,7 +8961,7 @@ function I({ kicker: e, title: t, description: n, action: r }) {
     ],
   });
 }
-function L({ courses: e, go: t }) {
+function L({ courses: e, go: t, notices = j }) {
   let n = e[0] ?? O[0];
   const ranking = [
     { rank: 1, name: `이지은`, dept: `마케팅팀`, score: 1280 },
@@ -9063,7 +9112,7 @@ function L({ courses: e, go: t }) {
             </button>
           </div>
           <div className="home-notice-list">
-            {j.slice(0, 3).map((notice) => (
+            {notices.slice(0, 3).map((notice) => (
               <button
                 onClick={() => t(`noticeDetail`, notice.id)}
                 key={notice.id}
@@ -10829,10 +10878,10 @@ function re({
     ],
   });
 }
-function ie({ go: e }) {
+function ie({ go: e, notices = j }) {
   let [t, n] = (0, r.useState)(``),
     [a, o] = (0, r.useState)(`전체`),
-    s = j.filter(
+    s = notices.filter(
       (e) => (a === `전체` || e.category === a) && (!t || e.title.includes(t)),
     );
   return (0, i.jsxs)(`main`, {
@@ -10862,7 +10911,10 @@ function ie({ go: e }) {
             onChange: (e) => o(e.target.value),
             children: [
               (0, i.jsx)(`option`, { children: `전체` }),
+              (0, i.jsx)(`option`, { children: `필수 안내` }),
               (0, i.jsx)(`option`, { children: `교육 안내` }),
+              (0, i.jsx)(`option`, { children: `시스템 안내` }),
+              (0, i.jsx)(`option`, { children: `일반 공지` }),
               (0, i.jsx)(`option`, { children: `시스템` }),
               (0, i.jsx)(`option`, { children: `과정 안내` }),
               (0, i.jsx)(`option`, { children: `이벤트` }),
@@ -10938,10 +10990,10 @@ function ie({ go: e }) {
     ],
   });
 }
-function ae({ notice: e, go: t }) {
-  let n = j.findIndex((t) => t.id === e.id),
-    r = j[n - 1],
-    a = j[n + 1];
+function ae({ notice: e, go: t, notices = j }) {
+  let n = notices.findIndex((t) => t.id === e.id),
+    r = notices[n - 1],
+    a = notices[n + 1];
   return (0, i.jsxs)(`main`, {
     className: `page`,
     children: [
