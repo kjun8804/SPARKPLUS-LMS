@@ -13990,8 +13990,317 @@ html[data-theme="dark"] .learner-department-card .department-icon {
   margin: 10px 0 6px;
   font-size: 25px;
 }
+.statistics-report-v2 {
+  gap: 18px;
+}
+.statistics-report-v2 .report-actions {
+  gap: 10px;
+}
+.statistics-report-v2 .report-actions > span {
+  opacity: 0.8;
+}
+.statistics-filter {
+  grid-template-columns: minmax(300px, 1fr) 140px 140px 140px auto;
+  padding: 9px;
+  border-radius: 15px;
+}
+.statistics-filter .search,
+.statistics-filter select,
+.statistics-filter .filter-reset {
+  height: 38px !important;
+  min-height: 38px !important;
+}
+.statistics-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+.statistics-kpi-grid > div {
+  min-height: 112px;
+  padding: 20px 23px;
+  border: 1px solid var(--ui-line);
+  border-radius: 20px;
+  background: var(--ui-surface);
+  box-shadow: 0 5px 18px rgba(0, 27, 55, 0.035);
+}
+.statistics-kpi-grid span,
+.statistics-kpi-grid strong,
+.statistics-kpi-grid small {
+  display: block;
+}
+.statistics-kpi-grid span {
+  color: var(--ui-sub);
+  font-size: 11px;
+  font-weight: 650;
+}
+.statistics-kpi-grid strong {
+  margin: 10px 0 7px;
+  color: var(--ui-text);
+  font-size: 29px;
+  line-height: 1;
+}
+.statistics-kpi-grid small {
+  color: #8b95a1;
+  font-size: 9px;
+}
+.completion-trend-card {
+  min-height: 430px;
+  padding: 25px 28px 20px;
+}
+.completion-trend-card .results-card-head {
+  align-items: center;
+}
+.single-legend {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--ui-sub);
+  font-size: 10px;
+}
+.single-legend:before {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #4f8b6e;
+  content: "";
+}
+.completion-chart-wrap svg {
+  width: 100%;
+  height: 315px;
+  margin-top: 8px;
+  overflow: visible;
+}
+.completion-chart-wrap .report-line.completion {
+  stroke: #4f8b6e;
+  stroke-width: 3.5;
+}
+.completion-chart-wrap .report-months {
+  padding: 0 3% 0 8%;
+  font-size: 11px;
+}
+.trend-hit {
+  fill: transparent;
+  cursor: pointer;
+}
+.trend-dot {
+  fill: #fff;
+  stroke: #4f8b6e;
+  stroke-width: 3;
+  vector-effect: non-scaling-stroke;
+}
+.trend-tooltip rect {
+  fill: #26323d;
+}
+.trend-tooltip text {
+  fill: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  text-anchor: middle;
+}
+.performance-focus-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(360px, 0.9fr);
+  gap: 16px;
+}
+.performance-focus-grid .results-card {
+  min-height: 350px;
+  padding: 24px;
+}
+.department-rate-card .results-card-head > button {
+  color: #52799b;
+  font-size: 10px;
+  font-weight: 700;
+}
+.department-rate-list {
+  display: grid;
+  gap: 22px;
+  margin-top: 26px;
+}
+.department-rate-list .dept-result-row {
+  grid-template-columns: 82px 1fr 44px;
+}
+.department-rate-list .dept-result-row span,
+.department-rate-list .dept-result-row b {
+  font-size: 11px;
+}
+.department-rate-list .dept-result-row > div {
+  height: 10px;
+}
+.attention-course-list {
+  margin-top: 17px;
+}
+.attention-course-list > button {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto 14px;
+  align-items: center;
+  width: 100%;
+  gap: 12px;
+  padding: 16px 2px;
+  border-bottom: 1px solid var(--ui-line);
+  text-align: left;
+}
+.attention-course-list > button:last-child {
+  border-bottom: 0;
+}
+.attention-course-list > button > div {
+  min-width: 0;
+}
+.attention-course-list b,
+.attention-course-list span {
+  display: block;
+}
+.attention-course-list b {
+  overflow: hidden;
+  color: var(--ui-text);
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.attention-course-list span {
+  margin-top: 6px;
+  color: var(--ui-sub);
+  font-size: 9px;
+}
+.attention-course-list em {
+  padding: 6px 8px;
+  border-radius: 8px;
+  background: #fff1ef;
+  color: #b65a53;
+  font-size: 9px;
+  font-style: normal;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.attention-course-list > button > i {
+  color: #8b95a1;
+  font-size: 18px;
+  font-style: normal;
+}
+.performance-summary-table td {
+  padding-top: 15px !important;
+  padding-bottom: 15px !important;
+}
+.learning-result-cell b,
+.learning-result-cell span {
+  display: block;
+}
+.learning-result-cell b {
+  color: #4e5968;
+  font-size: 10px;
+}
+.learning-result-cell span {
+  margin-top: 4px;
+  color: #8b95a1;
+  font-size: 9px;
+}
+.performance-rate {
+  font-size: 13px;
+}
+.performance-detail-summary {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  margin-top: 20px;
+  padding: 15px 0;
+  border-top: 1px solid var(--ui-line);
+  border-bottom: 1px solid var(--ui-line);
+}
+.performance-detail-summary > div {
+  padding: 0 15px;
+  border-right: 1px solid var(--ui-line);
+}
+.performance-detail-summary > div:first-child {
+  padding-left: 0;
+}
+.performance-detail-summary > div:last-child {
+  border-right: 0;
+}
+.performance-detail-summary span,
+.performance-detail-summary b {
+  display: block;
+}
+.performance-detail-summary span {
+  color: var(--ui-sub);
+  font-size: 9px;
+}
+.performance-detail-summary b {
+  margin-top: 6px;
+  font-size: 14px;
+}
+.performance-detail-section {
+  padding: 22px 0;
+  border-bottom: 1px solid var(--ui-line);
+}
+.performance-detail-section h3 {
+  margin: 0 0 17px;
+  font-size: 13px;
+}
+.detail-trend-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  height: 180px;
+}
+.detail-trend-bars > div {
+  display: flex;
+  flex: 1;
+  height: 100%;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 5px;
+}
+.detail-trend-bars i {
+  display: flex;
+  width: 22px;
+  height: 135px;
+  align-items: flex-end;
+  overflow: hidden;
+  border-radius: 7px;
+  background: var(--ui-line);
+}
+.detail-trend-bars i b {
+  width: 100%;
+  border-radius: inherit;
+  background: linear-gradient(180deg, #77a38d, #4f836a);
+}
+.detail-trend-bars span,
+.detail-trend-bars small {
+  color: var(--ui-sub);
+  font-size: 9px;
+}
+.department-rate-list.compact {
+  gap: 15px;
+  margin-top: 0;
+}
+.survey-summary > div {
+  display: flex;
+  gap: 8px;
+}
+.survey-summary > div span {
+  flex: 1;
+  padding: 11px 13px;
+  border-radius: 10px;
+  background: var(--ui-surface-soft);
+  color: var(--ui-sub);
+  font-size: 10px;
+}
+.survey-summary > div b {
+  float: right;
+  color: var(--ui-text);
+}
+.survey-summary > p {
+  margin: 12px 0 0;
+  color: var(--ui-sub);
+  font-size: 10px;
+  line-height: 1.6;
+}
 @media (max-width: 700px) {
   .survey-kpi-grid {
+    grid-template-columns: 1fr;
+  }
+  .statistics-filter,
+  .statistics-kpi-grid,
+  .performance-focus-grid {
     grid-template-columns: 1fr;
   }
 }
