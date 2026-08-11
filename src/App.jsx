@@ -3358,49 +3358,95 @@ function ResultsDetailModal({ title, subtitle, children, onClose }) {
 
 function CompletionManagementPage() {
   const initialRows = [
-    [
-      `김수민`,
-      `People팀`,
-      `데이터 분석 기초 입문`,
-      100,
-      `제출`,
-      `수료 처리 대기`,
-    ],
-    [`이지은`, `마케팅팀`, `개인정보보호 필수교육`, 100, `제출`, `수료`],
-    [`박서준`, `개발팀`, `생성형 AI 업무 활용`, 72, `미제출`, `미수료`],
-    [
-      `최하늘`,
-      `세일즈팀`,
-      `처음 맡는 팀장을 위한 리더십`,
-      100,
-      `제출`,
-      `수료 처리 대기`,
-    ],
-    [`정유진`, `운영팀`, `개인정보보호 필수교육`, 100, `제출`, `수료`],
-    [`김도윤`, `개발팀`, `데이터 분석 기초 입문`, 46, `미제출`, `미수료`],
-    [
-      `윤서아`,
-      `People팀`,
-      `생성형 AI 업무 활용`,
-      100,
-      `제출`,
-      `수료 처리 대기`,
-    ],
-    [`오지훈`, `세일즈팀`, `개인정보보호 필수교육`, 100, `제출`, `수료`],
-  ].map((row, index) => ({
-    id: index + 1,
-    name: row[0],
-    dept: row[1],
-    course: row[2],
-    progress: row[3],
-    survey: row[4],
-    status: row[5],
-  }));
+    {
+      name: `김수민`,
+      dept: `People팀`,
+      course: `데이터 분석 기초 입문`,
+      progress: 100,
+      status: `수료 처리 대기`,
+      conditions: [true, true, true, true],
+      dates: [`2026.07.14`, `2026.08.09`, `2026.08.09`],
+      incompleteLessons: `없음`,
+    },
+    {
+      name: `이지은`,
+      dept: `마케팅팀`,
+      course: `개인정보보호 필수교육`,
+      progress: 100,
+      status: `수료`,
+      conditions: [true, true, true, true],
+      dates: [`2026.07.02`, `2026.07.28`, `2026.07.28`],
+      completedAt: `2026.07.29 10:24`,
+      incompleteLessons: `없음`,
+    },
+    {
+      name: `박서준`,
+      dept: `개발팀`,
+      course: `생성형 AI 업무 활용`,
+      progress: 72,
+      status: `미수료`,
+      conditions: [false, false, true, false],
+      dates: [`2026.07.21`, `2026.08.02`, `-`],
+      incompleteLessons: `4·5차시`,
+    },
+    {
+      name: `최하늘`,
+      dept: `세일즈팀`,
+      course: `처음 맡는 팀장을 위한 리더십`,
+      progress: 100,
+      status: `수료 처리 대기`,
+      conditions: [true, true, true, true],
+      dates: [`2026.07.08`, `2026.08.08`, `2026.08.08`],
+      incompleteLessons: `없음`,
+    },
+    {
+      name: `정유진`,
+      dept: `운영팀`,
+      course: `개인정보보호 필수교육`,
+      progress: 100,
+      status: `수료`,
+      conditions: [true, true, true, true],
+      dates: [`2026.07.01`, `2026.07.20`, `2026.07.20`],
+      completedAt: `2026.07.21 14:10`,
+      incompleteLessons: `없음`,
+    },
+    {
+      name: `김도윤`,
+      dept: `개발팀`,
+      course: `데이터 분석 기초 입문`,
+      progress: 46,
+      status: `미수료`,
+      conditions: [false, false, false, false],
+      dates: [`2026.07.18`, `2026.07.29`, `-`],
+      incompleteLessons: `3·4·5차시`,
+    },
+    {
+      name: `윤서아`,
+      dept: `People팀`,
+      course: `생성형 AI 업무 활용`,
+      progress: 100,
+      status: `수료 처리 대기`,
+      conditions: [true, true, true, true],
+      dates: [`2026.07.10`, `2026.08.10`, `2026.08.10`],
+      incompleteLessons: `없음`,
+    },
+    {
+      name: `오지훈`,
+      dept: `세일즈팀`,
+      course: `개인정보보호 필수교육`,
+      progress: 100,
+      status: `수료`,
+      conditions: [true, true, true, true],
+      dates: [`2026.07.03`, `2026.07.25`, `2026.07.25`],
+      completedAt: `2026.07.26 09:18`,
+      incompleteLessons: `없음`,
+    },
+  ].map((row, index) => ({ id: index + 1, ...row }));
   const [rows, setRows] = r.useState(initialRows);
   const [query, setQuery] = r.useState(``);
   const [dept, setDept] = r.useState(`전체 부서`);
   const [status, setStatus] = r.useState(`전체 수료 상태`);
-  const [period, setPeriod] = r.useState(`최근 3개월`);
+  const [period, setPeriod] = r.useState(`교육 기간 · 최근 3개월`);
   const [detail, setDetail] = r.useState(null);
   const filtered = rows.filter(
     (item) =>
@@ -3408,25 +3454,21 @@ function CompletionManagementPage() {
       (dept === `전체 부서` || item.dept === dept) &&
       (status === `전체 수료 상태` || item.status === status),
   );
-  const complete = rows.filter((item) => item.status === `수료`).length;
-  const waiting = rows.filter(
-    (item) => item.status === `수료 처리 대기`,
-  ).length;
-  const incomplete = rows.filter((item) => item.status === `미수료`).length;
   const processCompletion = (id) => {
-    if (confirm(`수료 처리 대상을 최종 수료로 변경하시겠습니까?`)) {
-      setRows((current) =>
-        current.map((item) =>
-          item.id === id ? { ...item, status: `수료` } : item,
-        ),
-      );
-    }
+    setRows((current) =>
+      current.map((item) =>
+        item.id === id
+          ? { ...item, status: `수료`, completedAt: `2026.08.11 14:30` }
+          : item,
+      ),
+    );
+    setDetail(null);
   };
   const reset = () => {
     setQuery(``);
     setDept(`전체 부서`);
     setStatus(`전체 수료 상태`);
-    setPeriod(`최근 3개월`);
+    setPeriod(`교육 기간 · 최근 3개월`);
   };
   return (
     <section className="results-section completion-management-page">
@@ -3458,8 +3500,16 @@ function CompletionManagementPage() {
             ),
           )}
         </select>
-        <select value={period} onChange={(e) => setPeriod(e.target.value)}>
-          {[`최근 3개월`, `최근 6개월`, `올해 전체`].map((value) => (
+        <select
+          value={period}
+          onChange={(e) => setPeriod(e.target.value)}
+          aria-label="수료 처리 기간"
+        >
+          {[
+            `교육 기간 · 최근 3개월`,
+            `교육 기간 · 최근 6개월`,
+            `교육 기간 · 올해 전체`,
+          ].map((value) => (
             <option key={value}>{value}</option>
           ))}
         </select>
@@ -3468,29 +3518,40 @@ function CompletionManagementPage() {
           초기화
         </button>
       </div>
-      <div className="results-kpi-grid three">
-        <div>
+      <div className="results-kpi-grid three completion-kpis">
+        <button
+          className={status === `수료` ? `selected complete` : `complete`}
+          onClick={() => setStatus(`수료`)}
+        >
           <span>수료</span>
           <strong>182명</strong>
-          <small>현재 목록 {complete}명</small>
-        </div>
-        <div>
+          <small>86.7%</small>
+        </button>
+        <button
+          className={
+            status === `수료 처리 대기` ? `selected waiting` : `waiting`
+          }
+          onClick={() => setStatus(`수료 처리 대기`)}
+        >
           <span>수료 처리 대기</span>
           <strong>7명</strong>
-          <small>현재 목록 {waiting}명</small>
-        </div>
-        <div className="attention">
+          <small>처리 필요</small>
+        </button>
+        <button
+          className={status === `미수료` ? `selected incomplete` : `incomplete`}
+          onClick={() => setStatus(`미수료`)}
+        >
           <span>미수료</span>
           <strong>21명</strong>
-          <small>현재 목록 {incomplete}명</small>
-        </div>
+          <small>10.0%</small>
+        </button>
       </div>
       <div className="results-list-head">
         <div>
-          <h2>학습자 수료 현황</h2>
+          <h2>학습자 목록</h2>
           <span>{filtered.length}명</span>
         </div>
-        <small>{period} 기준</small>
+        <small>{period.replace(`교육 기간 · `, ``)} 교육 기간 기준</small>
       </div>
       <div className="table-wrap results-table">
         <table>
@@ -3500,7 +3561,7 @@ function CompletionManagementPage() {
               <th>부서</th>
               <th>교육과정</th>
               <th>진도율</th>
-              <th>설문 제출</th>
+              <th>수료 조건</th>
               <th>수료 상태</th>
               <th>관리</th>
             </tr>
@@ -3520,11 +3581,7 @@ function CompletionManagementPage() {
                   </div>
                 </td>
                 <td>
-                  <span
-                    className={`submission ${item.survey === `제출` ? `done` : ``}`}
-                  >
-                    {item.survey}
-                  </span>
+                  <CompletionConditionSummary conditions={item.conditions} />
                 </td>
                 <td>
                   <span
@@ -3538,12 +3595,27 @@ function CompletionManagementPage() {
                     {item.status === `수료 처리 대기` && (
                       <button
                         className="process"
-                        onClick={() => processCompletion(item.id)}
+                        onClick={() => setDetail(item)}
                       >
                         수료 처리
                       </button>
                     )}
-                    <button onClick={() => setDetail(item)}>현황 보기</button>
+                    {item.status === `미수료` && (
+                      <button
+                        className="reason"
+                        onClick={() => setDetail(item)}
+                      >
+                        사유 확인
+                      </button>
+                    )}
+                    {item.status === `수료` && (
+                      <button
+                        className="history"
+                        onClick={() => setDetail(item)}
+                      >
+                        처리 내역
+                      </button>
+                    )}
                   </div>
                 </td>
               </tr>
@@ -3553,31 +3625,133 @@ function CompletionManagementPage() {
       </div>
       {detail && (
         <ResultsDetailModal
-          title="학습자 수료 상세"
+          title={
+            detail.status === `수료 처리 대기`
+              ? `학습자 수료 확인`
+              : detail.status === `미수료`
+                ? `미수료 사유 확인`
+                : `수료 처리 내역`
+          }
           subtitle={detail.name}
           onClose={() => setDetail(null)}
         >
-          <div className="modal-kpis">
-            <div>
-              <span>교육과정</span>
-              <b>{detail.course}</b>
-            </div>
-            <div>
-              <span>진도율</span>
-              <b>{detail.progress}%</b>
-            </div>
-            <div>
-              <span>수료 상태</span>
-              <b>{detail.status}</b>
-            </div>
+          <div className="completion-detail-course">
+            <span>교육과정</span>
+            <b>{detail.course}</b>
           </div>
-          <div className="results-note">
-            설문 제출 여부와 학습 진도, 수료 기준 충족 여부를 확인한 후 최종
-            처리해 주세요.
+          <div className="completion-detail-section">
+            <div className="completion-detail-title">
+              <h3>수료 조건</h3>
+              <b>{detail.conditions.filter(Boolean).length}/4 충족</b>
+            </div>
+            <CompletionConditionList conditions={detail.conditions} />
+          </div>
+          {detail.status === `미수료` && (
+            <div className="completion-detail-section incomplete-reason-box">
+              <h3>미충족 항목</h3>
+              <dl>
+                <div>
+                  <dt>현재 진도율</dt>
+                  <dd>{detail.progress}%</dd>
+                </div>
+                <div>
+                  <dt>미완료 차시</dt>
+                  <dd>{detail.incompleteLessons}</dd>
+                </div>
+                <div>
+                  <dt>평가</dt>
+                  <dd>
+                    {detail.conditions[2] ? `통과` : `미응시 또는 미통과`}
+                  </dd>
+                </div>
+                <div>
+                  <dt>설문</dt>
+                  <dd>{detail.conditions[3] ? `제출 완료` : `미제출`}</dd>
+                </div>
+              </dl>
+            </div>
+          )}
+          <div className="completion-detail-section">
+            <h3>학습 정보</h3>
+            <dl className="learning-date-list">
+              <div>
+                <dt>학습 시작일</dt>
+                <dd>{detail.dates[0]}</dd>
+              </div>
+              <div>
+                <dt>마지막 학습일</dt>
+                <dd>{detail.dates[1]}</dd>
+              </div>
+              <div>
+                <dt>교육 완료일</dt>
+                <dd>{detail.dates[2]}</dd>
+              </div>
+              {detail.completedAt && (
+                <div>
+                  <dt>수료 처리일</dt>
+                  <dd>{detail.completedAt}</dd>
+                </div>
+              )}
+            </dl>
+          </div>
+          <div className="completion-current-state">
+            <span>현재 상태</span>
+            <b
+              className={`completion-state ${detail.status === `수료` ? `complete` : detail.status === `미수료` ? `incomplete` : `waiting`}`}
+            >
+              {detail.status}
+            </b>
+          </div>
+          <div className="completion-modal-actions">
+            <button onClick={() => setDetail(null)}>닫기</button>
+            {detail.status === `수료 처리 대기` && (
+              <button
+                className="final-process"
+                disabled={!detail.conditions.every(Boolean)}
+                onClick={() => processCompletion(detail.id)}
+              >
+                최종 수료 처리
+              </button>
+            )}
           </div>
         </ResultsDetailModal>
       )}
     </section>
+  );
+}
+
+function CompletionConditionSummary({ conditions }) {
+  const labels = [`진도`, `차시`, `평가`, `설문`];
+  return (
+    <div
+      className="condition-summary"
+      title={`${conditions.filter(Boolean).length}/4 충족`}
+    >
+      {labels.map((label, index) => (
+        <span key={label} className={conditions[index] ? `met` : `unmet`}>
+          {label} {conditions[index] ? `✓` : `–`}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+function CompletionConditionList({ conditions }) {
+  const labels = [
+    `진도율 기준 충족`,
+    `필수 차시 전체 완료`,
+    `평가 통과`,
+    `설문 제출 완료`,
+  ];
+  return (
+    <ul className="condition-detail-list">
+      {labels.map((label, index) => (
+        <li key={label} className={conditions[index] ? `met` : `unmet`}>
+          <i>{conditions[index] ? `✓` : `!`}</i>
+          {label}
+        </li>
+      ))}
+    </ul>
   );
 }
 
