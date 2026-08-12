@@ -15622,3 +15622,55 @@ html[data-theme="dark"] .fixed-badge-card {
     max-width: none !important;
   }
 }
+
+/* Education course filter panel */
+.admin-portal .course-admin-grid-page > .course-card-filter {
+  display: grid !important;
+  width: 100% !important;
+  max-width: none !important;
+  box-sizing: border-box !important;
+  grid-template-columns: minmax(420px, 1fr) minmax(150px, 180px) minmax(150px, 180px) auto auto !important;
+  align-items: center !important;
+  gap: 12px !important;
+  margin: 0 !important;
+  padding: 16px 18px !important;
+  border: 1px solid var(--ui-line) !important;
+  border-radius: 16px !important;
+  background: var(--ui-surface-soft) !important;
+  box-shadow: none !important;
+}
+.admin-portal .course-admin-grid-page > .course-card-filter .search {
+  width: 100% !important;
+  min-width: 0 !important;
+  flex: none !important;
+}
+.admin-portal .course-admin-grid-page > .course-card-filter select {
+  width: 100% !important;
+  min-width: 150px !important;
+  max-width: none !important;
+}
+.admin-portal .course-admin-grid-page > .course-card-filter .filter-search-button {
+  min-width: 76px;
+  padding-right: 20px;
+  padding-left: 20px;
+}
+.admin-portal .course-admin-grid-page > .course-card-filter .filter-reset {
+  padding-right: 6px !important;
+  padding-left: 6px !important;
+}
+
+@media (max-width: 1000px) {
+  .admin-portal .course-admin-grid-page > .course-card-filter {
+    grid-template-columns: minmax(280px, 1fr) minmax(145px, 170px) minmax(145px, 170px) auto !important;
+  }
+  .admin-portal .course-admin-grid-page > .course-card-filter .filter-reset { grid-column: 4; }
+}
+@media (max-width: 760px) {
+  .admin-portal .course-admin-grid-page > .course-card-filter {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+    padding: 14px !important;
+  }
+  .admin-portal .course-admin-grid-page > .course-card-filter .search { grid-column: 1 / -1; }
+  .admin-portal .course-admin-grid-page > .course-card-filter select { min-width: 0 !important; }
+  .admin-portal .course-admin-grid-page > .course-card-filter .filter-reset { grid-column: auto; }
+}
