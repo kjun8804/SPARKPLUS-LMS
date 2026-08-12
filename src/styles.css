@@ -7593,7 +7593,7 @@ html[data-theme=dark] .course-danger-zone { border-color: #5e3e3b; background: #
   }
 }
 
-/* SearchFilterPanel: shared single source of truth */
+/* SearchFilterPanel: shared single source of truth. */
 .search-filter-panel {
   width: 100%;
   max-width: none;
