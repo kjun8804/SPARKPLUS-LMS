@@ -1094,6 +1094,9 @@ function CourseEditorV2({ selected, onBack }) {
   });
   const [editingIndex, setEditingIndex] = r.useState(null);
   const [surveyPreview, setSurveyPreview] = r.useState(false);
+  const [activeSurveyQuestion, setActiveSurveyQuestion] = r.useState(0);
+  const [surveyAddMenu, setSurveyAddMenu] = r.useState(false);
+  const [draggingSurveyQuestion, setDraggingSurveyQuestion] = r.useState(null);
   const update = (key, value) =>
     setForm((current) => ({ ...current, [key]: value }));
   const updateLesson = (key, value) =>
@@ -1143,22 +1146,29 @@ function CourseEditorV2({ selected, onBack }) {
         itemIndex === index ? { ...question, [key]: value } : question,
       ),
     }));
-  const addSurveyQuestion = () =>
+  const addSurveyQuestion = (type = `5점 척도`) =>
     setForm((current) => ({
       ...current,
       surveyQuestions: [
         ...current.surveyQuestions,
         {
           id: Date.now(),
-          question: `새 설문 문항`,
-          type: `5점 척도`,
+          question: type === `주관식` ? `교육에 대한 의견을 자유롭게 작성해 주세요.` : `새 설문 문항`,
+          type,
           required: false,
           lowLabel: `매우 그렇지 않다`,
           highLabel: `매우 그렇다`,
-          options: [],
+          options: [`단일 선택`, `복수 선택`].includes(type) ? [`선택지 1`, `선택지 2`] : [],
         },
       ],
     }));
+  const duplicateSurveyQuestion = (index) =>
+    setForm((current) => {
+      const copy = { ...current.surveyQuestions[index], id: Date.now(), options: [...(current.surveyQuestions[index].options || [])] };
+      const surveyQuestions = [...current.surveyQuestions];
+      surveyQuestions.splice(index + 1, 0, copy);
+      return { ...current, surveyQuestions };
+    });
   const removeSurveyQuestion = (index) =>
     setForm((current) => ({
       ...current,
@@ -1404,32 +1414,26 @@ function CourseEditorV2({ selected, onBack }) {
         </button>
       </section>
       <section className="panel editor-section course-survey-compact">
-        <div className="editor-section-head">
+        <div className="editor-section-head survey-builder-head">
           <div>
             <span>03</span>
-            <h3>수료 후 설문</h3>
+            <div><h3>수료 후 설문</h3><p>교육과정 완료 후 학습자에게 노출할 만족도 설문을 설정합니다.</p></div>
           </div>
           <div className="survey-editor-actions">
+            <label className="setting-switch-label">
+              <span>설문 사용</span>
+              <button type="button" className={form.surveyEnabled ? `rule-switch on` : `rule-switch`} onClick={() => update(`surveyEnabled`, !form.surveyEnabled)}><i /></button>
+            </label>
             <button
               className="secondary"
               onClick={() => setSurveyPreview(true)}
             >
               미리보기
             </button>
-            <label className="setting-switch-label">
-              <span>수강 완료 후 노출</span>
-              <button
-                className={
-                  form.surveyEnabled ? `rule-switch on` : `rule-switch`
-                }
-                onClick={() => update(`surveyEnabled`, !form.surveyEnabled)}
-              >
-                <i />
-              </button>
-            </label>
           </div>
         </div>
-        <div className="survey-basic-grid">
+        <div className={`survey-builder-body ${form.surveyEnabled ? `` : `disabled`}`}>
+        <div className="survey-basic-grid survey-builder-basics">
           <label className="wide">
             설문명
             <input
@@ -1437,13 +1441,17 @@ function CourseEditorV2({ selected, onBack }) {
               onChange={(event) => update(`surveyTitle`, event.target.value)}
             />
           </label>
-          <label>
-            연결 교육과정
-            <input value={form.title} disabled />
+          <label className="wide survey-description-field">
+            설문 안내 문구
+            <textarea
+              rows="2"
+              value={form.surveyDescription}
+              onChange={(event) => update(`surveyDescription`, event.target.value)}
+            />
           </label>
-          <div className="survey-date-input">
+          <div className="survey-date-input wide">
             <label>
-              설문 시작일
+              설문 기간
               <input
                 type="date"
                 value={form.surveyStartDate}
@@ -1454,7 +1462,7 @@ function CourseEditorV2({ selected, onBack }) {
             </label>
             <span>–</span>
             <label>
-              설문 종료일
+              종료일
               <input
                 type="date"
                 min={form.surveyStartDate}
@@ -1465,16 +1473,6 @@ function CourseEditorV2({ selected, onBack }) {
               />
             </label>
           </div>
-          <label className="wide">
-            설문 안내 문구
-            <textarea
-              rows="3"
-              value={form.surveyDescription}
-              onChange={(event) =>
-                update(`surveyDescription`, event.target.value)
-              }
-            />
-          </label>
           <label className="survey-anonymous">
             <input
               type="checkbox"
@@ -1496,13 +1494,29 @@ function CourseEditorV2({ selected, onBack }) {
               onUpdate={updateSurveyQuestion}
               onRemove={removeSurveyQuestion}
               onMove={moveSurveyQuestion}
+              onDuplicate={duplicateSurveyQuestion}
+              active={activeSurveyQuestion === index}
+              onActivate={() => setActiveSurveyQuestion(index)}
+              onDragStart={() => setDraggingSurveyQuestion(index)}
+              onDrop={() => {
+                if (draggingSurveyQuestion === null || draggingSurveyQuestion === index) return;
+                setForm((current) => {
+                  const surveyQuestions = [...current.surveyQuestions];
+                  const [moved] = surveyQuestions.splice(draggingSurveyQuestion, 1);
+                  surveyQuestions.splice(index, 0, moved);
+                  return { ...current, surveyQuestions };
+                });
+                setActiveSurveyQuestion(index);
+                setDraggingSurveyQuestion(null);
+              }}
             />
           ))}
         </div>
-        <button className="add-question" onClick={addSurveyQuestion}>
-          <Icon icon={Add01Icon} />
-          문항 추가
-        </button>
+        <div className="survey-add-wrap">
+          <button className="survey-add-button" onClick={() => setSurveyAddMenu((value) => !value)}><Icon icon={Add01Icon} />문항 추가</button>
+          {surveyAddMenu && <div className="survey-add-menu">{[`5점 척도`, `단일 선택`, `복수 선택`, `주관식`].map((type) => <button key={type} onClick={() => { addSurveyQuestion(type); setActiveSurveyQuestion(form.surveyQuestions.length); setSurveyAddMenu(false); }}>{type}</button>)}</div>}
+        </div>
+        </div>
       </section>
       <div className="course-editor-final-actions">
         <button className="danger-outline" onClick={remove}>
@@ -1740,6 +1754,11 @@ function SurveyQuestionEditor({
   onUpdate,
   onRemove,
   onMove,
+  onDuplicate,
+  active,
+  onActivate,
+  onDragStart,
+  onDrop,
 }) {
   const hasOptions = [`단일 선택`, `복수 선택`].includes(question.type);
   const updateOption = (optionIndex, value) =>
@@ -1749,45 +1768,22 @@ function SurveyQuestionEditor({
       question.options.map((option, i) => (i === optionIndex ? value : option)),
     );
   return (
-    <article className="survey-question-editor">
+    <article className={`survey-question-editor ${active ? `active` : ``}`} onClick={onActivate} onDragOver={(event) => event.preventDefault()} onDrop={onDrop}>
       <div className="survey-question-editor-head">
+        <span className="survey-drag-handle" draggable onDragStart={onDragStart} title="드래그하여 순서 변경">⋮⋮</span>
         <b>Q{index + 1}</b>
-        <div>
-          <button
-            disabled={index === 0}
-            onClick={() => onMove(index, -1)}
-            aria-label="위로 이동"
-          >
-            ↑
-          </button>
-          <button
-            disabled={index === total - 1}
-            onClick={() => onMove(index, 1)}
-            aria-label="아래로 이동"
-          >
-            ↓
-          </button>
-          <button
-            className="delete"
-            onClick={() => onRemove(index)}
-            aria-label="문항 삭제"
-          >
-            <Icon icon={Delete02Icon} />
-          </button>
-        </div>
       </div>
       <div className="survey-question-editor-fields">
         <label className="wide">
-          질문
           <input
+            aria-label={`Q${index + 1} 질문`}
             value={question.question}
             onChange={(event) =>
               onUpdate(index, `question`, event.target.value)
             }
           />
         </label>
-        <label>
-          문항 유형
+        <label className="survey-type-select">
           <select
             value={question.type}
             onChange={(event) => onUpdate(index, `type`, event.target.value)}
@@ -1797,22 +1793,12 @@ function SurveyQuestionEditor({
             ))}
           </select>
         </label>
-        <label className="required-check">
-          <input
-            type="checkbox"
-            checked={question.required}
-            onChange={(event) =>
-              onUpdate(index, `required`, event.target.checked)
-            }
-          />
-          필수 응답
-        </label>
       </div>
       {question.type === `5점 척도` && (
         <div className="scale-label-editor">
           <label>
-            1점 설명
             <input
+              aria-label="1점 설명"
               value={question.lowLabel || ``}
               onChange={(event) =>
                 onUpdate(index, `lowLabel`, event.target.value)
@@ -1821,8 +1807,8 @@ function SurveyQuestionEditor({
           </label>
           <div>☆ ☆ ☆ ☆ ☆</div>
           <label>
-            5점 설명
             <input
+              aria-label="5점 설명"
               value={question.highLabel || ``}
               onChange={(event) =>
                 onUpdate(index, `highLabel`, event.target.value)
@@ -1872,9 +1858,13 @@ function SurveyQuestionEditor({
           className="survey-textarea-preview"
           rows="3"
           disabled
-          placeholder="학습자가 의견을 입력하는 영역입니다."
+          placeholder="장문형 답변"
         />
       )}
+      <div className="survey-question-actions">
+        <div><button onClick={() => onDuplicate(index)}>복제</button><button className="delete" onClick={() => onRemove(index)}>삭제</button></div>
+        <label><span>필수 응답</span><button type="button" className={question.required ? `rule-switch on` : `rule-switch`} onClick={() => onUpdate(index, `required`, !question.required)}><i /></button></label>
+      </div>
     </article>
   );
 }
