@@ -5600,10 +5600,19 @@ function LegacyStatisticsReportPage() {
 function LearningRewardsPage() {
   const [tab, setTab] = r.useState(`ranking`);
   const [rankingScope, setRankingScope] = r.useState(`individual`);
-  const [range, setRange] = r.useState(`월간 랭킹`);
-  const [period, setPeriod] = r.useState(`2026년 8월`);
+  const [selectedYear, setSelectedYear] = r.useState(2026);
+  const [selectedMonth, setSelectedMonth] = r.useState(8);
+  const [pickerYear, setPickerYear] = r.useState(2026);
+  const [monthPickerOpen, setMonthPickerOpen] = r.useState(false);
   const [dept, setDept] = r.useState(`전체 부서`);
   const [detail, setDetail] = r.useState(null);
+  const [pointRules, setPointRules] = r.useState([
+    { id: 1, activity: `차시 완료`, points: 20, enabled: true },
+    { id: 2, activity: `과정 수료`, points: 100, enabled: true },
+    { id: 3, activity: `퀴즈 완료`, points: 50, enabled: true },
+    { id: 4, activity: `설문 제출`, points: 10, enabled: true },
+  ]);
+  const [pointRuleForm, setPointRuleForm] = r.useState(null);
   const [badgeFilter, setBadgeFilter] = r.useState(`전체`);
   const [enabled, setEnabled] = r.useState({
     0: true,
@@ -5653,6 +5662,13 @@ function LearningRewardsPage() {
   const filteredRanking = ranking.filter(
     (item) => dept === `전체 부서` || item.dept === dept,
   );
+  const period = `${selectedYear}년 ${selectedMonth}월`;
+  const savePointRule = () => {
+    if (!pointRuleForm.activity.trim()) return alert(`활동명을 입력해주세요.`);
+    const rule = { ...pointRuleForm, points: Math.max(0, Number(pointRuleForm.points) || 0) };
+    setPointRules((current) => rule.id ? current.map((item) => item.id === rule.id ? rule : item) : [...current, { ...rule, id: Date.now() }]);
+    setPointRuleForm(null);
+  };
   return (
     <section className="results-section rewards-page">
       <div className="results-tabs">
@@ -5661,6 +5677,12 @@ function LearningRewardsPage() {
           onClick={() => setTab(`ranking`)}
         >
           학습 랭킹
+        </button>
+        <button
+          className={tab === `points` ? `active` : ``}
+          onClick={() => setTab(`points`)}
+        >
+          포인트 관리
         </button>
         <button
           className={tab === `badges` ? `active` : ``}
@@ -5676,25 +5698,6 @@ function LearningRewardsPage() {
               <button className={rankingScope === `individual` ? `active` : ``} onClick={() => setRankingScope(`individual`)}>개인 랭킹</button>
               <button className={rankingScope === `department` ? `active` : ``} onClick={() => setRankingScope(`department`)}>부서 랭킹</button>
             </div>
-            <div className="ranking-type">
-              <button
-                className={range === `월간 랭킹` ? `active` : ``}
-                onClick={() => setRange(`월간 랭킹`)}
-              >
-                월간 랭킹
-              </button>
-              <button
-                className={range === `연간 랭킹` ? `active` : ``}
-                onClick={() => setRange(`연간 랭킹`)}
-              >
-                연간 랭킹
-              </button>
-            </div>
-            <select value={period} onChange={(e) => setPeriod(e.target.value)}>
-              {[`2026년 8월`, `2026년 7월`, `2026년 전체`].map((v) => (
-                <option key={v}>{v}</option>
-              ))}
-            </select>
             {rankingScope === `individual` && (
               <select value={dept} onChange={(e) => setDept(e.target.value)}>
                 {[
@@ -5709,9 +5712,13 @@ function LearningRewardsPage() {
                 ))}
               </select>
             )}
-            <button className="point-rule-button" onClick={() => setDetail({ type: `pointRules` })}>
-              포인트 기준 보기
-            </button>
+            <div className="reward-month-picker">
+              <button type="button" className="reward-month-trigger" onClick={() => { setPickerYear(selectedYear); setMonthPickerOpen(!monthPickerOpen); }}>{period}<span aria-hidden="true">▣</span></button>
+              {monthPickerOpen && <div className="reward-month-popover">
+                <div><button type="button" aria-label="이전 연도" onClick={() => setPickerYear((year) => year - 1)}>‹</button><b>{pickerYear}년</b><button type="button" aria-label="다음 연도" onClick={() => setPickerYear((year) => year + 1)}>›</button></div>
+                <div>{Array.from({ length: 12 }, (_, index) => index + 1).map((month) => <button type="button" key={month} className={pickerYear === selectedYear && month === selectedMonth ? `active` : ``} onClick={() => { setSelectedYear(pickerYear); setSelectedMonth(month); setMonthPickerOpen(false); }}>{month}월</button>)}</div>
+              </div>}
+            </div>
           </div>
           {rankingScope === `individual` ? (
             <>
@@ -5731,7 +5738,7 @@ function LearningRewardsPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredRanking.map((item) => (
+                  {filteredRanking.slice(3).map((item) => (
                     <tr key={item.rank}>
                       <td>
                         <span className={`rank-number top-${item.rank}`}>
@@ -5766,8 +5773,14 @@ function LearningRewardsPage() {
             </div>
             </>
           ) : (
-            <><RewardTopThree items={departmentRanking.slice(0, 3)} type="department" /><DepartmentRankingTable departments={departmentRanking} period={period} /></>
+            <><RewardTopThree items={departmentRanking.slice(0, 3)} type="department" /><DepartmentRankingTable departments={departmentRanking.slice(3)} period={period} /></>
           )}
+        </>
+      ) : tab === `points` ? (
+        <>
+          <div className="point-management-head"><div><h2>포인트 지급 기준</h2><p>학습 활동별 포인트와 사용 상태를 관리합니다.</p></div><button type="button" className="point-rule-add" onClick={() => setPointRuleForm({ id: null, activity: ``, points: 20, enabled: true })}><Icon icon={Add01Icon} size={16} />포인트 기준 추가</button></div>
+          <div className="table-wrap results-table point-rule-table"><table><thead><tr><th>활동</th><th>지급 포인트</th><th>상태</th><th>관리</th></tr></thead><tbody>{pointRules.map((rule) => <tr key={rule.id}><td><b>{rule.activity}</b></td><td><strong>+{rule.points}P</strong></td><td><span className={`point-rule-status ${rule.enabled ? `enabled` : ``}`}>{rule.enabled ? `사용 중` : `사용 안 함`}</span></td><td><button type="button" className="analysis-button" onClick={() => setPointRuleForm({ ...rule })}>수정</button></td></tr>)}</tbody></table></div>
+          <div className="recent-point-section"><div><h2>최근 포인트 적립 내역</h2></div><div className="recent-point-list">{[[`김지수`, `개인정보보호 필수교육 수료`, `+100P`, `2026.08.12`],[`이지은`, `생성형 AI 업무 활용 퀴즈 완료`, `+50P`, `2026.08.11`],[`정유진`, `데이터 분석 기초 입문 차시 완료`, `+20P`, `2026.08.10`]].map((item) => <div key={`${item[0]}-${item[3]}`}><b>{item[0]}</b><span>{item[1]}</span><strong>{item[2]}</strong><time>{item[3]}</time></div>)}</div></div>
         </>
       ) : (
         <>
@@ -5815,15 +5828,13 @@ function LearningRewardsPage() {
       )}
       {detail && (
         <ResultsDetailModal
-          title={detail.type === `points` ? `포인트 적립 내역` : detail.type === `pointRules` ? `포인트 지급 기준` : detail.type === `badgePeople` ? `뱃지 획득 현황` : `뱃지 지급 기준`}
+          title={detail.type === `points` ? `포인트 적립 내역` : detail.type === `badgePeople` ? `뱃지 획득 현황` : `뱃지 지급 기준`}
           subtitle={detail.name || `학습 활동별 적립 포인트를 확인하세요.`}
           onClose={() => setDetail(null)}
         >
           {detail.type === `points` ? (
             <><div className="point-detail-summary"><div><span>이번 달 포인트</span><b>{detail.point.toLocaleString()}P</b></div><div><span>이번 달 순위</span><b>{detail.rank}위</b></div><div><span>획득 뱃지</span><b>{detail.badges}개</b></div></div>
             <div className="point-history actual-history">{[[`08.10`, `데이터 분석 기초 입문`, `과정 수료`, `+100P`],[`08.10`, `데이터 분석 기초 입문 · 5차시`, `차시 학습 완료`, `+20P`],[`08.08`, `개인정보보호 필수교육`, `퀴즈 완료`, `+50P`],[`08.08`, `개인정보보호 필수교육`, `설문 제출`, `+10P`]].map((x, index) => <div key={`${x[0]}-${index}`}><time>{x[0]}</time><span><b>{x[1]}</b><small>{x[2]}</small></span><strong>{x[3]}</strong></div>)}</div></>
-          ) : detail.type === `pointRules` ? (
-            <div className="point-rule-list">{[[`차시 학습 완료`, `+20P`],[`과정 수료`, `+100P`],[`퀴즈 완료`, `+50P`],[`설문 제출`, `+10P`]].map((x) => <div key={x[0]}><span>{x[0]}</span><b>{x[1]}</b></div>)}</div>
           ) : detail.type === `badgePeople` ? (
             <div className="badge-recipient-list">{[[`김지수`, `People팀`, `2026.07`],[`이지은`, `마케팅팀`, `2026.06`],[`정유진`, `운영팀`, `2026.05`]].map((x) => <div key={x[0]}><span className="recipient-avatar">{x[0][0]}</span><b>{x[0]}</b><span>{x[1]}</span><time>{x[2]}</time></div>)}</div>
           ) : (
@@ -5843,6 +5854,7 @@ function LearningRewardsPage() {
           )}
         </ResultsDetailModal>
       )}
+      {pointRuleForm && <div className="overlay center" onMouseDown={() => setPointRuleForm(null)}><section className="point-rule-editor" onMouseDown={(event) => event.stopPropagation()}><header><div><span>포인트 관리</span><h2>{pointRuleForm.id ? `포인트 기준 수정` : `포인트 기준 추가`}</h2></div><button onClick={() => setPointRuleForm(null)} aria-label="닫기"><Icon icon={Cancel01Icon} /></button></header><div className="point-rule-editor-body"><label>활동명<input value={pointRuleForm.activity} onChange={(event) => setPointRuleForm((current) => ({ ...current, activity: event.target.value }))} placeholder="활동명을 입력해주세요" /></label><label>지급 포인트<div className="point-input-with-unit"><input type="number" min="0" value={pointRuleForm.points} onChange={(event) => setPointRuleForm((current) => ({ ...current, points: event.target.value }))} /><span>P</span></div></label><label>상태<select value={pointRuleForm.enabled ? `사용 중` : `사용 안 함`} onChange={(event) => setPointRuleForm((current) => ({ ...current, enabled: event.target.value === `사용 중` }))}><option>사용 중</option><option>사용 안 함</option></select></label></div><footer><button className="secondary" onClick={() => setPointRuleForm(null)}>취소</button><button className="primary" onClick={savePointRule}>저장</button></footer></section></div>}
     </section>
   );
 }
@@ -5851,11 +5863,7 @@ function RewardTopThree({ items, type }) {
   return (
     <div className="reward-top-section">
       <div className="reward-section-title">
-        <div>
-          <span>{type === `individual` ? `이번 달의 학습 리더` : `이번 달의 우수 학습 부서`}</span>
-          <h2>TOP 3</h2>
-        </div>
-        <p>{type === `individual` ? `활발하게 학습한 구성원을 확인하세요.` : `부서원 1인당 평균 포인트 기준입니다.`}</p>
+        <h2>TOP 3</h2>
       </div>
       <div className="reward-podium-grid">
         {items.map((item, index) => (
@@ -5865,7 +5873,7 @@ function RewardTopThree({ items, type }) {
             <h3>{type === `individual` ? item.name : item.dept}</h3>
             <p>{type === `individual` ? item.dept : `참여 ${item.members}명`}</p>
             <strong>{(type === `individual` ? item.point : item.averagePoint).toLocaleString()}P</strong>
-            <small>{type === `individual` ? `학습 포인트` : `1인당 평균`}</small>
+            {type === `department` && <small>1인당 평균</small>}
           </article>
         ))}
       </div>

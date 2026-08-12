@@ -17030,3 +17030,84 @@ html[data-theme="dark"] .learner-soft-tag.position { background:#252b32; color:#
   .admin-portal > .main > .page-head h1 { font-size:30px!important; }
   .course-admin-result { align-items:flex-start!important; flex-direction:column; }
 }
+
+/* Learning rewards: monthly ranking, point rules, and restrained award styling. */
+.rewards-page .results-tabs { display:flex; gap:28px; margin:0 0 24px; border-bottom:1px solid var(--ui-line); }
+.rewards-page .results-tabs button { position:relative; min-width:108px; min-height:48px; padding:0 4px; border:0; background:transparent!important; color:var(--ui-sub)!important; font-size:15px; font-weight:650; }
+.rewards-page .results-tabs button.active { color:#2868ad!important; }
+.rewards-page .results-tabs button.active::after { position:absolute; right:4px; bottom:-1px; left:4px; height:2px; border-radius:999px; background:#3182f6; content:""; }
+.reward-toolbar { position:relative; justify-content:flex-start; gap:12px; margin:0 0 22px; padding:12px; }
+.reward-toolbar .reward-ranking-scope { display:inline-flex; flex:0 0 auto; gap:3px; margin:0; padding:4px; border-radius:12px; background:#edf1f5; }
+.reward-toolbar .reward-ranking-scope button { min-width:96px; height:38px; padding:0 14px; border:0; border-radius:9px; background:#f3f5f7!important; color:#65717f!important; font-size:13px; font-weight:650; }
+.reward-toolbar .reward-ranking-scope button.active { background:#e2efff!important; color:#245f9d!important; box-shadow:0 0 0 1px rgba(49,130,246,.08); }
+.reward-toolbar > select { min-width:150px; }
+.reward-month-picker { position:relative; margin-left:auto; }
+.reward-month-trigger { display:inline-flex; min-width:148px; height:42px; align-items:center; justify-content:space-between; gap:14px; padding:0 13px; border:1px solid var(--ui-line); border-radius:12px; background:var(--ui-surface); color:var(--ui-text); font-size:13px; font-weight:600; }
+.reward-month-trigger span { color:#64809c; font-size:12px; }
+.reward-month-popover { position:absolute; z-index:80; top:50px; right:0; width:286px; padding:16px; border:1px solid var(--ui-line); border-radius:16px; background:var(--ui-surface); box-shadow:0 16px 42px rgba(0,27,55,.14); }
+.reward-month-popover > div:first-child { display:grid; grid-template-columns:36px 1fr 36px; align-items:center; margin-bottom:13px; text-align:center; }
+.reward-month-popover > div:first-child button { width:34px; height:34px; border:0; border-radius:9px; background:var(--ui-surface-soft); color:var(--ui-text); font-size:20px; }
+.reward-month-popover > div:first-child b { font-size:15px; }
+.reward-month-popover > div:last-child { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; }
+.reward-month-popover > div:last-child button { height:36px; border:0; border-radius:9px; background:transparent; color:var(--ui-sub); font-size:13px; }
+.reward-month-popover > div:last-child button:hover { background:var(--ui-surface-soft); }
+.reward-month-popover > div:last-child button.active { background:#e5f1ff; color:#245f9d; font-weight:700; }
+
+.reward-top-section { padding:24px; background:var(--ui-surface); }
+.reward-section-title { margin-bottom:17px; }
+.reward-section-title h2 { margin:0; font-size:20px; }
+.reward-podium-grid { grid-template-columns:repeat(3,minmax(0,1fr)); align-items:end; gap:12px; }
+.reward-podium-card { min-height:170px; padding:21px; }
+.reward-podium-card.rank-1 { min-height:190px; order:2; border-color:#ead9a7; background:#fffbef; }
+.reward-podium-card.rank-2 { order:1; background:#f7f9fb; }
+.reward-podium-card.rank-3 { order:3; background:#fcf7f2; }
+.reward-podium-card .podium-rank { font-size:13px; }
+.reward-podium-card h3 { margin:12px 0 4px; font-size:18px; }
+.reward-podium-card p { margin:0 0 18px; font-size:13px; }
+.reward-podium-card strong { font-size:25px; }
+.reward-podium-card small { font-size:11px; }
+.reward-list-heading { margin:26px 2px 13px; }
+.reward-list-heading p { display:none; }
+.reward-list-heading h2 { font-size:19px; }
+.reward-list-heading > span { font-size:13px; }
+.reward-ranking-table th,.reward-ranking-table td,.department-ranking-table th,.department-ranking-table td { font-size:13px!important; }
+
+.point-management-head { display:flex; align-items:flex-end; justify-content:space-between; gap:20px; margin:2px 0 16px; }
+.point-management-head h2,.recent-point-section h2 { margin:0; font-size:20px; }
+.point-management-head p { margin:5px 0 0; color:var(--ui-sub); font-size:13px; }
+.point-rule-add { display:inline-flex; min-height:40px; align-items:center; gap:6px; padding:0 14px; border:1px solid #cfe0f6; border-radius:12px; background:#edf5ff; color:#2868ad; font-size:13px; font-weight:650; }
+.point-rule-table th,.point-rule-table td { padding:16px 18px!important; font-size:14px!important; }
+.point-rule-table td strong { color:#2868ad; font-size:15px; }
+.point-rule-status { display:inline-flex; min-height:28px; align-items:center; padding:0 9px; border-radius:8px; background:#f2f4f6; color:#6b7684; font-size:12px; font-weight:650; }
+.point-rule-status.enabled { background:#edf5ff; color:#2868ad; }
+.recent-point-section { margin-top:30px; }
+.recent-point-section > div:first-child { margin-bottom:13px; }
+.recent-point-list { overflow:hidden; border:1px solid var(--ui-line); border-radius:18px; background:var(--ui-surface); }
+.recent-point-list > div { display:grid; grid-template-columns:100px minmax(0,1fr) 80px 100px; align-items:center; gap:14px; padding:16px 18px; border-bottom:1px solid var(--ui-line); font-size:13px; }
+.recent-point-list > div:last-child { border-bottom:0; }
+.recent-point-list span,.recent-point-list time { color:var(--ui-sub); }
+.recent-point-list strong { color:#2868ad; }
+.point-rule-editor { width:min(480px,calc(100vw - 32px)); overflow:hidden; border:1px solid var(--ui-line); border-radius:22px; background:var(--ui-surface); box-shadow:0 24px 70px rgba(0,27,55,.18); }
+.point-rule-editor > header { display:flex; align-items:flex-start; justify-content:space-between; padding:22px 24px 18px; border-bottom:1px solid var(--ui-line); }
+.point-rule-editor > header span { color:#4b7ca9; font-size:11px; font-weight:700; }
+.point-rule-editor > header h2 { margin:5px 0 0; font-size:21px; }
+.point-rule-editor > header > button { width:36px; height:36px; border:0; border-radius:10px; background:var(--ui-surface-soft); color:var(--ui-sub); }
+.point-rule-editor-body { display:grid; gap:17px; padding:22px 24px; }
+.point-rule-editor-body label { display:grid; gap:8px; color:var(--ui-text); font-size:13px; font-weight:600; }
+.point-rule-editor-body input,.point-rule-editor-body select { width:100%; height:44px; box-sizing:border-box; padding:0 13px; background:var(--ui-surface); font-size:14px; font-weight:400; }
+.point-input-with-unit { position:relative; }
+.point-input-with-unit input { padding-right:40px; }
+.point-input-with-unit span { position:absolute; top:0; right:14px; height:44px; line-height:44px; color:var(--ui-sub); }
+.point-rule-editor > footer { display:flex; justify-content:flex-end; gap:9px; padding:16px 24px 20px; border-top:1px solid var(--ui-line); }
+.point-rule-editor > footer button { min-width:88px; min-height:40px; }
+
+@media(max-width:800px) {
+  .reward-toolbar { align-items:stretch; flex-wrap:wrap; }
+  .reward-toolbar .reward-ranking-scope { flex:1 1 100%; }
+  .reward-toolbar .reward-ranking-scope button { flex:1; }
+  .reward-month-picker { margin-left:0; }
+  .reward-podium-grid { grid-template-columns:1fr; }
+  .reward-podium-card.rank-1,.reward-podium-card.rank-2,.reward-podium-card.rank-3 { min-height:160px; order:initial; }
+  .recent-point-list > div { grid-template-columns:80px 1fr 70px; }
+  .recent-point-list time { grid-column:2 / -1; }
+}
