@@ -439,33 +439,20 @@ function f({ logout: e }) {
       (0, i.jsxs)(`main`, {
         className: `main ${t === `home` ? `admin-home-main` : t === `courses` ? `admin-courses-main` : t === `learners` ? `admin-learners-main` : [`rewards`, `notices`, `content`].includes(t) ? `admin-results-main` : ``}`,
         children: [
-          (0, i.jsxs)(`div`, {
-            className: `page-heading ${t === `home` ? `admin-home-heading home-welcome` : t === `courses` ? `admin-course-heading home-welcome` : t === `learners` ? `admin-learner-heading home-welcome` : [`rewards`, `notices`].includes(t) ? `admin-results-heading home-welcome` : ``}`,
-            children: [
-              (0, i.jsxs)(`div`, {
-                children: [
-                  t !== `home` &&
-                    t !== `courses` &&
-                    t !== `learners` &&
-                    ![`rewards`, `notices`].includes(
-                      t,
-                    ) &&
-                    (0, i.jsx)(`p`, { children: `SPARKPLUS LMS ADMIN` }),
-                  (0, i.jsx)(`h1`, { children: l[t][0] }),
-                  (0, i.jsx)(`span`, { children: l[t][1] }),
-                ],
-              }),
-              t === `notices` &&
-                (0, i.jsx)(`button`, {
-                  className: `primary`,
-                  onClick: () => setNoticeCreateSignal((value) => value + 1),
-                  children: [
-                    (0, i.jsx)(Icon, { icon: Add01Icon }),
-                    `공지사항 등록`,
-                  ],
-                }),
-            ],
-          }),
+          ![`content`, `learnerDetail`].includes(t) &&
+            (0, i.jsx)(I, {
+              kicker: l[t][0],
+              title: l[t][0],
+              description: l[t][1],
+              action:
+                t === `notices`
+                  ? (0, i.jsxs)(`button`, {
+                      className: `primary`,
+                      onClick: () => setNoticeCreateSignal((value) => value + 1),
+                      children: [(0, i.jsx)(Icon, { icon: Add01Icon }), `공지사항 등록`],
+                    })
+                  : null,
+            }),
           t === `home` && (0, i.jsx)(p, { onGo: B }),
           t === `courses` &&
             (0, i.jsx)(CourseAdminGrid, {
@@ -1293,6 +1280,7 @@ function CourseEditorV2({ selected, onBack, isNew = false }) {
   };
   return (
     <div className="course-editor-v2">
+      <div className="breadcrumb admin-detail-breadcrumb"><button onClick={onBack}>홈</button><span>›</span><button onClick={onBack}>교육과정 관리</button><span>›</span>{isNew ? `새 교육과정 등록` : `교육과정 수정`}</div>
       <button className="department-back" onClick={onBack}>
         <Icon icon={ArrowLeft01Icon} />
         교육과정 목록으로
@@ -3176,6 +3164,7 @@ function LearnerProfilePage({ learner, onBack }) {
     });
   return (
     <section className="learner-profile-page-full">
+      <div className="breadcrumb admin-detail-breadcrumb"><button onClick={onBack}>홈</button><span>›</span><button onClick={onBack}>학습자 관리</button><span>›</span>{learner.name}</div>
       <button className="department-back" onClick={onBack}>
         <Icon icon={ArrowLeft01Icon} />
         학습자 목록으로

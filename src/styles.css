@@ -16951,3 +16951,82 @@ html[data-theme="dark"] .learner-soft-tag.position { background:#252b32; color:#
   .learner-department-metrics b { font-size:21px; }
   .learner-management-table { overflow-x:auto; }
 }
+
+/* Administrator page structure reuses the learner PageHeader and spacing scale. */
+.admin-portal > .main,
+.admin-portal > .main.admin-home-main,
+.admin-portal > .main.admin-courses-main,
+.admin-portal > .main.admin-learners-main,
+.admin-portal > .main.admin-results-main {
+  width:min(1220px,calc(100% - 64px))!important;
+  max-width:1240px!important;
+  box-sizing:border-box!important;
+  margin:0 auto!important;
+  padding:52px 24px 82px!important;
+}
+.admin-portal > .main > .page-head {
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:28px;
+  margin:0 0 34px!important;
+  padding:0!important;
+}
+.admin-portal > .main > .page-head h1 {
+  margin:5px 0 7px!important;
+  color:var(--ui-text)!important;
+  font-size:34px!important;
+  font-weight:730!important;
+  line-height:1.25!important;
+  letter-spacing:-.045em!important;
+}
+.admin-portal > .main > .page-head p {
+  max-width:640px;
+  margin:0!important;
+  color:var(--ui-sub)!important;
+  font-size:14px!important;
+  font-weight:400!important;
+  line-height:1.6!important;
+}
+.admin-portal > .main > .page-head .breadcrumb,
+.admin-detail-breadcrumb {
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin:0 0 20px!important;
+  color:#9aa3ad!important;
+  font-size:12px!important;
+  font-weight:400!important;
+  line-height:1.4;
+}
+.admin-portal > .main > .page-head .breadcrumb span,
+.admin-detail-breadcrumb span { color:#b0b8c1; }
+.admin-detail-breadcrumb { margin-bottom:0!important; }
+.admin-detail-breadcrumb button { color:#6b7684!important; font-size:12px; font-weight:400; }
+
+/* Search panel to content follows the catalog result spacing. */
+.course-admin-grid-page { gap:0!important; }
+.course-admin-result { margin:34px 0 16px!important; }
+.course-admin-result-actions { align-self:center; }
+.learner-management-hub { gap:0!important; }
+.learner-management-hub > .search-filter-panel + .learner-department-head { margin-top:34px!important; }
+.learner-department-grid + .learner-list-head { margin-top:38px!important; }
+.learner-list-head { margin-bottom:16px!important; }
+.admin-notice-page { gap:0!important; }
+.notice-admin-summary { margin-bottom:20px; }
+.admin-notice-page > .search-filter-panel { margin-bottom:32px!important; }
+.rewards-page { gap:24px!important; }
+
+@media (max-width:700px) {
+  .admin-portal > .main,
+  .admin-portal > .main.admin-home-main,
+  .admin-portal > .main.admin-courses-main,
+  .admin-portal > .main.admin-learners-main,
+  .admin-portal > .main.admin-results-main {
+    width:min(100% - 32px,1220px)!important;
+    padding:38px 0 64px!important;
+  }
+  .admin-portal > .main > .page-head { align-items:flex-start; flex-direction:column; margin-bottom:28px!important; }
+  .admin-portal > .main > .page-head h1 { font-size:30px!important; }
+  .course-admin-result { align-items:flex-start!important; flex-direction:column; }
+}
