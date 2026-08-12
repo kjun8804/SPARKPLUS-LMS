@@ -1110,7 +1110,6 @@ function CourseEditorV2({ selected, onBack, isNew = false }) {
     surveyQuestions: isNew ? [] : selected.surveyQuestions || createDefaultSurveyQuestions(),
   });
   const [editingIndex, setEditingIndex] = r.useState(null);
-  const [surveyPreview, setSurveyPreview] = r.useState(false);
   const [activeSection, setActiveSection] = r.useState(`basic`);
   const [dirty, setDirty] = r.useState(false);
   const [coursePreview, setCoursePreview] = r.useState(false);
@@ -1280,7 +1279,7 @@ function CourseEditorV2({ selected, onBack, isNew = false }) {
           <h2>{form.title || `과정명을 입력해 주세요`}</h2>
           <p>{[form.category || `분야 미선택`, form.level || `레벨 미선택`, form.status || `상태 미선택`].join(` · `)}</p>
         </div>
-        <button className="secondary course-preview-button" onClick={() => setCoursePreview(true)}><Icon icon={ViewIcon} />미리보기</button>
+        <div className="course-builder-header-actions"><button className="secondary course-preview-button" onClick={() => setCoursePreview(true)}><Icon icon={ViewIcon} />미리보기</button>{!isNew && <button className="course-delete-icon" title="과정 삭제" aria-label="과정 삭제" onClick={remove}><Icon icon={Delete02Icon} /></button>}</div>
       </section>
       <nav className="course-builder-nav">{[[`basic`, `01 기본 정보`], [`lessons`, `02 커리큘럼 및 차시`], [`survey`, `03 수료 후 설문`]].map(([key, label]) => <button key={key} className={activeSection === key ? `active` : ``} onClick={() => sectionRefs[key].current?.scrollIntoView({ behavior: `smooth`, block: `start` })}>{label}</button>)}</nav>
       <section ref={sectionRefs.basic} data-section="basic" id="course-basic-section" className="panel editor-section course-builder-section">
@@ -1462,27 +1461,21 @@ function CourseEditorV2({ selected, onBack, isNew = false }) {
         <div className="editor-section-head survey-builder-head">
           <div>
             <span>03</span>
-            <div><h3>수료 후 설문</h3><p>교육 완료 후 진행할 Google Forms 설문을 연결합니다.</p></div>
+            <div><h3>수료 후 설문</h3><p>Google Forms 설문을 연결합니다.</p></div>
           </div>
           <div className="survey-editor-actions">
-            <label className="setting-switch-label">
-              <span>설문 사용</span>
-              <button type="button" className={form.surveyEnabled ? `rule-switch on` : `rule-switch`} onClick={() => update(`surveyEnabled`, !form.surveyEnabled)}><i /></button>
-            </label>
+            <button type="button" aria-label={form.surveyEnabled ? `설문 사용 중` : `설문 사용 안 함`} className={form.surveyEnabled ? `rule-switch on` : `rule-switch`} onClick={() => update(`surveyEnabled`, !form.surveyEnabled)}><i /></button>
           </div>
         </div>
-        {!form.surveyEnabled ? (
-          <div className="google-form-empty">현재 연결된 설문이 없습니다.</div>
-        ) : (
+        {form.surveyEnabled && (
           <div className="google-form-connect">
-            <label>Google Forms 링크<input value={form.googleFormUrl} placeholder="Google Forms 링크를 입력해주세요" onChange={(event) => update(`googleFormUrl`, event.target.value)} /></label>
+            <div className="google-form-link-row"><label>Google Forms 링크<input value={form.googleFormUrl} placeholder="Google Forms 링크를 입력해주세요" onChange={(event) => update(`googleFormUrl`, event.target.value)} /></label>{googleFormId(form.googleFormUrl) && <a className="google-form-edit-link" href={form.googleFormUrl} target="_blank" rel="noreferrer">Google Forms에서 편집 ↗</a>}</div>
             {form.googleFormUrl && !googleFormId(form.googleFormUrl) && <p className="google-form-error">올바른 Google Forms 링크를 입력해주세요.</p>}
-            {googleFormId(form.googleFormUrl) && <div className="google-form-connected"><div><span>Google Forms</span><b>수료 후 만족도 설문</b><small>연결됨</small></div><div><button className="secondary" onClick={() => setSurveyPreview(true)}>설문 미리보기</button><a className="secondary" href={form.googleFormUrl} target="_blank" rel="noreferrer">Google Forms에서 편집 ↗</a></div></div>}
+            {googleFormId(form.googleFormUrl) && <iframe className="google-form-inline-frame" src={googleFormEmbedUrl(form.googleFormUrl)} title="Google Forms 수료 후 설문" />}
           </div>
         )}
       </section>
-      {!isNew && <section className="course-danger-zone"><div><h3>과정 삭제</h3><p>삭제한 교육과정은 복구할 수 없습니다.</p></div><button className="danger-outline" onClick={remove}><Icon icon={Delete02Icon} />과정 삭제</button></section>}
-      <div className="course-editor-final-actions course-builder-savebar"><span>{dirty ? `변경사항이 있습니다.` : `모든 변경사항이 저장되었습니다.`}</span><div><button className="secondary" onClick={() => setCoursePreview(true)}>미리보기</button><button className="primary" onClick={save}>{isNew ? `교육과정 등록` : `변경사항 저장`}</button></div></div>
+      <div className="course-editor-final-actions course-builder-savebar"><span>{dirty ? `변경사항이 있습니다.` : `모든 변경사항이 저장되었습니다.`}</span><div><button className="primary" onClick={save}>{isNew ? `교육과정 등록` : `변경사항 저장`}</button></div></div>
       {lesson && (
         <div
           className="overlay"
@@ -1632,35 +1625,7 @@ function CourseEditorV2({ selected, onBack, isNew = false }) {
           </aside>
         </div>
       )}
-      {surveyPreview && (
-        <div
-          className="survey-preview-overlay"
-          onMouseDown={(event) =>
-            event.target === event.currentTarget && setSurveyPreview(false)
-          }
-        >
-          <div className="survey-preview-modal">
-            <div className="survey-preview-head">
-              <div>
-                <span>학습자 화면 미리보기</span>
-                <h2>수료 후 설문 미리보기</h2>
-              </div>
-              <button onClick={() => setSurveyPreview(false)}>×</button>
-            </div>
-            <iframe className="google-form-preview-frame" src={googleFormEmbedUrl(form.googleFormUrl)} title="Google Forms 설문 미리보기" />
-            <div className="survey-preview-footer">
-              <button
-                className="secondary"
-                onClick={() => setSurveyPreview(false)}
-              >
-                닫기
-              </button>
-              <a className="primary" href={googleFormEmbedUrl(form.googleFormUrl).replace(`?embedded=true`, ``)} target="_blank" rel="noreferrer">새 창에서 열기 ↗</a>
-            </div>
-          </div>
-        </div>
-      )}
-      {coursePreview && <div className="survey-preview-overlay" onMouseDown={(event) => event.target === event.currentTarget && setCoursePreview(false)}><div className="course-builder-preview"><header><div><span>사용자 화면 미리보기</span><h2>{form.title || `제목 없는 교육과정`}</h2><p>{form.category} · {form.level} · {form.status}</p></div><button onClick={() => setCoursePreview(false)}>×</button></header><div className="course-builder-preview-body"><h3>과정 소개</h3><p>{form.introduction || `과정 소개를 입력해 주세요.`}</p><h3>커리큘럼</h3>{form.lessons.map((item, index) => <div key={index}><b>{index + 1}차시 · {item.title}</b><span>{item.duration}</span></div>)}</div></div></div>}
+      {coursePreview && <div className="survey-preview-overlay course-preview-overlay" onMouseDown={(event) => event.target === event.currentTarget && setCoursePreview(false)}><div className="course-user-preview"><button className="course-user-preview-close" onClick={() => setCoursePreview(false)} aria-label="미리보기 닫기">×</button><X course={{ ...selected, title: form.title || `제목 없는 교육과정`, category: form.category || `분야`, status: form.status || `오픈 전`, level: form.level || `레벨`, description: form.introduction, introduction: form.introduction, curriculumSummary: form.curriculumSummary, curriculum: form.lessons, thumbnail: form.thumbnail, period: form.startDate && form.endDate ? `${form.startDate.replaceAll(`-`, `.`)} ~ ${form.endDate.replaceAll(`-`, `.`)}` : `교육 기간 미설정` }} go={() => {}} apply={() => {}} preview /></div></div>}
     </div>
   );
 }
@@ -9592,8 +9557,8 @@ function Y({ course: e, go: t }) {
     </article>
   );
 }
-function X({ course: e, go: t, apply: n }) {
-  let a = k[e.id] ?? [],
+function X({ course: e, go: t, apply: n, preview = false }) {
+  let a = e.curriculum || k[e.id] || [],
     [o, s] = (0, r.useState)(`intro`);
   return (0, i.jsxs)(`main`, {
     className: `page`,
@@ -9614,7 +9579,9 @@ function X({ course: e, go: t, apply: n }) {
       (0, i.jsxs)(`div`, {
         className: `detail-hero`,
         children: [
-          (0, i.jsx)(J, { accent: e.accent, label: e.category }),
+          e.thumbnail
+            ? (0, i.jsx)(`img`, { className: `detail-course-thumbnail`, src: e.thumbnail, alt: `${e.title} 썸네일` })
+            : (0, i.jsx)(J, { accent: e.accent, label: e.category }),
           (0, i.jsxs)(`div`, {
             className: `detail-intro`,
             children: [
@@ -9689,8 +9656,8 @@ function X({ course: e, go: t, apply: n }) {
                           (0, i.jsx)(`h2`, { children: `과정 소개` }),
                           (0, i.jsxs)(`p`, {
                             children: [
-                              e.description,
-                              ` 실무에서 바로 활용할 수 있도록 핵심 개념과 사례를 중심으로 구성했습니다.`,
+                              e.introduction || e.description,
+                              !preview && ` 실무에서 바로 활용할 수 있도록 핵심 개념과 사례를 중심으로 구성했습니다.`,
                             ],
                           }),
                         ],
@@ -9747,6 +9714,7 @@ function X({ course: e, go: t, apply: n }) {
                         (0, i.jsxs)(`p`, {
                           className: `curriculum-guide`,
                           children: [
+                            e.curriculumSummary && `${e.curriculumSummary} · `,
                             `총 `,
                             a.length,
                             `개 차시로 구성되어 있습니다.`,
@@ -10181,7 +10149,7 @@ function GoogleFormSurveyPage({ course, go }) {
   return (
     <main className="page google-form-user-page">
       <div className="breadcrumb"><button onClick={() => go(`lectureDetail`, course.id)}>나의 학습</button><span>›</span>수료 후 설문</div>
-      <header className="google-form-user-head"><div><h1>수료 후 설문</h1><p>교육에 대한 의견을 남겨주세요.</p></div><a href={responseUrl.replace(`?embedded=true`, ``)} target="_blank" rel="noreferrer">새 창에서 열기 ↗</a></header>
+      <header className="google-form-user-head"><h1>수료 후 설문</h1><a href={responseUrl.replace(`?embedded=true`, ``)} target="_blank" rel="noreferrer">새 창에서 열기 ↗</a></header>
       <iframe className="google-form-user-frame" src={responseUrl} title={`${course.title} 수료 후 설문`} />
     </main>
   );
