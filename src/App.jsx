@@ -3079,10 +3079,6 @@ function LearnerDepartmentHub({ onSelect }) {
                 <small>평균 진도율</small>
                 <b>{dept.progress}%</b>
               </div>
-              <div>
-                <small>수료율</small>
-                <b>{dept.completion}%</b>
-              </div>
               <div className={dept.required > 0 ? `needs-attention` : ``}>
                 <small>관리 필요</small>
                 <b>{dept.required}명</b>
@@ -3111,7 +3107,6 @@ function LearnerDepartmentHub({ onSelect }) {
               <th>직급</th>
               <th>수강 중 과정</th>
               <th>평균 진도율</th>
-              <th>수료 현황</th>
               <th>관리</th>
             </tr>
           </thead>
@@ -3127,24 +3122,15 @@ function LearnerDepartmentHub({ onSelect }) {
                     </div>
                   </div>
                 </td>
-                <td>{employee.dept}</td>
-                <td>{employee.position}</td>
+                <td><span className="learner-soft-tag department">{employee.dept}</span></td>
+                <td><span className="learner-soft-tag position">{employee.position}</span></td>
                 <td>{Math.max(0, employee.courses - employee.completed)}개</td>
                 <td>
                   <div className="table-progress">
                     {d({ value: employee.progress })}
                     <span>{employee.progress}%</span>
                   </div>
-                </td>
-                <td>
-                  <span
-                    className={`learner-state ${employee.learningStatus === `수료` ? `complete` : employee.learningStatus === `관리 필요` ? `attention` : `learning`}`}
-                  >
-                    {employee.learningStatus}
-                  </span>
-                  <small className="learner-completion-count">
-                    {employee.completed}/{employee.courses} 과정
-                  </small>
+                  {employee.learningStatus === `관리 필요` && <small className="learner-attention-inline">주의 필요</small>}
                 </td>
                 <td>
                   <button className="detail" onClick={() => onSelect(employee)}>
