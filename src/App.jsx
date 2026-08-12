@@ -7797,6 +7797,7 @@ function T({ createSignal }) {
   const [screen, setScreen] = r.useState(`list`);
   const [form, setForm] = r.useState(null);
   const [viewing, setViewing] = r.useState(null);
+  const [deleteTarget, setDeleteTarget] = r.useState(null);
   const initialSignal = r.useRef(createSignal);
   r.useEffect(() => {
     if (createSignal !== initialSignal.current) {
@@ -7823,10 +7824,13 @@ function T({ createSignal }) {
   };
   const editNotice = (notice) => { setForm({ ...emptyNoticeForm(), ...notice, start: notice.start?.replaceAll(`.`, `-`) || ``, end: notice.end?.replaceAll(`.`, `-`) || `` }); setScreen(`edit`); };
   const removeNotice = (notice) => {
-    if (confirm(`이 공지사항을 삭제하시겠습니까?`)) setNotices((current) => current.filter((item) => item.id !== notice.id));
+    setNotices((current) => current.filter((item) => item.id !== notice.id));
+    setDeleteTarget(null);
+    setViewing(null);
+    setScreen(`list`);
   };
   if (screen === `create` || screen === `edit`) return <NoticeEditorPage form={form} setForm={setForm} onCancel={() => { setForm(null); setScreen(screen === `edit` ? `detail` : `list`); }} onSave={saveNotice} />;
-  if (screen === `detail` && viewing) return <NoticeDetailPage notice={viewing} onBack={() => setScreen(`list`)} onEdit={() => editNotice(viewing)} />;
+  if (screen === `detail` && viewing) return <><NoticeDetailPage notice={viewing} onBack={() => setScreen(`list`)} onEdit={() => editNotice(viewing)} onDelete={() => setDeleteTarget(viewing)} />{deleteTarget && <NoticeDeleteDialog onCancel={() => setDeleteTarget(null)} onConfirm={() => removeNotice(deleteTarget)} />}</>;
   return (
     <section className="admin-notice-page">
       <PageHeader kicker="공지사항 관리" title="공지사항 관리" description="임직원에게 노출되는 공지사항을 등록하고 관리합니다." action={<button className="primary" onClick={() => { setForm(emptyNoticeForm()); setScreen(`create`); }}><Icon icon={Add01Icon} />공지사항 등록</button>} />
@@ -7847,11 +7851,12 @@ function T({ createSignal }) {
             <td><button className="notice-title-button" onClick={() => { setViewing(notice); setScreen(`detail`); }}>{notice.important && <span className="notice-pin" aria-label="중요 공지">📌</span>}<b>{notice.title}</b></button></td>
             <td><span className="notice-period">{notice.start?.slice(5).replaceAll(`.`, `/`).replaceAll(`-`, `/`)} ~ {notice.end ? notice.end.slice(5).replaceAll(`.`, `/`).replaceAll(`-`, `/`) : `계속`}</span></td>
             <td>{notice.views.toLocaleString()}</td>
-            <td className="notice-delete-cell"><button className="notice-delete-button" onClick={() => removeNotice(notice)} aria-label={`${notice.title} 삭제`} title="공지 삭제"><Icon icon={Delete02Icon} size={18} /></button></td>
+            <td className="notice-delete-cell"><button className="notice-delete-button" onClick={() => setDeleteTarget(notice)} aria-label={`${notice.title} 삭제`} title="공지 삭제"><Icon icon={Delete02Icon} size={18} /></button></td>
           </tr>)}</tbody>
         </table>
         {visible.length === 0 && <div className="notice-admin-empty">조건에 맞는 공지사항이 없습니다.</div>}
       </div>
+      {deleteTarget && <NoticeDeleteDialog onCancel={() => setDeleteTarget(null)} onConfirm={() => removeNotice(deleteTarget)} />}
     </section>
   );
 }
@@ -7870,15 +7875,20 @@ function NoticeEditorPage({ form, setForm, onCancel, onSave }) {
   </section>;
 }
 
-function NoticeDetailPage({ notice, onBack, onEdit }) {
+function NoticeDetailPage({ notice, onBack, onEdit, onDelete }) {
   return <section className="notice-subpage">
-    <PageHeader kicker="공지사항 관리 › 공지사항 상세" title="공지사항 상세" action={<button className="notice-detail-edit" onClick={onEdit} title="공지 수정" aria-label="공지 수정"><Icon icon={Edit02Icon} size={18} /></button>} />
+    <PageHeader kicker="공지사항 관리 › 공지사항 상세" title="공지사항 상세" />
+    <button className="notice-back-link" onClick={onBack}><Icon icon={ArrowLeft01Icon} size={16} />목록으로</button>
     <article className="notice-document">
-      <button className="notice-back-link" onClick={onBack}><Icon icon={ArrowLeft01Icon} size={16} />목록으로</button>
       <header>{notice.important && <span className="notice-pin-label">📌</span>}<h1>{notice.title}</h1><div><time>{notice.start?.replaceAll(`-`, `.`)}</time><span>조회수 {notice.views.toLocaleString()}</span></div></header>
       <div className="notice-document-body">{(notice.content || ``).split(`\n`).map((line, index) => <p key={index}>{line || <br />}</p>)}</div>
     </article>
+    <div className="notice-detail-actions"><button className="secondary" onClick={onEdit}><Icon icon={Edit02Icon} size={17} />수정</button><button className="notice-danger-outline" onClick={onDelete}><Icon icon={Delete02Icon} size={17} />삭제</button></div>
   </section>;
+}
+
+function NoticeDeleteDialog({ onCancel, onConfirm }) {
+  return <div className="overlay center" onMouseDown={(event) => event.target === event.currentTarget && onCancel()}><section className="notice-delete-dialog"><h2>공지사항을 삭제하시겠습니까?</h2><p>삭제한 공지사항은 복구할 수 없습니다.</p><div><button className="secondary" onClick={onCancel}>취소</button><button className="danger" onClick={onConfirm}>삭제</button></div></section></div>;
 }
 
 function NoticeEditorModal({ form, setForm, onClose, onPreview, onDraft, onPublish }) {
