@@ -1,8 +1,6 @@
 import * as r from "react";
 import { jsx, jsxs, Fragment } from "react/jsx-runtime";
 import { HugeiconsIcon } from "@hugeicons/react";
-import Lottie from "lottie-react";
-import hiHelloAnimation from "./assets/hi-hello.json";
 import {
   Search01Icon,
   FilterIcon,
@@ -51,6 +49,14 @@ function Icon({ icon, size = 18, className = ``, strokeWidth = 1.7 }) {
       className={className}
     />
   );
+}
+function HomeGreetingSticker() {
+  return <svg viewBox="-380 -430 760 860" role="img" aria-label="손 흔드는 인사 스티커">
+    <g className="home-greeting-hand">
+      <path fill="#efcbbb" d="M302.614-40.484C272.385-53.858 229.199-35.931 198.642 7.409c-20.069 28.454-25.98 68.971-52.338 73.195-10.068 1.62-15.538-4.506-18.383-13.328-2.999-14.886-2.342-37.892 3.215-70.067l59.975-269.561c4.772-20.598-6.412-40.538-33.335-47.039-26.922-6.501-47.171 6.697-51.964 27.295L52.272-47.685C41.481 6.293 21.474-3.514 26.311-64.649v-.022L41.655-351.24c1.248-22.151-15.782-40.253-40.954-41.216-25.172-.963-43.317 14.139-44.609 36.269L-58.53-62.679c-3.13 59.253-24.34 36.926-28.937-6l-34.015-237.45c-3.48-22.392-24.472-37.868-49.644-33.84-25.172 4.05-40.384 24.866-36.904 47.258l32.724 217.006c12.98 82.849-3.985 105.789-31.915 15.826l-34.89-131.879c-5.691-21.167-26.551-34.299-52.752-26.945-26.201 7.355-37.496 28.433-31.827 49.6l34.103 123.957c14.25 89.242 14.25 124.458 14.25 185.9 0 61.446 28.259 251.747 244.411 251.747 216.154 0 260.607-219.571 262.667-233.468 0 0 2.692-32.397 25.303-62.713 32.152-43.1 54.722-69.079 68.403-84.621 6.936-7.858 13.681-37.364-19.833-52.183Z"/>
+      <path fill="#f7bba3" d="M139.235 80.388c-6.567-2.671-12.124-9.545-12.784-24.497-41.412 5.669-97.426 17.27-140.525 59.431-55.948 54.696-65.49 113.821-65.031 153.374.372 31.89 17.774 46.996 22.874-.262 6.413-59.693 49.95-178.24 195.466-188.046Z"/>
+    </g>
+  </svg>;
 }
 function SearchFilterPanel({
   value,
@@ -8860,7 +8866,7 @@ function L({ courses: e, go: t, notices = j }) {
           </h1>
         </div>
         <div className="home-welcome-sticker" aria-hidden="true">
-          <Lottie animationData={hiHelloAnimation} loop autoplay />
+          <HomeGreetingSticker />
         </div>
         <div className="home-quick-stats">
           <div>

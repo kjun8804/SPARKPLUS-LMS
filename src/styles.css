@@ -6594,6 +6594,14 @@ b {
   pointer-events:none;
 }
 .home-welcome-sticker > div,.home-welcome-sticker svg { width:100%!important; height:100%!important; }
+.home-greeting-hand { transform-box:fill-box; transform-origin:50% 92%; animation:home-hand-wave 2s ease-in-out infinite; }
+@keyframes home-hand-wave {
+  0%,42%,100% { transform:rotate(0deg); }
+  8% { transform:rotate(12deg); }
+  16% { transform:rotate(-14deg); }
+  24% { transform:rotate(10deg); }
+  32% { transform:rotate(-8deg); }
+}
 .home-quick-stats {
   display: flex;
   align-items: center;
