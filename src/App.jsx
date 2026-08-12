@@ -837,6 +837,7 @@ function CourseAdminGrid({ onEdit }) {
             <option key={value}>{value}</option>
           ))}
         </select>
+        <button className="filter-search-button">검색</button>
         <button
           className="filter-reset"
           onClick={() => {
@@ -2788,6 +2789,7 @@ function LegacyLearnerDepartmentHub({ onSelect }) {
               <option key={value}>{value}</option>
             ))}
           </select>
+          <button className="filter-search-button">검색</button>
           <button
             className="filter-reset"
             onClick={() => {
@@ -3018,6 +3020,7 @@ function LearnerDepartmentHub({ onSelect }) {
             <option key={value}>{value}</option>
           ))}
         </select>
+        <button className="filter-search-button">검색</button>
         <button className="filter-reset" onClick={resetFilters}>
           <Icon icon={RefreshIcon} /> 초기화
         </button>
@@ -3879,6 +3882,7 @@ function CompletionManagementPage() {
             <option key={value}>{value}</option>
           ))}
         </select>
+        <button className="filter-search-button">검색</button>
         <button className="filter-reset" onClick={reset}>
           <Icon icon={RefreshIcon} />
           초기화
@@ -4134,6 +4138,7 @@ function SurveyAssessmentPage() {
     <section className="results-section google-form-admin-page">
       <div className="google-form-admin-toolbar">
         <div className="search"><Icon icon={Search01Icon} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="교육과정 또는 설문명 검색" /></div>
+        <button className="filter-search-button">검색</button>
         <button className="filter-reset" onClick={() => setQuery(``)}><Icon icon={RefreshIcon} />초기화</button>
       </div>
       <div className="results-list-head"><div><h2>설문 관리</h2><span>{visible.length}개 과정</span></div></div>
@@ -4283,6 +4288,7 @@ function LegacySurveyResultsPage() {
             <option key={value}>{value}</option>
           ))}
         </select>
+        <button className="filter-search-button">검색</button>
         <button className="filter-reset" onClick={reset}>
           <Icon icon={RefreshIcon} />
           초기화
@@ -4654,6 +4660,7 @@ function LegacySurveyAssessmentPage() {
             ))}
           </select>
         )}
+        <button className="filter-search-button">검색</button>
         <button
           className="filter-reset"
           onClick={() => {
@@ -5079,6 +5086,7 @@ function StatisticsReportPage() {
             <option key={value}>{value}</option>
           ))}
         </select>
+        <button className="filter-search-button">검색</button>
         <button className="filter-reset" onClick={reset}>
           <Icon icon={RefreshIcon} />
           초기화
@@ -5478,6 +5486,7 @@ function LegacyStatisticsReportPage() {
             <option key={v}>{v}</option>
           ))}
         </select>
+        <button className="filter-search-button">검색</button>
         <button
           className="filter-reset"
           onClick={() => {
@@ -6132,6 +6141,7 @@ function PerformanceAnalysisV2() {
           <option>최근 6개월</option>
           <option>2026년 전체</option>
         </select>
+        <button className="filter-search-button">검색</button>
         <button className="filter-reset" onClick={reset}>
           <Icon icon={RefreshIcon} />
           초기화
@@ -6525,6 +6535,7 @@ function PerformanceAnalysis() {
             <option key={item.name}>{item.name}</option>
           ))}
         </select>
+        <button className="filter-search-button">검색</button>
         <button
           className="filter-reset"
           onClick={() => {
@@ -7902,7 +7913,8 @@ function T({ createSignal }) {
         <label className="search"><Icon icon={Search01Icon} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="공지사항 제목 검색" /></label>
         <select value={category} onChange={(event) => setCategory(event.target.value)}>{[`전체 분류`, `필수 안내`, `교육 안내`, `시스템 안내`, `일반 공지`].map((item) => <option key={item}>{item}</option>)}</select>
         <select value={status} onChange={(event) => setStatus(event.target.value)}>{[`전체 상태`, `게시 중`, `게시 예정`, `종료`, `임시저장`].map((item) => <option key={item}>{item}</option>)}</select>
-        <button onClick={() => { setQuery(``); setCategory(`전체 분류`); setStatus(`전체 상태`); }}>초기화</button>
+        <button className="filter-search-button">검색</button>
+        <button className="filter-reset" onClick={() => { setQuery(``); setCategory(`전체 분류`); setStatus(`전체 상태`); }}><Icon icon={RefreshIcon} />초기화</button>
       </div>
       <div className="notice-admin-table-wrap">
         <table className="notice-admin-table">

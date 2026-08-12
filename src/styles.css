@@ -15518,3 +15518,107 @@ html[data-theme="dark"] .fixed-badge-card {
     margin-right: 0;
   }
 }
+
+/* Shared administrator filter toolbar and status system */
+.admin-portal :is(.course-card-filter, .learner-management-filter, .learner-filter-fields, .results-filter, .google-form-admin-toolbar, .analysis-filter-bar, .performance-filter-panel, .notice-admin-filters) {
+  display: flex !important;
+  align-items: center !important;
+  flex-wrap: wrap !important;
+  gap: 10px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+}
+.admin-portal :is(.course-card-filter, .learner-management-filter, .learner-filter-fields, .results-filter, .google-form-admin-toolbar, .analysis-filter-bar, .notice-admin-filters) .search {
+  min-width: 280px !important;
+  height: 44px !important;
+  min-height: 44px !important;
+  flex: 1 1 360px !important;
+  padding: 0 14px !important;
+  border: 1px solid var(--ui-line) !important;
+  border-radius: 11px !important;
+  background: var(--ui-surface) !important;
+}
+.admin-portal :is(.course-card-filter, .learner-management-filter, .learner-filter-fields, .results-filter, .analysis-filter-bar, .performance-filter-panel, .notice-admin-filters) select {
+  width: auto !important;
+  min-width: 132px !important;
+  max-width: 200px !important;
+  height: 44px !important;
+  min-height: 44px !important;
+  flex: 0 0 auto !important;
+  padding: 0 34px 0 13px !important;
+  border: 1px solid var(--ui-line) !important;
+  border-radius: 11px !important;
+  background-color: var(--ui-surface) !important;
+  color: var(--ui-text) !important;
+  font-size: 14px !important;
+  font-weight: 400 !important;
+}
+.admin-portal .filter-search-button {
+  display: inline-flex;
+  height: 44px;
+  min-height: 44px;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  padding: 0 20px;
+  border: 1px solid #20262d;
+  border-radius: 11px;
+  background: #20262d;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 650;
+  white-space: nowrap;
+}
+.admin-portal .filter-search-button:hover { background: #343b43; }
+.admin-portal :is(.course-card-filter, .learner-management-filter, .learner-filter-fields, .results-filter, .google-form-admin-toolbar, .analysis-filter-bar, .performance-filter-panel, .notice-admin-filters) .filter-reset {
+  display: inline-flex !important;
+  width: auto !important;
+  min-width: auto !important;
+  height: 44px !important;
+  min-height: 44px !important;
+  flex: 0 0 auto !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  padding: 0 8px !important;
+  border: 0 !important;
+  border-radius: 8px !important;
+  background: transparent !important;
+  color: var(--ui-text) !important;
+  font-size: 14px !important;
+  font-weight: 550 !important;
+  white-space: nowrap;
+}
+.admin-portal .filter-reset:hover { background: var(--ui-surface-soft) !important; }
+.admin-portal .compact-department-filter { padding: 0; border: 0; background: transparent; }
+
+.admin-portal :is(.admin-course-status, .completion-state, .google-form-status, .notice-status-badge) {
+  display: inline-flex;
+  min-height: 30px;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 11px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.35;
+  white-space: nowrap;
+}
+.admin-portal .admin-course-status { height: auto; }
+.admin-portal .admin-course-status.running { background: rgba(219, 242, 231, .96); color: #176443; }
+.admin-portal .admin-course-status.ready { background: rgba(224, 237, 252, .97); color: #315f8b; }
+.admin-portal .admin-course-status.closed { background: rgba(233, 236, 239, .97); color: #4e5968; }
+
+@media (max-width: 760px) {
+  .admin-portal :is(.course-card-filter, .learner-management-filter, .learner-filter-fields, .results-filter, .google-form-admin-toolbar, .analysis-filter-bar, .performance-filter-panel, .notice-admin-filters) .search {
+    min-width: 100% !important;
+    flex-basis: 100% !important;
+  }
+  .admin-portal :is(.course-card-filter, .learner-management-filter, .learner-filter-fields, .results-filter, .analysis-filter-bar, .performance-filter-panel, .notice-admin-filters) select {
+    min-width: 145px !important;
+    flex: 1 1 145px !important;
+    max-width: none !important;
+  }
+}
