@@ -1475,9 +1475,10 @@ function CourseEditorV2({ selected, onBack, isNew = false }) {
         </div>
         {form.surveyEnabled && (
           <div className="google-form-connect">
-            <div className="google-form-link-row"><label>Google Forms 링크<input value={form.googleFormUrl} placeholder="Google Forms 링크를 입력해주세요" onChange={(event) => update(`googleFormUrl`, event.target.value)} /></label>{googleFormId(form.googleFormUrl) && <a className="google-form-edit-link" href={form.googleFormUrl} target="_blank" rel="noreferrer">Google Forms에서 편집 ↗</a>}</div>
+            <div className="google-form-connect-head"><h4>Google Forms 설문</h4><a className="google-form-edit-link" href="https://docs.google.com/forms/u/0/?tgif=d" target="_blank" rel="noreferrer">Google Forms에서 새 설문 만들기 ↗</a></div>
+            <div className="google-form-link-row"><label>설문 응답 링크<input value={form.googleFormUrl} placeholder="응답자가 접속할 수 있는 Google Forms 링크를 붙여넣어주세요" onChange={(event) => update(`googleFormUrl`, event.target.value)} /><small>Google Forms에서 설문을 완성한 후 응답용 링크를 복사해 붙여넣어주세요.</small></label></div>
             {form.googleFormUrl && !googleFormId(form.googleFormUrl) && <p className="google-form-error">올바른 Google Forms 링크를 입력해주세요.</p>}
-            {googleFormId(form.googleFormUrl) && <iframe className="google-form-inline-frame" src={googleFormEmbedUrl(form.googleFormUrl)} title="Google Forms 수료 후 설문" />}
+            {googleFormId(form.googleFormUrl) && <div className="google-form-preview"><h4>설문지 미리보기</h4><iframe className="google-form-inline-frame" src={googleFormEmbedUrl(form.googleFormUrl)} title="Google Forms 수료 후 설문" /></div>}
           </div>
         )}
       </section>
