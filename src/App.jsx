@@ -5607,21 +5607,14 @@ function LearningRewardsPage() {
   const [dept, setDept] = r.useState(`전체 부서`);
   const [detail, setDetail] = r.useState(null);
   const [pointRules, setPointRules] = r.useState([
-    { id: 1, activity: `차시 완료`, points: 20, enabled: true },
-    { id: 2, activity: `과정 수료`, points: 100, enabled: true },
-    { id: 3, activity: `퀴즈 완료`, points: 50, enabled: true },
-    { id: 4, activity: `설문 제출`, points: 10, enabled: true },
+    { id: 1, activityType: `차시 완료`, targetType: `전체 교육과정`, course: ``, threshold: 1, frequency: `조건 달성마다`, points: 20, enabled: true },
+    { id: 2, activityType: `과정 수료`, targetType: `전체 교육과정`, course: ``, threshold: 1, frequency: `최초 1회`, points: 100, enabled: true },
+    { id: 3, activityType: `퀴즈 완료`, targetType: `전체 교육과정`, course: ``, threshold: 80, frequency: `조건 달성마다`, points: 50, enabled: true },
+    { id: 4, activityType: `설문 제출`, targetType: `전체 교육과정`, course: ``, threshold: 1, frequency: `최초 1회`, points: 10, enabled: true },
   ]);
   const [pointRuleForm, setPointRuleForm] = r.useState(null);
   const [badgeFilter, setBadgeFilter] = r.useState(`전체`);
-  const [enabled, setEnabled] = r.useState({
-    0: true,
-    1: true,
-    2: true,
-    3: true,
-    4: true,
-    5: true,
-  });
+  const [badgeRuleForm, setBadgeRuleForm] = r.useState(null);
   const ranking = [
     [`이지은`, `마케팅팀`, 1280, 8, 6, 5],
     [`정유진`, `운영팀`, 1160, 7, 6, 4],
@@ -5651,23 +5644,33 @@ function LearningRewardsPage() {
     completionRate: item[3],
     completedCourses: item[4],
   }));
-  const badges = [
-    { name: `이달의 학습왕`, condition: `월간 학습 포인트 1위`, people: 8, type: `랭킹형`, icon: Medal01Icon, tone: `gold` },
-    { name: `이달의 TOP3`, condition: `월간 학습 포인트 2~3위`, people: 24, type: `랭킹형`, icon: RankingIcon, tone: `silver` },
-    { name: `올해의 러닝 챔피언`, condition: `연간 학습 포인트 TOP3`, people: 3, type: `랭킹형`, icon: SparklesIcon, tone: `bronze` },
-    { name: `완주왕`, condition: `교육과정 5개 이상 수료`, people: 42, type: `성취형`, icon: CheckmarkCircle02Icon, tone: `blue` },
-    { name: `꾸준한 학습자`, condition: `4주 연속 학습 활동 달성`, people: 67, type: `성취형`, icon: Award01Icon, tone: `violet` },
-    { name: `퀴즈 마스터`, condition: `퀴즈 10회 이상 완료`, people: 31, type: `성취형`, icon: Quiz01Icon, tone: `green` },
-  ];
+  const [badges, setBadges] = r.useState([
+    { id: 1, name: `이달의 학습왕`, activityType: `월간 포인트 순위`, targetType: `전체 교육과정`, course: ``, threshold: 1, people: 8, type: `랭킹형`, icon: Medal01Icon, tone: `gold`, enabled: true },
+    { id: 2, name: `이달의 TOP3`, activityType: `월간 포인트 TOP`, targetType: `전체 교육과정`, course: ``, threshold: 3, people: 24, type: `랭킹형`, icon: RankingIcon, tone: `silver`, enabled: true },
+    { id: 3, name: `완주왕`, activityType: `과정 수료`, targetType: `전체 교육과정`, course: ``, threshold: 5, people: 42, type: `성취형`, icon: CheckmarkCircle02Icon, tone: `blue`, enabled: true },
+    { id: 4, name: `꾸준한 학습자`, activityType: `연속 학습`, targetType: `전체 교육과정`, course: ``, threshold: 4, people: 67, type: `성취형`, icon: Award01Icon, tone: `violet`, enabled: true },
+    { id: 5, name: `퀴즈 마스터`, activityType: `퀴즈 완료`, targetType: `전체 교육과정`, course: ``, threshold: 10, people: 31, type: `성취형`, icon: Quiz01Icon, tone: `green`, enabled: true },
+  ]);
   const filteredRanking = ranking.filter(
     (item) => dept === `전체 부서` || item.dept === dept,
   );
   const period = `${selectedYear}년 ${selectedMonth}월`;
+  const courseOptions = [`개인정보보호 필수교육`, `생성형 AI 업무 활용`, `데이터 분석 기초 입문`, `리더십 기본 과정`];
+  const conditionUnit = (activity) => activity === `퀴즈 완료` ? `점 이상` : activity === `연속 학습` ? `주 이상` : activity.includes(`순위`) ? `위` : activity.includes(`TOP`) ? `위 이내` : `회 이상`;
+  const ruleSummary = (rule) => `${rule.targetType === `특정 교육과정` ? rule.course : `전체 과정`} · ${rule.activityType} ${rule.threshold}${conditionUnit(rule.activityType)} · ${rule.frequency}`;
+  const badgeSummary = (badge) => `${badge.targetType === `특정 교육과정` ? badge.course : `전체 과정`} · ${badge.activityType} ${badge.threshold}${conditionUnit(badge.activityType)}`;
   const savePointRule = () => {
-    if (!pointRuleForm.activity.trim()) return alert(`활동명을 입력해주세요.`);
+    if (pointRuleForm.targetType === `특정 교육과정` && !pointRuleForm.course) return alert(`적용할 교육과정을 선택해주세요.`);
     const rule = { ...pointRuleForm, points: Math.max(0, Number(pointRuleForm.points) || 0) };
     setPointRules((current) => rule.id ? current.map((item) => item.id === rule.id ? rule : item) : [...current, { ...rule, id: Date.now() }]);
     setPointRuleForm(null);
+  };
+  const saveBadgeRule = () => {
+    if (!badgeRuleForm.name.trim()) return alert(`뱃지명을 입력해주세요.`);
+    if (badgeRuleForm.targetType === `특정 교육과정` && !badgeRuleForm.course) return alert(`적용할 교육과정을 선택해주세요.`);
+    const badge = { ...badgeRuleForm, threshold: Math.max(1, Number(badgeRuleForm.threshold) || 1) };
+    setBadges((current) => badge.id ? current.map((item) => item.id === badge.id ? badge : item) : [...current, { ...badge, id: Date.now(), people: 0, icon: Award01Icon, tone: `blue` }]);
+    setBadgeRuleForm(null);
   };
   return (
     <section className="results-section rewards-page">
@@ -5778,8 +5781,8 @@ function LearningRewardsPage() {
         </>
       ) : tab === `points` ? (
         <>
-          <div className="point-management-head"><div><h2>포인트 지급 기준</h2><p>학습 활동별 포인트와 사용 상태를 관리합니다.</p></div><button type="button" className="point-rule-add" onClick={() => setPointRuleForm({ id: null, activity: ``, points: 20, enabled: true })}><Icon icon={Add01Icon} size={16} />포인트 기준 추가</button></div>
-          <div className="table-wrap results-table point-rule-table"><table><thead><tr><th>활동</th><th>지급 포인트</th><th>상태</th><th>관리</th></tr></thead><tbody>{pointRules.map((rule) => <tr key={rule.id}><td><b>{rule.activity}</b></td><td><strong>+{rule.points}P</strong></td><td><span className={`point-rule-status ${rule.enabled ? `enabled` : ``}`}>{rule.enabled ? `사용 중` : `사용 안 함`}</span></td><td><button type="button" className="analysis-button" onClick={() => setPointRuleForm({ ...rule })}>수정</button></td></tr>)}</tbody></table></div>
+          <div className="point-management-head"><div><h2>포인트 지급 기준</h2><p>실제 학습 활동과 지급 조건을 연결해 관리합니다.</p></div><button type="button" className="point-rule-add" onClick={() => setPointRuleForm({ id: null, activityType: `차시 완료`, targetType: `전체 교육과정`, course: ``, threshold: 1, frequency: `조건 달성마다`, points: 20, enabled: true })}><Icon icon={Add01Icon} size={16} />포인트 기준 추가</button></div>
+          <div className="table-wrap results-table point-rule-table"><table><thead><tr><th>활동 유형</th><th>적용 조건</th><th>지급 포인트</th><th>상태</th><th>관리</th></tr></thead><tbody>{pointRules.map((rule) => <tr key={rule.id}><td><b>{rule.activityType}</b></td><td><span className="rule-target-summary">{ruleSummary(rule)}</span></td><td><strong>+{rule.points}P</strong></td><td><span className={`point-rule-status ${rule.enabled ? `enabled` : ``}`}>{rule.enabled ? `사용 중` : `사용 안 함`}</span></td><td><button type="button" className="analysis-button" onClick={() => setPointRuleForm({ ...rule })}>수정</button></td></tr>)}</tbody></table></div>
           <div className="recent-point-section"><div><h2>최근 포인트 적립 내역</h2></div><div className="recent-point-list">{[[`김지수`, `개인정보보호 필수교육 수료`, `+100P`, `2026.08.12`],[`이지은`, `생성형 AI 업무 활용 퀴즈 완료`, `+50P`, `2026.08.11`],[`정유진`, `데이터 분석 기초 입문 차시 완료`, `+20P`, `2026.08.10`]].map((item) => <div key={`${item[0]}-${item[3]}`}><b>{item[0]}</b><span>{item[1]}</span><strong>{item[2]}</strong><time>{item[3]}</time></div>)}</div></div>
         </>
       ) : (
@@ -5789,14 +5792,13 @@ function LearningRewardsPage() {
               <h2>지급 뱃지</h2>
               <p>사전에 정의된 뱃지의 조건과 자동 지급 여부를 관리합니다.</p>
             </div>
-            <span>활성 {Object.values(enabled).filter(Boolean).length}개</span>
+            <div className="badge-intro-actions"><span>활성 {badges.filter((badge) => badge.enabled).length}개</span><button type="button" className="point-rule-add" onClick={() => setBadgeRuleForm({ id: null, name: ``, activityType: `과정 수료`, targetType: `전체 교육과정`, course: ``, threshold: 1, type: `성취형`, enabled: true })}><Icon icon={Add01Icon} size={16} />뱃지 추가</button></div>
           </div>
           <div className="badge-filter-tabs">
             {[`전체`, `랭킹형`, `성취형`].map((item) => <button key={item} className={badgeFilter === item ? `active` : ``} onClick={() => setBadgeFilter(item)}>{item}</button>)}
           </div>
           <div className="fixed-badge-grid">
             {badges.filter((badge) => badgeFilter === `전체` || badge.type === badgeFilter).map((badge) => {
-              const index = badges.findIndex((item) => item.name === badge.name);
               return (
               <article className="fixed-badge-card" key={badge.name}>
                 <div className="badge-card-head">
@@ -5804,14 +5806,14 @@ function LearningRewardsPage() {
                     <Icon icon={badge.icon} size={25} />
                   </div>
                   <div className="badge-switch-wrap">
-                    <span>{enabled[index] ? `사용 중` : `사용 안 함`}</span>
-                    <button aria-label={`${badge.name} 활성화`} className={`rule-switch ${enabled[index] ? `on` : ``}`} onClick={() => setEnabled((current) => ({ ...current, [index]: !current[index] }))}><i /></button>
+                    <span>{badge.enabled ? `사용 중` : `사용 안 함`}</span>
+                    <button aria-label={`${badge.name} 활성화`} className={`rule-switch ${badge.enabled ? `on` : ``}`} onClick={() => setBadges((current) => current.map((item) => item.id === badge.id ? { ...item, enabled: !item.enabled } : item))}><i /></button>
                   </div>
                 </div>
                 <div className="fixed-badge-copy">
                   <span className="badge-type-chip">{badge.type}</span>
                   <h3>{badge.name}</h3>
-                  <p>{badge.condition}</p>
+                  <p>{badgeSummary(badge)}</p>
                 </div>
                 <div className="badge-card-meta">
                   <b>현재 획득 <strong>{badge.people}명</strong></b>
@@ -5819,7 +5821,7 @@ function LearningRewardsPage() {
                 </div>
                 <div className="badge-card-actions">
                   <button title={`${badge.name} 지급 현황`} onClick={() => setDetail({ type: `badgePeople`, ...badge })}>지급 현황 보기</button>
-                  <button title={`${badge.name} 지급 기준`} onClick={() => setDetail({ type: `badge`, ...badge })}>기준 보기/수정</button>
+                  <button title={`${badge.name} 지급 기준`} onClick={() => setBadgeRuleForm({ ...badge })}>기준 보기/수정</button>
                 </div>
               </article>
             )})}
@@ -5828,33 +5830,20 @@ function LearningRewardsPage() {
       )}
       {detail && (
         <ResultsDetailModal
-          title={detail.type === `points` ? `포인트 적립 내역` : detail.type === `badgePeople` ? `뱃지 획득 현황` : `뱃지 지급 기준`}
+          title={detail.type === `points` ? `포인트 적립 내역` : `뱃지 획득 현황`}
           subtitle={detail.name || `학습 활동별 적립 포인트를 확인하세요.`}
           onClose={() => setDetail(null)}
         >
           {detail.type === `points` ? (
             <><div className="point-detail-summary"><div><span>이번 달 포인트</span><b>{detail.point.toLocaleString()}P</b></div><div><span>이번 달 순위</span><b>{detail.rank}위</b></div><div><span>획득 뱃지</span><b>{detail.badges}개</b></div></div>
             <div className="point-history actual-history">{[[`08.10`, `데이터 분석 기초 입문`, `과정 수료`, `+100P`],[`08.10`, `데이터 분석 기초 입문 · 5차시`, `차시 학습 완료`, `+20P`],[`08.08`, `개인정보보호 필수교육`, `퀴즈 완료`, `+50P`],[`08.08`, `개인정보보호 필수교육`, `설문 제출`, `+10P`]].map((x, index) => <div key={`${x[0]}-${index}`}><time>{x[0]}</time><span><b>{x[1]}</b><small>{x[2]}</small></span><strong>{x[3]}</strong></div>)}</div></>
-          ) : detail.type === `badgePeople` ? (
-            <div className="badge-recipient-list">{[[`김지수`, `People팀`, `2026.07`],[`이지은`, `마케팅팀`, `2026.06`],[`정유진`, `운영팀`, `2026.05`]].map((x) => <div key={x[0]}><span className="recipient-avatar">{x[0][0]}</span><b>{x[0]}</b><span>{x[1]}</span><time>{x[2]}</time></div>)}</div>
           ) : (
-            <>
-              <div className="badge-condition-editor">
-                <label>지급 방식<input value="자동 지급" readOnly /></label>
-                <label>
-                  지급 조건
-                  <input defaultValue={detail.condition} />
-                </label>
-                <label>상태<input value={enabled[badges.findIndex((badge) => badge.name === detail.name)] ? `활성화` : `비활성화`} readOnly /></label>
-              </div>
-              <div className="results-note">
-                조건 변경 시 다음 자동 지급 시점부터 새로운 기준이 적용됩니다.
-              </div>
-            </>
+            <div className="badge-recipient-list">{[[`김지수`, `People팀`, `2026.07`],[`이지은`, `마케팅팀`, `2026.06`],[`정유진`, `운영팀`, `2026.05`]].map((x) => <div key={x[0]}><span className="recipient-avatar">{x[0][0]}</span><b>{x[0]}</b><span>{x[1]}</span><time>{x[2]}</time></div>)}</div>
           )}
         </ResultsDetailModal>
       )}
-      {pointRuleForm && <div className="overlay center" onMouseDown={() => setPointRuleForm(null)}><section className="point-rule-editor" onMouseDown={(event) => event.stopPropagation()}><header><div><span>포인트 관리</span><h2>{pointRuleForm.id ? `포인트 기준 수정` : `포인트 기준 추가`}</h2></div><button onClick={() => setPointRuleForm(null)} aria-label="닫기"><Icon icon={Cancel01Icon} /></button></header><div className="point-rule-editor-body"><label>활동명<input value={pointRuleForm.activity} onChange={(event) => setPointRuleForm((current) => ({ ...current, activity: event.target.value }))} placeholder="활동명을 입력해주세요" /></label><label>지급 포인트<div className="point-input-with-unit"><input type="number" min="0" value={pointRuleForm.points} onChange={(event) => setPointRuleForm((current) => ({ ...current, points: event.target.value }))} /><span>P</span></div></label><label>상태<select value={pointRuleForm.enabled ? `사용 중` : `사용 안 함`} onChange={(event) => setPointRuleForm((current) => ({ ...current, enabled: event.target.value === `사용 중` }))}><option>사용 중</option><option>사용 안 함</option></select></label></div><footer><button className="secondary" onClick={() => setPointRuleForm(null)}>취소</button><button className="primary" onClick={savePointRule}>저장</button></footer></section></div>}
+      {pointRuleForm && <div className="overlay center" onMouseDown={() => setPointRuleForm(null)}><section className="point-rule-editor structured-rule-editor" onMouseDown={(event) => event.stopPropagation()}><header><div><span>포인트 관리</span><h2>{pointRuleForm.id ? `포인트 기준 수정` : `포인트 기준 추가`}</h2></div><button onClick={() => setPointRuleForm(null)} aria-label="닫기"><Icon icon={Cancel01Icon} /></button></header><div className="point-rule-editor-body structured-rule-grid"><label>활동 유형<select value={pointRuleForm.activityType} onChange={(event) => setPointRuleForm((current) => ({ ...current, activityType: event.target.value, threshold: event.target.value === `퀴즈 완료` ? 80 : 1 }))}>{[`차시 완료`,`과정 수료`,`퀴즈 완료`,`설문 제출`].map((item) => <option key={item}>{item}</option>)}</select></label><label>적용 대상<select value={pointRuleForm.targetType} onChange={(event) => setPointRuleForm((current) => ({ ...current, targetType: event.target.value, course: `` }))}><option>전체 교육과정</option><option>특정 교육과정</option></select></label>{pointRuleForm.targetType === `특정 교육과정` && <label className="rule-grid-wide">교육과정<select value={pointRuleForm.course} onChange={(event) => setPointRuleForm((current) => ({ ...current, course: event.target.value }))}><option value="">교육과정을 선택해주세요</option>{courseOptions.map((item) => <option key={item}>{item}</option>)}</select></label>}<label>달성 기준<div className="point-input-with-unit"><input type="number" min="1" max={pointRuleForm.activityType === `퀴즈 완료` ? 100 : undefined} value={pointRuleForm.threshold} onChange={(event) => setPointRuleForm((current) => ({ ...current, threshold: event.target.value }))} /><span>{conditionUnit(pointRuleForm.activityType)}</span></div></label><label>지급 주기<select value={pointRuleForm.frequency} onChange={(event) => setPointRuleForm((current) => ({ ...current, frequency: event.target.value }))}><option>최초 1회</option><option>조건 달성마다</option></select></label><label>지급 포인트<div className="point-input-with-unit"><input type="number" min="0" value={pointRuleForm.points} onChange={(event) => setPointRuleForm((current) => ({ ...current, points: event.target.value }))} /><span>P</span></div></label><label>상태<select value={pointRuleForm.enabled ? `사용 중` : `사용 안 함`} onChange={(event) => setPointRuleForm((current) => ({ ...current, enabled: event.target.value === `사용 중` }))}><option>사용 중</option><option>사용 안 함</option></select></label></div><footer><button className="secondary" onClick={() => setPointRuleForm(null)}>취소</button><button className="primary" onClick={savePointRule}>저장</button></footer></section></div>}
+      {badgeRuleForm && <div className="overlay center" onMouseDown={() => setBadgeRuleForm(null)}><section className="point-rule-editor structured-rule-editor" onMouseDown={(event) => event.stopPropagation()}><header><div><span>뱃지 관리</span><h2>{badgeRuleForm.id ? `뱃지 지급 기준 수정` : `뱃지 추가`}</h2></div><button onClick={() => setBadgeRuleForm(null)} aria-label="닫기"><Icon icon={Cancel01Icon} /></button></header><div className="point-rule-editor-body structured-rule-grid"><label className="rule-grid-wide">뱃지명<input value={badgeRuleForm.name} onChange={(event) => setBadgeRuleForm((current) => ({ ...current, name: event.target.value }))} placeholder="뱃지명을 입력해주세요" /></label><label>뱃지 유형<select value={badgeRuleForm.type} onChange={(event) => setBadgeRuleForm((current) => ({ ...current, type: event.target.value }))}><option>성취형</option><option>랭킹형</option></select></label><label>활동 유형<select value={badgeRuleForm.activityType} onChange={(event) => setBadgeRuleForm((current) => ({ ...current, activityType: event.target.value, threshold: 1 }))}>{[`과정 수료`,`차시 완료`,`퀴즈 완료`,`연속 학습`,`월간 포인트 순위`,`월간 포인트 TOP`].map((item) => <option key={item}>{item}</option>)}</select></label><label>적용 대상<select value={badgeRuleForm.targetType} onChange={(event) => setBadgeRuleForm((current) => ({ ...current, targetType: event.target.value, course: `` }))}><option>전체 교육과정</option><option>특정 교육과정</option></select></label>{badgeRuleForm.targetType === `특정 교육과정` && <label>교육과정<select value={badgeRuleForm.course} onChange={(event) => setBadgeRuleForm((current) => ({ ...current, course: event.target.value }))}><option value="">교육과정을 선택해주세요</option>{courseOptions.map((item) => <option key={item}>{item}</option>)}</select></label>}<label>달성 기준<div className="point-input-with-unit"><input type="number" min="1" value={badgeRuleForm.threshold} onChange={(event) => setBadgeRuleForm((current) => ({ ...current, threshold: event.target.value }))} /><span>{conditionUnit(badgeRuleForm.activityType)}</span></div></label><label>상태<select value={badgeRuleForm.enabled ? `사용 중` : `사용 안 함`} onChange={(event) => setBadgeRuleForm((current) => ({ ...current, enabled: event.target.value === `사용 중` }))}><option>사용 중</option><option>사용 안 함</option></select></label></div><footer><button className="secondary" onClick={() => setBadgeRuleForm(null)}>취소</button><button className="primary" onClick={saveBadgeRule}>저장</button></footer></section></div>}
     </section>
   );
 }

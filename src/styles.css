@@ -17111,3 +17111,16 @@ html[data-theme="dark"] .learner-soft-tag.position { background:#252b32; color:#
   .recent-point-list > div { grid-template-columns:80px 1fr 70px; }
   .recent-point-list time { grid-column:2 / -1; }
 }
+.badge-intro-actions { display:flex; align-items:center; gap:10px; }
+.badge-intro-actions > span { padding:7px 11px; border-radius:999px; background:var(--ui-surface-soft); color:var(--ui-sub); font-size:12px; font-weight:650; white-space:nowrap; }
+.rule-target-summary { color:var(--ui-sub); font-size:13px; line-height:1.5; }
+.structured-rule-editor { width:min(620px,calc(100vw - 32px)); }
+.structured-rule-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+.structured-rule-grid .rule-grid-wide { grid-column:1 / -1; }
+.structured-rule-grid .point-input-with-unit span { min-width:max-content; padding:0 12px; }
+@media (max-width:640px) {
+  .structured-rule-grid { grid-template-columns:1fr; }
+  .structured-rule-grid .rule-grid-wide { grid-column:auto; }
+  .badge-page-intro { align-items:flex-start; gap:14px; }
+  .badge-intro-actions { align-items:flex-end; flex-direction:column; }
+}
