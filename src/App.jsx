@@ -440,7 +440,7 @@ function f({ logout: e }) {
         className: `main ${t === `home` ? `admin-home-main` : t === `courses` ? `admin-courses-main` : t === `learners` ? `admin-learners-main` : [`rewards`, `notices`, `content`].includes(t) ? `admin-results-main` : ``}`,
         children: [
           ![`content`, `learnerDetail`].includes(t) &&
-            (0, i.jsx)(I, {
+            (0, i.jsx)(PageHeader, {
               kicker: l[t][0],
               title: l[t][0],
               description: l[t][1],
@@ -8801,7 +8801,7 @@ function F({
     }),
   });
 }
-function I({ kicker: e, title: t, description: n, action: r }) {
+function PageHeader({ kicker: e, title: t, description: n, action: r }) {
   return (0, i.jsxs)(`div`, {
     className: `page-head`,
     children: [
@@ -9084,7 +9084,7 @@ function U({ go: e }) {
   return (0, i.jsxs)(`main`, {
     className: `page dashboard-page`,
     children: [
-      (0, i.jsx)(I, {
+      (0, i.jsx)(PageHeader, {
         title: `관리자 대시보드`,
         description: `교육 운영 현황을 한눈에 확인하고 빠르게 관리하세요.`,
         action: (0, i.jsx)(`span`, {
@@ -9797,7 +9797,7 @@ function te({ courses: e, go: t, notify: n }) {
   return (0, i.jsxs)(`main`, {
     className: `page`,
     children: [
-      (0, i.jsx)(I, {
+      (0, i.jsx)(PageHeader, {
         kicker: `나의 학습`,
         title: `나의 학습`,
         description: `수강 중인 과정과 완료한 학습 내역을 확인하세요.`,
@@ -10716,7 +10716,7 @@ function ie({ go: e, notices = j }) {
   return (0, i.jsxs)(`main`, {
     className: `page`,
     children: [
-      (0, i.jsx)(I, {
+      (0, i.jsx)(PageHeader, {
         kicker: `공지사항`,
         title: `공지사항`,
         description: `교육 운영과 시스템 이용에 필요한 소식을 확인하세요.`,
@@ -10942,7 +10942,7 @@ function oe({ initialTab: e, notify: t }) {
   return (0, i.jsxs)(`main`, {
     className: `page`,
     children: [
-      (0, i.jsx)(I, {
+      (0, i.jsx)(PageHeader, {
         kicker: `프로필`,
         title: `프로필 설정`,
         description: `회원정보와 계정 보안 설정을 관리하세요.`,
