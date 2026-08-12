@@ -439,7 +439,7 @@ function f({ logout: e }) {
       (0, i.jsxs)(`main`, {
         className: `main ${t === `home` ? `admin-home-main` : t === `courses` ? `admin-courses-main` : t === `learners` ? `admin-learners-main` : [`rewards`, `notices`, `content`].includes(t) ? `admin-results-main` : ``}`,
         children: [
-          ![`content`, `learnerDetail`].includes(t) &&
+          ![`content`, `learnerDetail`, `notices`].includes(t) &&
             (0, i.jsx)(PageHeader, {
               kicker: l[t][0],
               title: l[t][0],
@@ -7794,17 +7794,15 @@ function T({ createSignal }) {
     try { return JSON.parse(localStorage.getItem(`sparkplus-admin-notices`)) || adminNoticeSeed; } catch { return adminNoticeSeed; }
   });
   const [query, setQuery] = r.useState(``);
-  const [category, setCategory] = r.useState(`전체 분류`);
-  const [status, setStatus] = r.useState(`전체 상태`);
-  const [openMenu, setOpenMenu] = r.useState(null);
+  const [screen, setScreen] = r.useState(`list`);
   const [form, setForm] = r.useState(null);
-  const [preview, setPreview] = r.useState(null);
   const [viewing, setViewing] = r.useState(null);
   const initialSignal = r.useRef(createSignal);
   r.useEffect(() => {
     if (createSignal !== initialSignal.current) {
       initialSignal.current = createSignal;
       setForm(emptyNoticeForm());
+      setScreen(`create`);
     }
   }, [createSignal]);
   r.useEffect(() => {
@@ -7813,65 +7811,74 @@ function T({ createSignal }) {
   }, [notices]);
   const visible = notices.filter((notice) =>
     (!query || notice.title.toLowerCase().includes(query.toLowerCase())) &&
-    (category === `전체 분류` || notice.category === category) &&
-    (status === `전체 상태` || notice.status === status)
+    true
   );
-  const counts = notices.reduce((result, notice) => ({ ...result, [notice.status]: (result[notice.status] || 0) + 1 }), {});
-  const targetLabel = (draft) => draft.targetType === `부서 선택` ? (draft.departments.length > 1 ? `${draft.departments[0]} 외 ${draft.departments.length - 1}개 부서` : draft.departments[0] || `부서 미선택`) : draft.targetType === `교육과정 수강자` ? `${draft.course} 수강자` : `전체 임직원`;
-  const saveNotice = (publish) => {
+  const saveNotice = () => {
     if (!form.title.trim()) return alert(`공지사항 제목을 입력해 주세요.`);
     if (!form.content.trim()) return alert(`공지 내용을 입력해 주세요.`);
-    const next = { ...form, id: form.id || Date.now(), target: targetLabel(form), status: publish ? (`2026-08-11` < form.start ? `게시 예정` : `게시 중`) : `임시저장`, views: form.views || 0 };
+    const next = { ...form, id: form.id || Date.now(), target: `전체 임직원`, status: `게시 중`, views: form.views || 0 };
     setNotices((current) => form.id ? current.map((item) => item.id === form.id ? next : item) : [next, ...current]);
     setForm(null);
+    setScreen(`list`);
   };
-  const editNotice = (notice) => setForm({ ...emptyNoticeForm(), ...notice, targetType: notice.targetType || (notice.target.includes(`수강자`) ? `교육과정 수강자` : notice.target.includes(`팀`) ? `부서 선택` : `전체 임직원`), departments: notice.departments || (notice.target.endsWith(`팀`) ? [notice.target] : []) });
+  const editNotice = (notice) => { setForm({ ...emptyNoticeForm(), ...notice, start: notice.start?.replaceAll(`.`, `-`) || ``, end: notice.end?.replaceAll(`.`, `-`) || `` }); setScreen(`edit`); };
   const removeNotice = (notice) => {
-    if (confirm(`‘${notice.title}’ 공지사항을 삭제하시겠습니까?\n삭제 후에는 복구할 수 없습니다.`)) setNotices((current) => current.filter((item) => item.id !== notice.id));
+    if (confirm(`이 공지사항을 삭제하시겠습니까?`)) setNotices((current) => current.filter((item) => item.id !== notice.id));
   };
+  if (screen === `create` || screen === `edit`) return <NoticeEditorPage form={form} setForm={setForm} onCancel={() => { setForm(null); setScreen(screen === `edit` ? `detail` : `list`); }} onSave={saveNotice} />;
+  if (screen === `detail` && viewing) return <NoticeDetailPage notice={viewing} onBack={() => setScreen(`list`)} onEdit={() => editNotice(viewing)} />;
   return (
     <section className="admin-notice-page">
-      <div className="notice-admin-summary">
-        <div><h2>전체 공지 {notices.length}건</h2><p>공지 게시 상태와 노출 대상을 한눈에 확인하세요.</p></div>
-        <div className="notice-summary-chips"><span>게시 중 {counts[`게시 중`] || 0}</span><span>예약 {counts[`게시 예정`] || 0}</span><span>종료 {counts[`종료`] || 0}</span><span>임시저장 {counts[`임시저장`] || 0}</span></div>
-      </div>
+      <PageHeader kicker="공지사항 관리" title="공지사항 관리" description="임직원에게 노출되는 공지사항을 등록하고 관리합니다." action={<button className="primary" onClick={() => { setForm(emptyNoticeForm()); setScreen(`create`); }}><Icon icon={Add01Icon} />공지사항 등록</button>} />
       <SearchFilterPanel
         variant="compact"
         value={query}
         onValueChange={setQuery}
         placeholder="공지사항 제목 검색"
-        filters={[
-          { label: `분류`, value: category, onChange: setCategory, options: [`전체 분류`, `필수 안내`, `교육 안내`, `시스템 안내`, `일반 공지`] },
-          { label: `게시 상태`, value: status, onChange: setStatus, options: [`전체 상태`, `게시 중`, `게시 예정`, `종료`, `임시저장`] },
-        ]}
+        filters={[]}
         onSearch={() => {}}
-        onReset={() => { setQuery(``); setCategory(`전체 분류`); setStatus(`전체 상태`); }}
+        onReset={() => setQuery(``)}
       />
+      <div className="notice-admin-summary"><h2>전체 공지 {notices.length}건</h2></div>
       <div className="notice-admin-table-wrap">
         <table className="notice-admin-table">
-          <thead><tr><th>분류</th><th>제목</th><th>게시 대상</th><th>게시 기간</th><th>상태</th><th>조회수</th><th>관리</th></tr></thead>
+          <thead><tr><th>제목</th><th>게시 기간</th><th>조회수</th><th>삭제</th></tr></thead>
           <tbody>{visible.map((notice) => <tr key={notice.id}>
-            <td><span className={`notice-category-badge ${notice.important ? `important` : ``}`}>{notice.category}</span></td>
-            <td><button className="notice-title-button" onClick={() => setViewing(notice)}>{notice.important && <span>중요</span>}<b>{notice.title}</b></button></td>
-            <td>{notice.target}</td>
+            <td><button className="notice-title-button" onClick={() => { setViewing(notice); setScreen(`detail`); }}>{notice.important && <span className="notice-pin" aria-label="중요 공지">📌</span>}<b>{notice.title}</b></button></td>
             <td><span className="notice-period">{notice.start?.slice(5).replaceAll(`.`, `/`).replaceAll(`-`, `/`)} ~ {notice.end ? notice.end.slice(5).replaceAll(`.`, `/`).replaceAll(`-`, `/`) : `계속`}</span></td>
-            <td><span className={`notice-status-badge status-${notice.status.replaceAll(` `, `-`)}`}>{notice.status}</span></td>
             <td>{notice.views.toLocaleString()}</td>
-            <td className="notice-menu-cell"><button className="notice-more-button" onClick={() => setOpenMenu(openMenu === notice.id ? null : notice.id)} aria-label="공지 관리 메뉴">⋯</button>{openMenu === notice.id && <div className="notice-row-menu">
-              <button onClick={() => { notice.status === `임시저장` || notice.status === `게시 예정` ? setPreview(notice) : setViewing(notice); setOpenMenu(null); }}>{notice.status === `임시저장` || notice.status === `게시 예정` ? `미리보기` : `공지 보기`}</button>
-              <button onClick={() => { editNotice(notice); setOpenMenu(null); }}>수정</button>
-              {notice.status === `게시 중` ? <button onClick={() => { setNotices((current) => current.map((item) => item.id === notice.id ? { ...item, status: `종료` } : item)); setOpenMenu(null); }}>게시 종료</button> : notice.status !== `종료` && <button onClick={() => { setNotices((current) => current.map((item) => item.id === notice.id ? { ...item, status: `게시 중` } : item)); setOpenMenu(null); }}>게시</button>}
-              <button className="danger" onClick={() => { removeNotice(notice); setOpenMenu(null); }}>삭제</button>
-            </div>}</td>
+            <td className="notice-delete-cell"><button className="notice-delete-button" onClick={() => removeNotice(notice)} aria-label={`${notice.title} 삭제`} title="공지 삭제"><Icon icon={Delete02Icon} size={18} /></button></td>
           </tr>)}</tbody>
         </table>
         {visible.length === 0 && <div className="notice-admin-empty">조건에 맞는 공지사항이 없습니다.</div>}
       </div>
-      {form && <NoticeEditorModal form={form} setForm={setForm} onClose={() => setForm(null)} onPreview={() => setPreview({ ...form, target: targetLabel(form), status: `미리보기`, views: 0 })} onDraft={() => saveNotice(false)} onPublish={() => saveNotice(true)} />}
-      {preview && <NoticeReadingModal notice={preview} preview onClose={() => setPreview(null)} />}
-      {viewing && <NoticeReadingModal notice={viewing} onClose={() => setViewing(null)} onEdit={() => { editNotice(viewing); setViewing(null); }} onEnd={viewing.status === `게시 중` ? () => { setNotices((current) => current.map((item) => item.id === viewing.id ? { ...item, status: `종료` } : item)); setViewing(null); } : null} />}
     </section>
   );
+}
+
+function NoticeEditorPage({ form, setForm, onCancel, onSave }) {
+  const update = (key, value) => setForm((current) => ({ ...current, [key]: value }));
+  return <section className="notice-subpage">
+    <PageHeader kicker={`공지사항 관리 › ${form.id ? `공지사항 수정` : `공지사항 등록`}`} title={form.id ? `공지사항 수정` : `공지사항 등록`} />
+    <div className="notice-page-form">
+      <label>공지 제목<input value={form.title} onChange={(event) => update(`title`, event.target.value)} placeholder="공지사항 제목을 입력해주세요" /></label>
+      <label className="notice-important-check"><input type="checkbox" checked={form.important} onChange={(event) => update(`important`, event.target.checked)} /><span>중요 공지로 등록</span></label>
+      <fieldset><legend>게시 기간</legend><div className="notice-page-dates"><input aria-label="게시 시작일" type="date" value={form.start} onChange={(event) => update(`start`, event.target.value)} /><span>~</span><input aria-label="게시 종료일" type="date" value={form.end} onChange={(event) => update(`end`, event.target.value)} /></div></fieldset>
+      <label>공지 내용<textarea value={form.content} onChange={(event) => update(`content`, event.target.value)} placeholder="공지 내용을 입력해주세요." /></label>
+      <div className="notice-page-actions"><button className="secondary" onClick={onCancel}>취소</button><button className="primary" onClick={onSave}>{form.id ? `저장` : `등록`}</button></div>
+    </div>
+  </section>;
+}
+
+function NoticeDetailPage({ notice, onBack, onEdit }) {
+  return <section className="notice-subpage">
+    <PageHeader kicker="공지사항 관리 › 공지사항 상세" title="공지사항 상세" action={<button className="notice-detail-edit" onClick={onEdit} title="공지 수정" aria-label="공지 수정"><Icon icon={Edit02Icon} size={18} /></button>} />
+    <article className="notice-document">
+      <button className="notice-back-link" onClick={onBack}><Icon icon={ArrowLeft01Icon} size={16} />목록으로</button>
+      <header>{notice.important && <span className="notice-pin-label">📌</span>}<h1>{notice.title}</h1><div><time>{notice.start?.replaceAll(`-`, `.`)}</time><span>조회수 {notice.views.toLocaleString()}</span></div></header>
+      <div className="notice-document-body">{(notice.content || ``).split(`\n`).map((line, index) => <p key={index}>{line || <br />}</p>)}</div>
+    </article>
+  </section>;
 }
 
 function NoticeEditorModal({ form, setForm, onClose, onPreview, onDraft, onPublish }) {
