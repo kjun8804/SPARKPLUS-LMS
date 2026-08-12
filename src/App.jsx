@@ -243,15 +243,7 @@ var a = [
     { label: `홈`, page: `home` },
     { label: `교육과정 관리`, page: `courses` },
     { label: `학습자 관리`, page: `learners` },
-    {
-      label: `교육 성과 관리`,
-      page: `completionAdmin`,
-      items: [
-        { label: `수료 관리`, page: `completionAdmin` },
-        { label: `설문 결과`, page: `assessmentAdmin` },
-        { label: `학습 리워드`, page: `rewards` },
-      ],
-    },
+    { label: `학습 리워드`, page: `rewards` },
     { label: `공지사항 관리`, page: `notices` },
   ],
   l = {
@@ -271,14 +263,6 @@ var a = [
     learnerDetail: [
       `학습자 상세`,
       `개인별 수강 과정과 학습 진행 정보를 확인합니다.`,
-    ],
-    completionAdmin: [
-      `수료 관리`,
-      `교육과정별 학습자의 수료 현황을 확인하고 수료 처리 상태를 관리합니다.`,
-    ],
-    assessmentAdmin: [
-      `설문 관리`,
-      `교육과정별 Google Forms 연결 상태와 응답 결과를 관리합니다.`,
     ],
     rewards: [`학습 리워드`, `학습 포인트를 기반으로 랭킹과 뱃지 지급 현황을 관리합니다.`],
     assignments: [
@@ -453,17 +437,17 @@ function f({ logout: e }) {
         ],
       }),
       (0, i.jsxs)(`main`, {
-        className: `main ${t === `home` ? `admin-home-main` : t === `courses` ? `admin-courses-main` : t === `learners` ? `admin-learners-main` : [`completionAdmin`, `assessmentAdmin`, `rewards`, `notices`, `content`].includes(t) ? `admin-results-main` : ``}`,
+        className: `main ${t === `home` ? `admin-home-main` : t === `courses` ? `admin-courses-main` : t === `learners` ? `admin-learners-main` : [`rewards`, `notices`, `content`].includes(t) ? `admin-results-main` : ``}`,
         children: [
           (0, i.jsxs)(`div`, {
-            className: `page-heading ${t === `home` ? `admin-home-heading home-welcome` : t === `courses` ? `admin-course-heading home-welcome` : t === `learners` ? `admin-learner-heading home-welcome` : [`completionAdmin`, `assessmentAdmin`, `rewards`, `notices`].includes(t) ? `admin-results-heading home-welcome` : ``}`,
+            className: `page-heading ${t === `home` ? `admin-home-heading home-welcome` : t === `courses` ? `admin-course-heading home-welcome` : t === `learners` ? `admin-learner-heading home-welcome` : [`rewards`, `notices`].includes(t) ? `admin-results-heading home-welcome` : ``}`,
             children: [
               (0, i.jsxs)(`div`, {
                 children: [
                   t !== `home` &&
                     t !== `courses` &&
                     t !== `learners` &&
-                    ![`completionAdmin`, `assessmentAdmin`, `rewards`, `notices`].includes(
+                    ![`rewards`, `notices`].includes(
                       t,
                     ) &&
                     (0, i.jsx)(`p`, { children: `SPARKPLUS LMS ADMIN` }),
@@ -523,8 +507,6 @@ function f({ logout: e }) {
             }),
           t === `assignments` &&
             (0, i.jsx)(x, { onCreate: () => M(`교육과정 배정`) }),
-          t === `completionAdmin` && (0, i.jsx)(CompletionManagementPage, {}),
-          t === `assessmentAdmin` && (0, i.jsx)(SurveyAssessmentPage, {}),
           t === `rewards` && (0, i.jsx)(LearningRewardsPage, {}),
           t === `completion` && (0, i.jsx)(S, { tab: N, setTab: P }),
           t === `surveys` && (0, i.jsx)(C, {}),
@@ -568,18 +550,18 @@ function p({ onGo: e }) {
       page: `learners`,
     },
     {
-      title: `수료 처리 대기`,
-      count: 7,
-      detail: `수료 기준 충족 후 최종 처리를 기다리는 학습자`,
+      title: `필수교육 미완료`,
+      count: 11,
+      detail: `필수교육 수료 조건을 아직 충족하지 못한 학습자`,
       tone: `waiting`,
-      page: `completionAdmin`,
+      page: `learners`,
     },
     {
-      title: `설문 마감 예정`,
+      title: `리워드 확인`,
       count: 3,
-      detail: `7일 이내 응답이 마감되는 설문`,
+      detail: `이번 달 학습 랭킹 상위 학습자`,
       tone: `survey`,
-      page: `assessmentAdmin`,
+      page: `rewards`,
     },
   ];
 
@@ -1013,6 +995,13 @@ function googleFormEmbedUrl(url = ``) {
   const id = googleFormId(inputUrl);
   return id ? `https://docs.google.com/forms/d/${id}/viewform?embedded=true` : ``;
 }
+function googleFormResultsUrl(url = ``) {
+  const inputUrl = url.trim();
+  if (/\/forms\/d\/[a-zA-Z0-9_-]+\/edit/.test(inputUrl)) {
+    return inputUrl.split(`#`)[0].split(`?`)[0] + `#responses`;
+  }
+  return `https://docs.google.com/forms/u/0/?tgif=d`;
+}
 
 const createDefaultSurveyQuestions = () => [
   {
@@ -1327,6 +1316,14 @@ function CourseEditorV2({ selected, onBack, isNew = false }) {
         <div className="course-builder-header-actions"><button className="secondary course-preview-button" onClick={() => setCoursePreview(true)}><Icon icon={ViewIcon} />미리보기</button>{!isNew && <button className="course-delete-icon" title="과정 삭제" aria-label="과정 삭제" onClick={remove}><Icon icon={Delete02Icon} /></button>}</div>
       </section>
       <nav className="course-builder-nav">{[[`basic`, `01 기본 정보`], [`lessons`, `02 커리큘럼 및 차시`], [`survey`, `03 수료 후 설문`]].map(([key, label]) => <button key={key} className={activeSection === key ? `active` : ``} onClick={() => sectionRefs[key].current?.scrollIntoView({ behavior: `smooth`, block: `start` })}>{label}</button>)}</nav>
+      {!isNew && (
+        <section className="course-completion-summary" aria-label="교육과정 수료 현황">
+          <div><span>전체 학습자</span><b>{selected.learners || 0}명</b></div>
+          <div><span>수료</span><b>{Math.round((selected.learners || 0) * (selected.rate || 0) / 100)}명</b></div>
+          <div><span>학습 중</span><b>{Math.max(0, (selected.learners || 0) - Math.round((selected.learners || 0) * (selected.rate || 0) / 100))}명</b></div>
+          <div><span>수료율</span><b>{selected.rate || 0}%</b></div>
+        </section>
+      )}
       <section ref={sectionRefs.basic} data-section="basic" id="course-basic-section" className="panel editor-section course-builder-section">
         <div className="editor-section-head">
           <div>
@@ -1517,7 +1514,7 @@ function CourseEditorV2({ selected, onBack, isNew = false }) {
             <div className="google-form-connect-head"><h4>Google Forms 설문</h4><a className="google-form-edit-link" href="https://docs.google.com/forms/u/0/?tgif=d" target="_blank" rel="noreferrer">Google Forms에서 새 설문 만들기 ↗</a></div>
             <div className="google-form-link-row"><label>설문 응답 링크<input value={form.googleFormUrl} placeholder="응답자가 접속할 수 있는 Google Forms 링크를 붙여넣어주세요" onChange={(event) => update(`googleFormUrl`, event.target.value)} /><small>Google Forms에서 설문을 완성한 후 응답용 링크를 복사해 붙여넣어주세요.</small></label></div>
             {form.googleFormUrl && !googleFormId(form.googleFormUrl) && <p className="google-form-error">올바른 Google Forms 링크를 입력해주세요.</p>}
-            {googleFormId(form.googleFormUrl) && <div className="google-form-preview"><h4>설문지 미리보기</h4><iframe className="google-form-inline-frame" src={googleFormEmbedUrl(form.googleFormUrl)} title="Google Forms 수료 후 설문" /></div>}
+            {googleFormId(form.googleFormUrl) && <><a className="google-form-results-link" href={googleFormResultsUrl(form.googleFormUrl)} target="_blank" rel="noreferrer">Google Forms에서 응답 결과 보기 ↗</a><div className="google-form-preview"><h4>설문지 미리보기</h4><iframe className="google-form-inline-frame" src={googleFormEmbedUrl(form.googleFormUrl)} title="Google Forms 수료 후 설문" /></div></>}
           </div>
         )}
       </section>
@@ -3154,21 +3151,25 @@ function LearnerProfilePage({ learner, onBack }) {
   const learningCourses = a
     .concat(a)
     .slice(0, learner.courses)
-    .map((course, index) => ({
-      ...course,
-      learningProgress:
+    .map((course, index) => {
+      const learningProgress =
         index < learner.completed
           ? 100
           : index === learner.completed
             ? learner.progress
-            : 0,
-      state:
-        index < learner.completed
-          ? `수료`
-          : index === learner.completed
-            ? `수강 중`
-            : `미수강`,
-    }));
+            : 0;
+      const surveyRequired = index % 2 === 0;
+      const surveySubmitted = learningProgress === 100 && index < learner.completed;
+      const completed = learningProgress === 100 && (!surveyRequired || surveySubmitted);
+      return {
+        ...course,
+        learningProgress,
+        surveyRequired,
+        surveySubmitted,
+        state: completed ? `수료` : learningProgress > 0 ? `학습 중` : `미수강`,
+        completedAt: completed ? `2026.08.${String(8 - index).padStart(2, `0`)}` : null,
+      };
+    });
   return (
     <section className="learner-profile-page-full">
       <button className="department-back" onClick={onBack}>
@@ -3276,8 +3277,9 @@ function LearnerProfilePage({ learner, onBack }) {
                 <th>교육과정</th>
                 <th>교육 기간</th>
                 <th>진도율</th>
+                <th>설문 제출</th>
                 <th>학습 상태</th>
-                <th>최근 학습일</th>
+                <th>수료일</th>
               </tr>
             </thead>
             <tbody>
@@ -3297,17 +3299,20 @@ function LearnerProfilePage({ learner, onBack }) {
                     </div>
                   </td>
                   <td>
+                    {course.surveyRequired
+                      ? course.surveySubmitted
+                        ? <span className="survey-submit-state done">제출 완료</span>
+                        : <span className="survey-submit-state pending">미제출</span>
+                      : <span className="survey-submit-state none">설문 없음</span>}
+                  </td>
+                  <td>
                     <span
                       className={`learning-state ${course.state === `수료` ? `complete` : course.state === `수강 중` ? `current` : `none`}`}
                     >
                       {course.state}
                     </span>
                   </td>
-                  <td>
-                    {course.state === `미수강`
-                      ? `—`
-                      : `2026.08.${String(8 - index).padStart(2, `0`)}`}
-                  </td>
+                  <td>{course.completedAt || `—`}</td>
                 </tr>
               ))}
             </tbody>

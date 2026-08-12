@@ -7604,6 +7604,67 @@ html[data-theme=dark] .course-danger-zone { border-color: #5e3e3b; background: #
   background: var(--ui-surface);
   box-shadow: none;
 }
+
+/* Completion information lives in course and learner detail views. */
+.course-completion-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin: 18px 0 22px;
+}
+.course-completion-summary > div {
+  display: flex;
+  min-height: 86px;
+  flex-direction: column;
+  justify-content: center;
+  gap: 7px;
+  padding: 16px 18px;
+  border: 1px solid var(--ui-line);
+  border-radius: 16px;
+  background: var(--ui-surface);
+}
+.course-completion-summary span {
+  color: var(--ui-sub);
+  font-size: 13px;
+  font-weight: 500;
+}
+.course-completion-summary b {
+  color: var(--ui-text);
+  font-size: 22px;
+  font-weight: 700;
+}
+.survey-submit-state {
+  display: inline-flex;
+  min-height: 28px;
+  align-items: center;
+  padding: 4px 9px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 650;
+  white-space: nowrap;
+}
+.survey-submit-state.done { background: #e8f6ef; color: #19724e; }
+.survey-submit-state.pending { background: #fff4df; color: #9a5b13; }
+.survey-submit-state.none { background: #f2f4f6; color: #6b7684; }
+.google-form-results-link {
+  display: inline-flex;
+  width: fit-content;
+  min-height: 40px;
+  align-items: center;
+  margin-top: 14px;
+  padding: 0 14px;
+  border: 1px solid #cfe0f6;
+  border-radius: 11px;
+  background: #f5f9ff;
+  color: #2868ad;
+  font-size: 13px;
+  font-weight: 650;
+  text-decoration: none;
+}
+.google-form-results-link:hover { background: #edf5ff; }
+@media (max-width: 760px) {
+  .course-completion-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
 .search-filter-input {
   display: flex;
   width: 100%;
