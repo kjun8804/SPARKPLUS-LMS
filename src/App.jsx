@@ -455,19 +455,6 @@ function f({ logout: e }) {
                   (0, i.jsx)(`span`, { children: l[t][1] }),
                 ],
               }),
-              t === `courses` &&
-                (0, i.jsx)(`button`, {
-                  className: `primary`,
-                  onClick: () => {
-                    R({ id: `new`, title: `새 교육과정`, category: `직무역량`, status: `오픈 전`, lessons: 1, learners: 0, rate: 0, curriculum: null });
-                    setIsNewCourse(true);
-                    B(`content`);
-                  },
-                  children: [
-                    (0, i.jsx)(Icon, { icon: Add01Icon }),
-                    `새 교육과정 등록`,
-                  ],
-                }),
               t === `notices` &&
                 (0, i.jsx)(`button`, {
                   className: `primary`,
@@ -482,6 +469,11 @@ function f({ logout: e }) {
           t === `home` && (0, i.jsx)(p, { onGo: B }),
           t === `courses` &&
             (0, i.jsx)(CourseAdminGrid, {
+              onCreate: () => {
+                R({ id: `new`, title: `새 교육과정`, category: `직무역량`, status: `오픈 전`, lessons: 1, learners: 0, rate: 0, curriculum: null });
+                setIsNewCourse(true);
+                B(`content`);
+              },
               onEdit: (e) => {
                 (R(e), setIsNewCourse(false), B(`content`));
               },
@@ -826,7 +818,7 @@ function g() {
     ],
   });
 }
-function CourseAdminGrid({ onEdit }) {
+function CourseAdminGrid({ onEdit, onCreate }) {
   const [query, setQuery] = r.useState(``);
   const [category, setCategory] = r.useState(`전체 분야`);
   const [level, setLevel] = r.useState(`전체 레벨`);
@@ -875,15 +867,12 @@ function CourseAdminGrid({ onEdit }) {
           <span>전체 교육과정</span>
           <b>{filtered.length}개</b>
         </div>
-        <select
-          className="course-sort-select"
-          aria-label="교육과정 정렬"
-          value={sort}
-          onChange={(event) => setSort(event.target.value)}
-        >
-          <option>최신 등록순</option>
-          <option>오래된 등록순</option>
-        </select>
+        <div className="course-admin-result-actions">
+          <select className="course-sort-select" aria-label="교육과정 정렬" value={sort} onChange={(event) => setSort(event.target.value)}>
+            <option>최신 등록순</option><option>오래된 등록순</option>
+          </select>
+          <button type="button" className="primary course-create-compact" onClick={onCreate}><Icon icon={Add01Icon} size={16} />새 교육과정 등록</button>
+        </div>
       </div>
       <div className="admin-course-card-grid">
         {filtered.map((course, index) => (
@@ -956,6 +945,8 @@ function CourseAdminGrid({ onEdit }) {
                 <span>수강 {course.learners}명</span>
                 <i aria-hidden="true" />
                 <span>수료율 {course.rate}%</span>
+                <i aria-hidden="true" />
+                <span className="admin-course-like"><Icon icon={ThumbsUpIcon} size={15} />{course.likes ?? ([74, 87, 98, 64, 53, 126][course.id - 1] || 42)}</span>
               </div>
             </div>
           </article>
@@ -1195,7 +1186,7 @@ function CourseEditorV2({ selected, onBack, isNew = false }) {
   const addQuiz = () =>
     updateLesson(`quiz`, [
       ...(lesson.quiz || []),
-      { question: ``, type: `객관식`, options: [``, ``], answer: ``, explanation: `` },
+      { question: ``, type: `객관식`, options: [``, ``], correctOption: 0 },
     ]);
   const updateQuiz = (index, key, value) =>
     updateLesson(
@@ -1204,6 +1195,30 @@ function CourseEditorV2({ selected, onBack, isNew = false }) {
         itemIndex === index ? { ...item, [key]: value } : item,
       ),
     );
+  const removeLesson = (index) => {
+    if (!confirm(`이 차시를 삭제하시겠습니까?`)) return;
+    setForm((current) => ({ ...current, lessons: current.lessons.filter((_, lessonIndex) => lessonIndex !== index) }));
+    if (editingIndex === index) setEditingIndex(null);
+    setDirty(true);
+  };
+  const updateQuizOption = (questionIndex, optionIndex, value) => {
+    const question = lesson.quiz[questionIndex];
+    const options = [...(question.options || [])];
+    const correctOption = Number.isInteger(question.correctOption) ? question.correctOption : Math.max(0, options.indexOf(question.answer));
+    options[optionIndex] = value;
+    updateLesson(`quiz`, lesson.quiz.map((item, index) => index === questionIndex ? { ...item, options, correctOption, answer: correctOption === optionIndex ? value : item.answer } : item));
+  };
+  const removeQuizOption = (questionIndex, optionIndex) => {
+    const question = lesson.quiz[questionIndex];
+    const options = question.options || [];
+    if (options.length <= 2) return alert(`선택지는 최소 2개 이상이어야 합니다.`);
+    const currentCorrect = Number.isInteger(question.correctOption) ? question.correctOption : Math.max(0, options.indexOf(question.answer));
+    updateLesson(`quiz`, lesson.quiz.map((item, index) => index === questionIndex ? {
+      ...item,
+      options: options.filter((_, index) => index !== optionIndex),
+      correctOption: currentCorrect === optionIndex ? 0 : currentCorrect > optionIndex ? currentCorrect - 1 : currentCorrect,
+    } : item));
+  };
   const updateSurveyQuestion = (index, key, value) =>
     setForm((current) => ({
       ...current,
@@ -1491,6 +1506,7 @@ function CourseEditorV2({ selected, onBack, isNew = false }) {
                 <Icon icon={Edit02Icon} />
                 차시 수정
               </button>
+              <button type="button" className="lesson-delete-icon" aria-label={`${index + 1}차시 삭제`} title="차시 삭제" onClick={(event) => { event.stopPropagation(); removeLesson(index); }}><Icon icon={Delete02Icon} size={17} /></button>
             </article>
           ))}
         </div>
@@ -1511,14 +1527,15 @@ function CourseEditorV2({ selected, onBack, isNew = false }) {
         </div>
         {form.surveyEnabled && (
           <div className="google-form-connect">
-            <div className="google-form-connect-head"><h4>Google Forms 설문</h4><a className="google-form-edit-link" href="https://docs.google.com/forms/u/0/?tgif=d" target="_blank" rel="noreferrer">Google Forms에서 새 설문 만들기 ↗</a></div>
+            <div className="google-form-connect-head"><h4>Google Forms 설문</h4></div>
+            <div className="google-form-action-row"><a className="google-form-edit-link" href="https://docs.google.com/forms/u/0/?tgif=d" target="_blank" rel="noreferrer"><Icon icon={Add01Icon} size={16} />새 설문 만들기 ↗</a>{googleFormId(form.googleFormUrl) && <a className="google-form-results-link" href={googleFormResultsUrl(form.googleFormUrl)} target="_blank" rel="noreferrer">응답 결과 보기 ↗</a>}</div>
             <div className="google-form-link-row"><label>설문 응답 링크<input value={form.googleFormUrl} placeholder="응답자가 접속할 수 있는 Google Forms 링크를 붙여넣어주세요" onChange={(event) => update(`googleFormUrl`, event.target.value)} /><small>Google Forms에서 설문을 완성한 후 응답용 링크를 복사해 붙여넣어주세요.</small></label></div>
             {form.googleFormUrl && !googleFormId(form.googleFormUrl) && <p className="google-form-error">올바른 Google Forms 링크를 입력해주세요.</p>}
-            {googleFormId(form.googleFormUrl) && <><a className="google-form-results-link" href={googleFormResultsUrl(form.googleFormUrl)} target="_blank" rel="noreferrer">Google Forms에서 응답 결과 보기 ↗</a><div className="google-form-preview"><h4>설문지 미리보기</h4><iframe className="google-form-inline-frame" src={googleFormEmbedUrl(form.googleFormUrl)} title="Google Forms 수료 후 설문" /></div></>}
+            {googleFormId(form.googleFormUrl) && <div className="google-form-preview"><h4>설문지 미리보기</h4><iframe className="google-form-inline-frame" src={googleFormEmbedUrl(form.googleFormUrl)} title="Google Forms 수료 후 설문" /></div>}
           </div>
         )}
       </section>
-      <div className="course-editor-final-actions course-builder-savebar"><span>{dirty ? `변경사항이 있습니다.` : `모든 변경사항이 저장되었습니다.`}</span><div><button className="primary" onClick={save}>{isNew ? `교육과정 등록` : `변경사항 저장`}</button></div></div>
+      <div className="course-editor-final-actions course-builder-savebar"><div><button className="primary" onClick={save}>{isNew ? `교육과정 등록` : `저장`}</button></div></div>
       {lesson && (
         <div
           className="overlay"
@@ -1643,11 +1660,12 @@ function CourseEditorV2({ selected, onBack, isNew = false }) {
                     <div className="lesson-quiz-list">
                       {(lesson.quiz || []).map((question, index) => (
                         <article key={index}>
-                          <div className="quiz-builder-head"><b>Q{index + 1}</b><select value={question.type} onChange={(event) => updateQuiz(index, `type`, event.target.value)}><option>객관식</option><option>복수 선택</option><option>주관식</option></select></div>
+                          <div className="quiz-builder-head"><b>Q{index + 1}</b></div>
                           <label className="quiz-question-field">질문<input className="quiz-question-input" value={question.question} placeholder="질문을 입력해주세요" onChange={(event) => updateQuiz(index, `question`, event.target.value)} /></label>
-                          {question.type !== `주관식` && <div className="quiz-option-list">{(question.options || []).map((option, optionIndex) => <div key={optionIndex}><span>{question.type === `객관식` ? `○` : `□`}</span><input value={option} placeholder="선택지 입력" onChange={(event) => { const options = [...(question.options || [])]; options[optionIndex] = event.target.value; updateQuiz(index, `options`, options); }} /></div>)}</div>}
-                          <label className="quiz-answer-field">정답<input value={question.answer || ``} onChange={(event) => updateQuiz(index, `answer`, event.target.value)} placeholder="정답 또는 예시 답안" /></label>
-                          <label className="quiz-explanation-field">해설<input value={question.explanation || ``} onChange={(event) => updateQuiz(index, `explanation`, event.target.value)} placeholder="선택 사항" /></label>
+                          <div className="quiz-option-list">{(question.options?.length >= 2 ? question.options : [``, ``]).map((option, optionIndex) => {
+                            const correctOption = Number.isInteger(question.correctOption) ? question.correctOption : Math.max(0, (question.options || []).indexOf(question.answer));
+                            return <div key={optionIndex} className={correctOption === optionIndex ? `correct` : ``}><input type="radio" name={`quiz-${index}-correct`} aria-label={`${optionIndex + 1}번 선택지를 정답으로 지정`} checked={correctOption === optionIndex} onChange={() => updateLesson(`quiz`, lesson.quiz.map((item, itemIndex) => itemIndex === index ? { ...item, correctOption: optionIndex, answer: option } : item))} /><input value={option} placeholder={`선택지 ${optionIndex + 1}`} onChange={(event) => updateQuizOption(index, optionIndex, event.target.value)} /><button type="button" aria-label={`${optionIndex + 1}번 선택지 삭제`} onClick={() => removeQuizOption(index, optionIndex)}>×</button></div>;
+                          })}<button type="button" className="quiz-option-add" onClick={() => updateQuiz(index, `options`, [...(question.options || [``, ``]), ``])}>+ 선택지 추가</button></div>
                           <div className="quiz-builder-actions"><button onClick={() => updateLesson(`quiz`, [...lesson.quiz.slice(0, index + 1), { ...question, options: [...(question.options || [])] }, ...lesson.quiz.slice(index + 1)])}>복제</button><button className="delete" onClick={() => updateLesson(`quiz`, lesson.quiz.filter((_, itemIndex) => itemIndex !== index))}>삭제</button></div>
                         </article>
                       ))}

@@ -16797,3 +16797,50 @@ html[data-theme="dark"] .fixed-badge-card {
 .admin-portal table td b { font-weight:600!important; }
 @media(max-width:900px){.admin-portal>.topbar{padding:0 20px!important}.admin-portal>.topbar .main-nav{margin-left:22px!important;overflow-x:auto}.admin-portal>.topbar .profile-button>span:nth-child(2){display:none!important}}
 @media(max-width:700px){.admin-portal>.main,.admin-portal>.main.admin-home-main,.admin-portal>.main.admin-courses-main,.admin-portal>.main.admin-learners-main,.admin-portal>.main.admin-results-main{width:min(100% - 32px,1240px)!important;padding:38px 0 64px!important}.admin-portal .page-heading,.admin-portal .home-welcome{align-items:stretch!important;flex-direction:column!important;margin-bottom:28px!important}.admin-portal .page-heading h1,.admin-portal .home-welcome h1{font-size:30px!important}}
+
+/* Course management refinements */
+.course-admin-result-actions { display:flex; align-items:center; gap:10px; margin-left:auto; }
+.admin-portal .course-create-compact { min-height:40px!important; height:40px!important; gap:6px; padding:0 13px!important; white-space:nowrap; }
+.admin-course-like { display:inline-flex; align-items:center; gap:4px; }
+
+.lesson-manage-list > article { grid-template-columns:18px 44px minmax(280px,1fr) minmax(250px,auto) 104px 38px; }
+.lesson-delete-icon { display:grid; width:38px; height:38px; min-height:38px; place-items:center; padding:0; border:1px solid var(--ui-line); border-radius:10px; background:transparent; color:#9b4b4b; cursor:pointer; }
+.lesson-delete-icon:hover { border-color:#efcaca; background:#fff4f4; color:#c43d3d; }
+
+.course-survey-compact > .survey-builder-head { min-height:0; padding-top:0; padding-bottom:16px; }
+.course-survey-compact .survey-editor-actions { min-height:24px; align-items:center; }
+.course-survey-compact .survey-editor-actions .rule-switch { width:42px; height:24px; margin:0; transform:none; }
+.google-form-action-row { display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin:0 0 18px; }
+.google-form-action-row .google-form-edit-link,
+.google-form-action-row .google-form-results-link { display:inline-flex; min-height:40px; height:40px; align-items:center; gap:6px; box-sizing:border-box; margin:0; padding:0 14px; border-radius:11px; font-size:13px; font-weight:650; text-decoration:none; }
+.google-form-action-row .google-form-edit-link { border:1px solid #cfe0f6; background:#edf5ff; color:#2868ad; }
+.google-form-action-row .google-form-edit-link:hover { background:#e4f0ff; }
+.google-form-action-row .google-form-results-link { border:1px solid var(--ui-line-strong); background:var(--ui-surface); color:var(--ui-text); }
+
+.quiz-option-list { gap:8px; }
+.quiz-option-list > div { grid-template-columns:22px minmax(0,1fr) 30px; gap:8px; min-width:0; padding:3px 7px; border:1px solid var(--ui-line); border-radius:10px; background:var(--ui-surface); }
+.quiz-option-list > div.correct { border-color:#9bc2f4; background:#f3f8ff; }
+.quiz-option-list > div > input[type="radio"] { width:17px; height:17px; margin:0; padding:0; accent-color:#3182f6; }
+.quiz-option-list > div > input:not([type="radio"]) { width:100%; min-width:0; height:38px; padding:0 4px; border:0; background:transparent; font-size:14px; font-weight:400; }
+.quiz-option-list > div > button { width:28px; height:28px; padding:0; border:0; border-radius:8px; background:transparent; color:var(--ui-sub); font-size:20px; cursor:pointer; }
+.quiz-option-list > div > button:hover { background:#fff0f0; color:#c43d3d; }
+.quiz-option-add { justify-self:start; min-height:36px; padding:0 8px; border:0; background:transparent; color:#2868ad; font-size:13px; font-weight:650; cursor:pointer; }
+.course-builder-savebar { justify-content:flex-end; }
+.course-builder-savebar > div { margin-left:auto; }
+
+@media (max-width:1000px) {
+  .lesson-manage-list > article { grid-template-columns:18px 40px minmax(0,1fr) 104px 38px; }
+  .lesson-setting-tags { grid-column:3; }
+  .lesson-manage-list > article > .secondary { grid-column:4; grid-row:1 / span 2; }
+  .lesson-delete-icon { grid-column:5; grid-row:1 / span 2; }
+}
+@media (max-width:700px) {
+  .course-admin-result { align-items:flex-start; gap:12px; }
+  .course-admin-result-actions { width:100%; justify-content:flex-end; }
+  .lesson-manage-list > article { grid-template-columns:18px 38px minmax(0,1fr) 38px; }
+  .lesson-setting-tags { grid-column:2 / -1; }
+  .lesson-manage-list > article > .secondary { grid-column:2 / 4; grid-row:auto; }
+  .lesson-delete-icon { grid-column:4; grid-row:auto; }
+  .google-form-action-row > a { flex:1 1 auto; justify-content:center; }
+  .course-builder-savebar > div { display:flex; justify-content:flex-end; }
+}
