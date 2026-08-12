@@ -7593,6 +7593,224 @@ html[data-theme=dark] .course-danger-zone { border-color: #5e3e3b; background: #
   }
 }
 
+/* Final brand alignment: reference search panels and blue actions */
+:root {
+  --ui-brand: #3182f6;
+  --ui-brand-hover: #1b64da;
+  --search-reference-bg: #f2f4f6;
+}
+
+/* Primary actions use one blue system across learner and administrator LMS. */
+.primary,
+.course-search-button,
+.admin-portal .primary,
+.admin-portal .course-search-button,
+.admin-portal .filter-search-button,
+.filter-card .search-button {
+  border-color: var(--ui-brand) !important;
+  background: var(--ui-brand) !important;
+  color: #fff !important;
+  box-shadow: none !important;
+}
+.primary:hover,
+.course-search-button:hover,
+.admin-portal .primary:hover,
+.admin-portal .course-search-button:hover,
+.admin-portal .filter-search-button:hover,
+.filter-card .search-button:hover {
+  border-color: var(--ui-brand-hover) !important;
+  background: var(--ui-brand-hover) !important;
+}
+
+/* Learner course search: same white shell and gray inner rows as the reference. */
+.toss-page > .filter-card {
+  padding: 20px 22px !important;
+  border-color: var(--search-panel-border) !important;
+  background: #fff !important;
+}
+.toss-page > .filter-card .search-wrap {
+  min-height: 64px !important;
+  border: 0 !important;
+  border-radius: 18px !important;
+  background: var(--search-reference-bg) !important;
+}
+.toss-page > .filter-card .filters {
+  padding: 18px 22px !important;
+  border-radius: 18px !important;
+  background: var(--search-reference-bg) !important;
+}
+.toss-page > .filter-card .filters select {
+  min-height: 56px !important;
+  border-color: #e1e6eb !important;
+  border-radius: 14px !important;
+  background-color: #fff !important;
+}
+.toss-page > .filter-card .filter-actions button {
+  min-height: 56px !important;
+  border-radius: 14px !important;
+}
+.toss-page > .filter-card .filter-actions .reset {
+  border: 1px solid #dfe5eb !important;
+  background: #fff !important;
+  color: #344054 !important;
+}
+
+/* Administrator base variant: white shell with two distinct gray inner rows. */
+.admin-portal :is(
+  .course-admin-grid-page > .course-card-filter,
+  .learner-management-filter,
+  .learner-filter-fields,
+  .results-filter,
+  .analysis-filter-bar
+) {
+  position: relative !important;
+  isolation: isolate;
+  padding: 20px 22px !important;
+  overflow: hidden;
+  border-color: var(--search-panel-border) !important;
+  border-radius: 20px !important;
+  background: #fff !important;
+}
+.admin-portal :is(
+  .course-admin-grid-page > .course-card-filter,
+  .learner-management-filter,
+  .learner-filter-fields,
+  .results-filter,
+  .analysis-filter-bar
+)::after {
+  position: absolute;
+  z-index: -1;
+  right: 22px;
+  bottom: 20px;
+  left: 22px;
+  height: 86px;
+  border-radius: 18px;
+  background: var(--search-reference-bg);
+  content: "";
+}
+.admin-portal :is(
+  .course-admin-grid-page > .course-card-filter,
+  .learner-management-filter,
+  .learner-filter-fields,
+  .results-filter,
+  .analysis-filter-bar
+) .search {
+  height: 68px !important;
+  min-height: 68px !important;
+  margin-bottom: 4px !important;
+  border: 0 !important;
+  border-radius: 18px !important;
+  background: var(--search-reference-bg) !important;
+}
+.admin-portal :is(
+  .course-card-filter,
+  .learner-management-filter,
+  .learner-filter-fields,
+  .results-filter,
+  .analysis-filter-bar,
+  .performance-filter-panel,
+  .notice-admin-filters
+) select {
+  height: 56px !important;
+  min-height: 56px !important;
+  border-color: #e1e6eb !important;
+  border-radius: 14px !important;
+  background-color: #fff !important;
+}
+.admin-portal :is(
+  .course-card-filter,
+  .learner-management-filter,
+  .learner-filter-fields,
+  .results-filter,
+  .google-form-admin-toolbar,
+  .analysis-filter-bar,
+  .performance-filter-panel,
+  .notice-admin-filters
+) .filter-reset,
+.admin-portal .filter-search-button {
+  height: 56px !important;
+  min-height: 56px !important;
+  border-radius: 14px !important;
+}
+.admin-portal :is(
+  .course-card-filter,
+  .learner-management-filter,
+  .learner-filter-fields,
+  .results-filter,
+  .google-form-admin-toolbar,
+  .analysis-filter-bar,
+  .performance-filter-panel,
+  .notice-admin-filters
+) .filter-reset {
+  border: 1px solid #dfe5eb !important;
+  background: #fff !important;
+  color: #344054 !important;
+}
+
+/* Compact variant keeps the same gray panel language. */
+.admin-portal :is(.notice-admin-filters, .google-form-admin-toolbar, .performance-filter-panel) {
+  border-color: var(--search-panel-border) !important;
+  background: var(--search-reference-bg) !important;
+}
+.admin-portal :is(.notice-admin-filters, .google-form-admin-toolbar) .search {
+  height: 56px !important;
+  min-height: 56px !important;
+  border-color: #e1e6eb !important;
+  background: #fff !important;
+}
+
+/* Learner-facing charts never use the old black palette. */
+.toss-page .bar-row i,
+.toss-page .progress-track i,
+.toss-page .progress-block .progress-track i,
+.toss-page .popularity-bar i {
+  background: linear-gradient(90deg, #3182f6, #74b4ff) !important;
+}
+.toss-page .bar-row b,
+.toss-page .metric strong,
+.toss-page .chart-card strong {
+  color: #1b64da !important;
+}
+.toss-page .bar-chart .bar-low {
+  background: linear-gradient(180deg, #9fc8f5, #dbeaff) !important;
+}
+.toss-page .bar-chart .bar-middle {
+  background: linear-gradient(180deg, #5d9cec, #a9cdf8) !important;
+}
+.toss-page .bar-chart .bar-high {
+  background: linear-gradient(180deg, #3182f6, #79b5ff) !important;
+}
+
+@media (max-width: 760px) {
+  .admin-portal :is(
+    .course-admin-grid-page > .course-card-filter,
+    .learner-management-filter,
+    .learner-filter-fields,
+    .results-filter,
+    .analysis-filter-bar
+  ) {
+    background: var(--search-reference-bg) !important;
+  }
+  .admin-portal :is(
+    .course-admin-grid-page > .course-card-filter,
+    .learner-management-filter,
+    .learner-filter-fields,
+    .results-filter,
+    .analysis-filter-bar
+  )::after {
+    display: none;
+  }
+  .admin-portal :is(
+    .course-admin-grid-page > .course-card-filter,
+    .learner-management-filter,
+    .learner-filter-fields,
+    .results-filter,
+    .analysis-filter-bar
+  ) .search {
+    background: #fff !important;
+  }
+}
+
 /* Unified LMS search/filter panels */
 :root {
   --search-panel-bg: #f4f6f8;
@@ -15904,4 +16122,113 @@ html[data-theme="dark"] .fixed-badge-card {
   .admin-portal .course-admin-grid-page > .course-card-filter .search { grid-column: 1 / -1; }
   .admin-portal .course-admin-grid-page > .course-card-filter select { min-width: 0 !important; }
   .admin-portal .course-admin-grid-page > .course-card-filter .filter-reset { grid-column: auto; }
+}
+
+/* Cascade lock: blue brand and reference-panel layout */
+.primary,
+.course-search-button,
+.admin-portal .primary,
+.admin-portal .course-search-button,
+.admin-portal .filter-search-button,
+.filter-card .search-button {
+  border-color: #3182f6 !important;
+  background: #3182f6 !important;
+  color: #fff !important;
+  box-shadow: none !important;
+}
+.primary:hover,
+.course-search-button:hover,
+.admin-portal .primary:hover,
+.admin-portal .course-search-button:hover,
+.admin-portal .filter-search-button:hover,
+.filter-card .search-button:hover {
+  border-color: #1b64da !important;
+  background: #1b64da !important;
+}
+.admin-portal .course-admin-grid-page > .course-card-filter {
+  display: flex !important;
+  position: relative !important;
+  isolation: isolate;
+  flex-wrap: wrap !important;
+  padding: 20px 22px !important;
+  overflow: hidden;
+  border: 1px solid #e1e6eb !important;
+  border-radius: 20px !important;
+  background: #fff !important;
+}
+.admin-portal .course-admin-grid-page > .course-card-filter::after {
+  position: absolute;
+  z-index: -1;
+  right: 22px;
+  bottom: 20px;
+  left: 22px;
+  height: 86px;
+  border-radius: 18px;
+  background: #f2f4f6;
+  content: "";
+}
+.admin-portal .course-admin-grid-page > .course-card-filter .search {
+  order: -1 !important;
+  width: 100% !important;
+  min-width: 100% !important;
+  height: 68px !important;
+  min-height: 68px !important;
+  flex: 1 0 100% !important;
+  margin-bottom: 4px !important;
+  border: 0 !important;
+  border-radius: 18px !important;
+  background: #f2f4f6 !important;
+}
+.admin-portal .course-admin-grid-page > .course-card-filter select {
+  width: auto !important;
+  min-width: 170px !important;
+  max-width: 220px !important;
+  height: 56px !important;
+  min-height: 56px !important;
+  flex: 0 0 auto !important;
+  border-radius: 14px !important;
+  background-color: #fff !important;
+}
+.admin-portal .course-admin-grid-page > .course-card-filter .filter-reset,
+.admin-portal .course-admin-grid-page > .course-card-filter .filter-search-button {
+  height: 56px !important;
+  min-height: 56px !important;
+  border-radius: 14px !important;
+}
+.admin-portal .course-admin-grid-page > .course-card-filter .filter-reset {
+  order: 98 !important;
+  margin-left: auto !important;
+  padding: 0 14px !important;
+  border: 1px solid #dfe5eb !important;
+  background: #fff !important;
+  color: #344054 !important;
+}
+.admin-portal .course-admin-grid-page > .course-card-filter .filter-search-button {
+  order: 99 !important;
+  min-width: 92px !important;
+}
+.toss-page .bar-row i,
+.toss-page .progress-track i,
+.toss-page .progress-block .progress-track i,
+.toss-page .popularity-bar i {
+  background: linear-gradient(90deg, #3182f6, #74b4ff) !important;
+}
+.toss-page .bar-row b,
+.toss-page .metric strong,
+.toss-page .chart-card strong {
+  color: #1b64da !important;
+}
+@media (max-width: 760px) {
+  .admin-portal .course-admin-grid-page > .course-card-filter {
+    background: #f2f4f6 !important;
+  }
+  .admin-portal .course-admin-grid-page > .course-card-filter::after { display: none; }
+  .admin-portal .course-admin-grid-page > .course-card-filter .search {
+    background: #fff !important;
+  }
+  .admin-portal .course-admin-grid-page > .course-card-filter select {
+    min-width: 150px !important;
+    max-width: none !important;
+    flex: 1 1 150px !important;
+  }
 }
