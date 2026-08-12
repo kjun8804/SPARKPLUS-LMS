@@ -9342,7 +9342,7 @@ function K({
   const useTag = (tag) => p(tag);
   return (
     <main className="page toss-page">
-      <I
+      <PageHeader
         kicker="교육과정 조회"
         title="교육과정 조회"
         description="성장을 위한 다양한 교육과정을 찾아보세요."
