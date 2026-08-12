@@ -965,7 +965,13 @@ function googleFormId(url = ``) {
   return match?.[1] || ``;
 }
 function googleFormEmbedUrl(url = ``) {
-  const id = googleFormId(url);
+  const inputUrl = url.trim();
+  if (/^https:\/\/docs\.google\.com\/forms\/d\/e\/[a-zA-Z0-9_-]+\/viewform(?:[?#]|$)/.test(inputUrl)) {
+    if (/[?&]embedded=true(?:&|#|$)/.test(inputUrl)) return inputUrl;
+    const [urlWithoutHash, hash = ``] = inputUrl.split(`#`, 2);
+    return `${urlWithoutHash}${urlWithoutHash.includes(`?`) ? `&` : `?`}embedded=true${hash ? `#${hash}` : ``}`;
+  }
+  const id = googleFormId(inputUrl);
   return id ? `https://docs.google.com/forms/d/${id}/viewform?embedded=true` : ``;
 }
 
