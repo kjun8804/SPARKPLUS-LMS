@@ -6582,6 +6582,18 @@ b {
   line-height: 1.27;
   letter-spacing: -0.045em;
 }
+.home-welcome-copy { flex:0 1 auto; }
+.home-welcome-sticker {
+  width:112px;
+  height:112px;
+  flex:0 0 112px;
+  align-self:center;
+  margin-left:auto;
+  overflow:hidden;
+  filter:drop-shadow(0 5px 7px rgba(34,54,76,.08));
+  pointer-events:none;
+}
+.home-welcome-sticker > div,.home-welcome-sticker svg { width:100%!important; height:100%!important; }
 .home-quick-stats {
   display: flex;
   align-items: center;
@@ -6974,6 +6986,7 @@ html[data-theme="dark"] .home-badge-main > span {
   .home-welcome {
     align-items: flex-start;
   }
+  .home-welcome-sticker { width:94px; height:94px; flex-basis:94px; align-self:center; }
   .home-quick-stats {
     display: none;
   }
@@ -7004,6 +7017,8 @@ html[data-theme="dark"] .home-badge-main > span {
   .home-welcome h1 {
     font-size: 30px;
   }
+  .home-welcome { position:relative; display:block; padding-right:68px; }
+  .home-welcome-sticker { position:absolute; top:6px; right:0; width:64px; height:64px; margin:0; }
   .home-continue-content {
     grid-template-columns: 1fr;
   }

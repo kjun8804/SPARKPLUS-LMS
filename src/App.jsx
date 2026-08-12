@@ -1,6 +1,8 @@
 import * as r from "react";
 import { jsx, jsxs, Fragment } from "react/jsx-runtime";
 import { HugeiconsIcon } from "@hugeicons/react";
+import Lottie from "lottie-react";
+import hiHelloAnimation from "./assets/hi-hello.json";
 import {
   Search01Icon,
   FilterIcon,
@@ -8849,13 +8851,16 @@ function L({ courses: e, go: t, notices = j }) {
   return (
     <main className="page dashboard-page home-minimal">
       <section className="home-welcome">
-        <div>
+        <div className="home-welcome-copy">
           <span>8월 10일 월요일</span>
           <h1>
             김지수님, 오늘도 가볍게
             <br />
             시작해볼까요?
           </h1>
+        </div>
+        <div className="home-welcome-sticker" aria-hidden="true">
+          <Lottie animationData={hiHelloAnimation} loop autoplay />
         </div>
         <div className="home-quick-stats">
           <div>
