@@ -50,6 +50,65 @@ function Icon({ icon, size = 18, className = ``, strokeWidth = 1.7 }) {
     />
   );
 }
+function SearchFilterPanel({
+  value,
+  onValueChange,
+  placeholder,
+  filters = [],
+  onSearch,
+  onReset,
+  quickTags = [],
+  onQuickTag,
+  variant = `default`,
+}) {
+  return (
+    <section className={`search-filter-panel ${variant}`}>
+      <label className="search-filter-input">
+        <Icon icon={Search01Icon} size={20} />
+        <input
+          value={value}
+          onChange={(event) => onValueChange(event.target.value)}
+          onKeyDown={(event) => event.key === `Enter` && onSearch?.()}
+          placeholder={placeholder}
+        />
+      </label>
+      <div className="search-filter-row">
+        <div className="search-filter-selects">
+          {filters.map((filter) => (
+            <select
+              key={filter.label || filter.options[0]}
+              aria-label={filter.label || filter.options[0]}
+              value={filter.value}
+              onChange={(event) => filter.onChange(event.target.value)}
+            >
+              {filter.options.map((option) => (
+                <option key={option}>{option}</option>
+              ))}
+            </select>
+          ))}
+        </div>
+        <div className="search-filter-actions">
+          <button className="search-filter-reset" onClick={onReset}>
+            <Icon icon={RefreshIcon} size={19} />
+            초기화
+          </button>
+          <button className="search-filter-submit" onClick={onSearch}>
+            <Icon icon={Search01Icon} size={19} />
+            검색
+          </button>
+        </div>
+      </div>
+      {!!quickTags.length && (
+        <div className="search-filter-quick">
+          <span><Icon icon={FilterIcon} size={15} />빠른 선택</span>
+          {quickTags.map((tag) => (
+            <button key={tag} onClick={() => onQuickTag?.(tag)}>#{tag}</button>
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
 function menuIcon(label) {
   if (label.includes(`홈`) || label.includes(`대시보드`)) return Home01Icon;
   if (label.includes(`교육과정`) || label.includes(`학습`))
@@ -812,52 +871,23 @@ function CourseAdminGrid({ onEdit }) {
   };
   return (
     <section className="course-admin-grid-page">
-      <div className="course-card-filter">
-        <div className="search">
-          <Icon icon={Search01Icon} />
-          <input
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="교육과정명, 키워드 검색"
-          />
-        </div>
-        <select
-          value={category}
-          onChange={(event) => setCategory(event.target.value)}
-        >
-          {[`전체 분야`, `직무역량`, `리더십`, `AX`, `법정필수`].map(
-            (value) => (
-              <option key={value}>{value}</option>
-            ),
-          )}
-        </select>
-        <select value={level} onChange={(event) => setLevel(event.target.value)}>
-          {[`전체 레벨`, `레벨 1`, `레벨 2`, `레벨 3`].map((value) => (
-            <option key={value}>{value}</option>
-          ))}
-        </select>
-        <select
-          value={status}
-          onChange={(event) => setStatus(event.target.value)}
-        >
-          {[`전체 상태`, `오픈 전`, `운영 중`, `종료`].map((value) => (
-            <option key={value}>{value}</option>
-          ))}
-        </select>
-        <button className="filter-search-button">검색</button>
-        <button
-          className="filter-reset"
-          onClick={() => {
+      <SearchFilterPanel
+        value={query}
+        onValueChange={setQuery}
+        placeholder="교육과정명, 키워드 검색"
+        filters={[
+          { label: `분야`, value: category, onChange: setCategory, options: [`전체 분야`, `직무역량`, `리더십`, `AX`, `법정필수`] },
+          { label: `레벨`, value: level, onChange: setLevel, options: [`전체 레벨`, `레벨 1`, `레벨 2`, `레벨 3`] },
+          { label: `상태`, value: status, onChange: setStatus, options: [`전체 상태`, `오픈 전`, `운영 중`, `종료`] },
+        ]}
+        onSearch={() => {}}
+        onReset={() => {
             setQuery(``);
             setCategory(`전체 분야`);
             setLevel(`전체 레벨`);
             setStatus(`전체 상태`);
-          }}
-        >
-          <Icon icon={RefreshIcon} />
-          초기화
-        </button>
-      </div>
+        }}
+      />
       <div className="course-admin-result">
         <div>
           <span>전체 교육과정</span>
@@ -2987,52 +3017,18 @@ function LearnerDepartmentHub({ onSelect }) {
 
   return (
     <section className="department-hub learner-management-hub">
-      <div className="learner-management-filter">
-        <div className="search">
-          <Icon icon={Search01Icon} />
-          <input
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="이름 또는 부서 검색"
-          />
-        </div>
-        <select
-          value={department}
-          aria-label="부서"
-          onChange={(event) => {
-            setDepartment(event.target.value);
-            setSelectedDept(null);
-          }}
-        >
-          {[`전체 부서`, ...departmentMeta.map((dept) => dept.name)].map(
-            (value) => (
-              <option key={value}>{value}</option>
-            ),
-          )}
-        </select>
-        <select
-          value={position}
-          aria-label="직급"
-          onChange={(event) => setPosition(event.target.value)}
-        >
-          {[`전체 직급`, `인턴`, `매니저`, `파트장`, `팀장`].map((value) => (
-            <option key={value}>{value}</option>
-          ))}
-        </select>
-        <select
-          value={learningStatus}
-          aria-label="학습 상태"
-          onChange={(event) => setLearningStatus(event.target.value)}
-        >
-          {[`전체 학습 상태`, `관리 필요`, `수강 중`, `수료`].map((value) => (
-            <option key={value}>{value}</option>
-          ))}
-        </select>
-        <button className="filter-search-button">검색</button>
-        <button className="filter-reset" onClick={resetFilters}>
-          <Icon icon={RefreshIcon} /> 초기화
-        </button>
-      </div>
+      <SearchFilterPanel
+        value={query}
+        onValueChange={setQuery}
+        placeholder="이름 또는 부서 검색"
+        filters={[
+          { label: `부서`, value: department, onChange: (value) => { setDepartment(value); setSelectedDept(null); }, options: [`전체 부서`, ...departmentMeta.map((dept) => dept.name)] },
+          { label: `직급`, value: position, onChange: setPosition, options: [`전체 직급`, `인턴`, `매니저`, `파트장`, `팀장`] },
+          { label: `학습 상태`, value: learningStatus, onChange: setLearningStatus, options: [`전체 학습 상태`, `관리 필요`, `수강 중`, `수료`] },
+        ]}
+        onSearch={() => {}}
+        onReset={resetFilters}
+      />
 
       <div className="department-hub-intro learner-department-head">
         <div>
@@ -3849,53 +3845,18 @@ function CompletionManagementPage() {
   };
   return (
     <section className="results-section completion-management-page">
-      <div className="results-filter five-fields">
-        <div className="search">
-          <Icon icon={Search01Icon} />
-          <input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="교육과정 또는 학습자 검색"
-          />
-        </div>
-        <select value={dept} onChange={(e) => setDept(e.target.value)}>
-          {[
-            `전체 부서`,
-            `People팀`,
-            `개발팀`,
-            `마케팅팀`,
-            `세일즈팀`,
-            `운영팀`,
-          ].map((value) => (
-            <option key={value}>{value}</option>
-          ))}
-        </select>
-        <select value={status} onChange={(e) => setStatus(e.target.value)}>
-          {[`전체 수료 상태`, `수료`, `수료 처리 대기`, `미수료`].map(
-            (value) => (
-              <option key={value}>{value}</option>
-            ),
-          )}
-        </select>
-        <select
-          value={period}
-          onChange={(e) => setPeriod(e.target.value)}
-          aria-label="수료 처리 기간"
-        >
-          {[
-            `교육 기간 · 최근 3개월`,
-            `교육 기간 · 최근 6개월`,
-            `교육 기간 · 올해 전체`,
-          ].map((value) => (
-            <option key={value}>{value}</option>
-          ))}
-        </select>
-        <button className="filter-search-button">검색</button>
-        <button className="filter-reset" onClick={reset}>
-          <Icon icon={RefreshIcon} />
-          초기화
-        </button>
-      </div>
+      <SearchFilterPanel
+        value={query}
+        onValueChange={setQuery}
+        placeholder="학습자 또는 교육과정 검색"
+        filters={[
+          { label: `부서`, value: dept, onChange: setDept, options: [`전체 부서`, `People팀`, `개발팀`, `마케팅팀`, `세일즈팀`, `운영팀`] },
+          { label: `수료 상태`, value: status, onChange: setStatus, options: [`전체 수료 상태`, `수료`, `수료 처리 대기`, `미수료`] },
+          { label: `기간`, value: period, onChange: setPeriod, options: [`교육 기간 · 최근 3개월`, `교육 기간 · 최근 6개월`, `교육 기간 · 올해 전체`] },
+        ]}
+        onSearch={() => {}}
+        onReset={reset}
+      />
       <div className="results-kpi-grid three completion-kpis">
         <button
           className={status === `수료` ? `selected complete` : `complete`}
@@ -4251,57 +4212,19 @@ function LegacySurveyResultsPage() {
         <AssessmentKpi label="평균 응답률" value="74%" note="전체 과정 평균" />
         <AssessmentKpi label="평균 만족도" value="4.6 / 5" note="응답자 기준" />
       </div>
-      <div className="results-filter survey-results-filter">
-        <div className="search">
-          <Icon icon={Search01Icon} />
-          <input
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="교육과정 검색"
-          />
-        </div>
-        <select value={dept} onChange={(event) => setDept(event.target.value)}>
-          {[`전체 부서`, `People팀`, `개발팀`, `마케팅팀`, `세일즈팀`].map(
-            (value) => (
-              <option key={value}>{value}</option>
-            ),
-          )}
-        </select>
-        <select
-          value={surveyStatus}
-          onChange={(event) => setSurveyStatus(event.target.value)}
-        >
-          {[`전체 상태`, `응답 수집 중`, `응답 독려 필요`, `마감`].map(
-            (value) => (
-              <option key={value}>{value}</option>
-            ),
-          )}
-        </select>
-        <select
-          value={period}
-          onChange={(event) => setPeriod(event.target.value)}
-        >
-          {[`최근 3개월`, `최근 6개월`, `올해 전체`].map((value) => (
-            <option key={value}>{value}</option>
-          ))}
-        </select>
-        <select value={sort} onChange={(event) => setSort(event.target.value)}>
-          {[
-            `최근 설문순`,
-            `응답률 높은 순`,
-            `응답률 낮은 순`,
-            `만족도 높은 순`,
-            `만족도 낮은 순`,
-          ].map((value) => (
-            <option key={value}>{value}</option>
-          ))}
-        </select>
-        <button className="filter-search-button">검색</button>
-        <button className="filter-reset" onClick={reset}>
-          <Icon icon={RefreshIcon} />
-          초기화
-        </button>
-      </div>
+      <SearchFilterPanel
+        value={query}
+        onValueChange={setQuery}
+        placeholder="교육과정 또는 설문 검색"
+        filters={[
+          { label: `부서`, value: dept, onChange: setDept, options: [`전체 부서`, `People팀`, `개발팀`, `마케팅팀`, `세일즈팀`] },
+          { label: `설문 상태`, value: surveyStatus, onChange: setSurveyStatus, options: [`전체 상태`, `응답 수집 중`, `응답 독려 필요`, `마감`] },
+          { label: `기간`, value: period, onChange: setPeriod, options: [`최근 3개월`, `최근 6개월`, `올해 전체`] },
+          { label: `정렬`, value: sort, onChange: setSort, options: [`최근 설문순`, `응답률 높은 순`, `응답률 낮은 순`, `만족도 높은 순`, `만족도 낮은 순`] },
+        ]}
+        onSearch={() => {}}
+        onReset={reset}
+      />
       <div className="results-list-head">
         <div>
           <h2>과정별 설문 결과</h2>
@@ -7917,13 +7840,18 @@ function T({ createSignal }) {
         <div><h2>전체 공지 {notices.length}건</h2><p>공지 게시 상태와 노출 대상을 한눈에 확인하세요.</p></div>
         <div className="notice-summary-chips"><span>게시 중 {counts[`게시 중`] || 0}</span><span>예약 {counts[`게시 예정`] || 0}</span><span>종료 {counts[`종료`] || 0}</span><span>임시저장 {counts[`임시저장`] || 0}</span></div>
       </div>
-      <div className="notice-admin-filters">
-        <label className="search"><Icon icon={Search01Icon} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="공지사항 제목 검색" /></label>
-        <select value={category} onChange={(event) => setCategory(event.target.value)}>{[`전체 분류`, `필수 안내`, `교육 안내`, `시스템 안내`, `일반 공지`].map((item) => <option key={item}>{item}</option>)}</select>
-        <select value={status} onChange={(event) => setStatus(event.target.value)}>{[`전체 상태`, `게시 중`, `게시 예정`, `종료`, `임시저장`].map((item) => <option key={item}>{item}</option>)}</select>
-        <button className="filter-search-button">검색</button>
-        <button className="filter-reset" onClick={() => { setQuery(``); setCategory(`전체 분류`); setStatus(`전체 상태`); }}><Icon icon={RefreshIcon} />초기화</button>
-      </div>
+      <SearchFilterPanel
+        variant="compact"
+        value={query}
+        onValueChange={setQuery}
+        placeholder="공지사항 제목 검색"
+        filters={[
+          { label: `분류`, value: category, onChange: setCategory, options: [`전체 분류`, `필수 안내`, `교육 안내`, `시스템 안내`, `일반 공지`] },
+          { label: `게시 상태`, value: status, onChange: setStatus, options: [`전체 상태`, `게시 중`, `게시 예정`, `종료`, `임시저장`] },
+        ]}
+        onSearch={() => {}}
+        onReset={() => { setQuery(``); setCategory(`전체 분류`); setStatus(`전체 상태`); }}
+      />
       <div className="notice-admin-table-wrap">
         <table className="notice-admin-table">
           <thead><tr><th>분류</th><th>제목</th><th>게시 대상</th><th>게시 기간</th><th>상태</th><th>조회수</th><th>관리</th></tr></thead>
@@ -9421,63 +9349,20 @@ function K({
         title="교육과정 조회"
         description="성장을 위한 다양한 교육과정을 찾아보세요."
       />
-      <section className="filter-card">
-        <div className="search-wrap">
-          <Icon icon={Search01Icon} />
-          <input
-            value={t}
-            onChange={(event) => n(event.target.value)}
-            onKeyDown={(event) => event.key === `Enter` && u()}
-            placeholder="과정명, 키워드 검색"
-          />
-        </div>
-        <div className="filters">
-          {q({
-            value: r,
-            set: a,
-            options: [
-              `전체 분야`,
-              `직무역량`,
-              `리더십`,
-              `개발`,
-              `커뮤니케이션`,
-              `법정의무`,
-              `AI·DX`,
-            ],
-          })}
-          {q({
-            value: o,
-            set: s,
-            options: [`전체 레벨`, `레벨 1`, `레벨 2`, `레벨 3`],
-          })}
-          {q({
-            value: c,
-            set: l,
-            options: [`모집 상태`, `모집 중`, `모집 예정`, `마감 임박`],
-          })}
-          <div className="filter-actions">
-            <button className="secondary reset" onClick={d}>
-              <Icon icon={RefreshIcon} />
-              초기화
-            </button>
-            <button className="primary search-button" onClick={u}>
-              <Icon icon={Search01Icon} />
-              검색
-            </button>
-          </div>
-        </div>
-        <div className="quick-tags">
-          <span>
-            <Icon icon={FilterIcon} size={15} />
-            빠른 선택
-          </span>
-          {tags.map((tag) => (
-            <button key={tag} onClick={() => useTag(tag)}>
-              #{tag}
-            </button>
-          ))}
-        </div>
-      </section>
+      <SearchFilterPanel
+        value={t}
+        onValueChange={n}
+        placeholder="과정명, 키워드 검색"
+        filters={[
+          { label: `분야`, value: r, onChange: a, options: [`전체 분야`, `직무역량`, `리더십`, `개발`, `커뮤니케이션`, `법정의무`, `AI·DX`] },
+          { label: `레벨`, value: o, onChange: s, options: [`전체 레벨`, `레벨 1`, `레벨 2`, `레벨 3`] },
+          { label: `모집 상태`, value: c, onChange: l, options: [`모집 상태`, `모집 중`, `모집 예정`, `마감 임박`] },
+        ]}
+        onSearch={u}
+        onReset={d}
+        quickTags={tags}
+        onQuickTag={useTag}
+      />
       <div className="result-head">
         <p>
           총 <b>{e.length}</b>개 과정
