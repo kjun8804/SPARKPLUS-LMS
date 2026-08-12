@@ -1500,7 +1500,8 @@ function CourseEditorV2({ selected, onBack, isNew = false }) {
                 <Icon icon={Cancel01Icon} />
               </button>
             </div>
-            <div className="lesson-video-preview">
+            <div className="lesson-studio-content">
+              <div className="lesson-video-preview">
               {youtubeEmbedUrl(lesson.videoUrl) ? (
                 <iframe
                   src={youtubeEmbedUrl(lesson.videoUrl)}
@@ -1514,8 +1515,8 @@ function CourseEditorV2({ selected, onBack, isNew = false }) {
                   <span>YouTube 링크를 입력하면 영상이 표시됩니다.</span>
                 </div>
               )}
-            </div>
-            <div className="lesson-studio-form">
+              </div>
+              <div className="lesson-studio-form">
               <div className="lesson-drawer-section-title"><span>01</span><div><h3>기본 내용</h3><p>차시 제목과 학습 안내를 입력합니다.</p></div></div>
               <label>
                 차시명
@@ -1607,7 +1608,7 @@ function CourseEditorV2({ selected, onBack, isNew = false }) {
                       {(lesson.quiz || []).map((question, index) => (
                         <article key={index}>
                           <div className="quiz-builder-head"><b>Q{index + 1}</b><select value={question.type} onChange={(event) => updateQuiz(index, `type`, event.target.value)}><option>객관식</option><option>복수 선택</option><option>주관식</option></select></div>
-                          <input className="quiz-question-input" value={question.question} placeholder="질문을 입력해주세요" onChange={(event) => updateQuiz(index, `question`, event.target.value)} />
+                          <label className="quiz-question-field">질문<input className="quiz-question-input" value={question.question} placeholder="질문을 입력해주세요" onChange={(event) => updateQuiz(index, `question`, event.target.value)} /></label>
                           {question.type !== `주관식` && <div className="quiz-option-list">{(question.options || []).map((option, optionIndex) => <div key={optionIndex}><span>{question.type === `객관식` ? `○` : `□`}</span><input value={option} placeholder="선택지 입력" onChange={(event) => { const options = [...(question.options || [])]; options[optionIndex] = event.target.value; updateQuiz(index, `options`, options); }} /></div>)}</div>}
                           <label className="quiz-answer-field">정답<input value={question.answer || ``} onChange={(event) => updateQuiz(index, `answer`, event.target.value)} placeholder="정답 또는 예시 답안" /></label>
                           <label className="quiz-explanation-field">해설<input value={question.explanation || ``} onChange={(event) => updateQuiz(index, `explanation`, event.target.value)} placeholder="선택 사항" /></label>
@@ -1622,11 +1623,12 @@ function CourseEditorV2({ selected, onBack, isNew = false }) {
                   </>
                 )}
               </div>
+              </div>
             </div>
             <div className="lesson-studio-actions">
               <button className="secondary" onClick={() => setEditingIndex(null)}>취소</button>
               <button className="primary" onClick={() => setEditingIndex(null)}>
-                차시 적용
+                저장
               </button>
             </div>
           </aside>
