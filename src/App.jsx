@@ -7833,7 +7833,7 @@ function T({ createSignal }) {
   if (screen === `detail` && viewing) return <><NoticeDetailPage notice={viewing} onBack={() => setScreen(`list`)} onEdit={() => editNotice(viewing)} onDelete={() => setDeleteTarget(viewing)} />{deleteTarget && <NoticeDeleteDialog onCancel={() => setDeleteTarget(null)} onConfirm={() => removeNotice(deleteTarget)} />}</>;
   return (
     <section className="admin-notice-page">
-      <PageHeader kicker="공지사항 관리" title="공지사항 관리" description="임직원에게 노출되는 공지사항을 등록하고 관리합니다." action={<button className="primary" onClick={() => { setForm(emptyNoticeForm()); setScreen(`create`); }}><Icon icon={Add01Icon} />공지사항 등록</button>} />
+      <PageHeader kicker="공지사항 관리" title="공지사항 관리" description="임직원에게 노출되는 공지사항을 등록하고 관리합니다." />
       <SearchFilterPanel
         variant="compact"
         value={query}
@@ -7843,7 +7843,7 @@ function T({ createSignal }) {
         onSearch={() => {}}
         onReset={() => setQuery(``)}
       />
-      <div className="notice-admin-summary"><h2>전체 공지 {notices.length}건</h2></div>
+      <div className="notice-admin-summary"><h2>전체 공지 {notices.length}건</h2><button className="notice-create-button" onClick={() => { setForm(emptyNoticeForm()); setScreen(`create`); }}><Icon icon={Add01Icon} size={17} />공지사항 등록</button></div>
       <div className="notice-admin-table-wrap">
         <table className="notice-admin-table">
           <thead><tr><th>제목</th><th>게시 기간</th><th>조회수</th><th>삭제</th></tr></thead>
