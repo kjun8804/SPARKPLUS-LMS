@@ -7593,6 +7593,237 @@ html[data-theme=dark] .course-danger-zone { border-color: #5e3e3b; background: #
   }
 }
 
+/* Unified LMS search/filter panels */
+:root {
+  --search-panel-bg: #f4f6f8;
+  --search-panel-border: #e1e6eb;
+  --search-control-height: 50px;
+  --search-control-radius: 13px;
+}
+
+/* Learner LMS: full search row, filter row, optional quick choices */
+.toss-page > .filter-card {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 20px 22px;
+  border: 1px solid var(--search-panel-border);
+  border-radius: 20px;
+  background: var(--search-panel-bg);
+  box-shadow: none;
+}
+.toss-page > .filter-card .search-wrap {
+  min-height: 56px;
+  padding: 0 18px;
+  border: 1px solid var(--ui-line);
+  border-radius: var(--search-control-radius);
+  background: #fff;
+}
+.toss-page > .filter-card .search-wrap input {
+  font-size: 15px;
+  font-weight: 400;
+}
+.toss-page > .filter-card .filters {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 14px;
+}
+.toss-page > .filter-card .filters select {
+  width: auto;
+  min-width: 170px;
+  height: var(--search-control-height);
+  padding: 0 40px 0 15px;
+  border: 1px solid var(--ui-line);
+  border-radius: var(--search-control-radius);
+  background-color: #fff;
+  font-size: 14px;
+  font-weight: 400;
+}
+.toss-page > .filter-card .filter-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+}
+.toss-page > .filter-card .filter-actions button {
+  min-height: var(--search-control-height);
+  border-radius: var(--search-control-radius);
+  font-size: 14px;
+  white-space: nowrap;
+}
+.toss-page > .filter-card .quick-tags {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--search-panel-border);
+}
+
+/* Administrator LMS: shared two-row base variant */
+.admin-portal :is(
+  .course-admin-grid-page > .course-card-filter,
+  .learner-management-filter,
+  .learner-filter-fields,
+  .results-filter,
+  .analysis-filter-bar
+) {
+  display: flex !important;
+  width: 100% !important;
+  max-width: none !important;
+  box-sizing: border-box !important;
+  align-items: center !important;
+  flex-wrap: wrap !important;
+  gap: 12px !important;
+  margin: 0 !important;
+  padding: 20px 22px !important;
+  border: 1px solid var(--search-panel-border) !important;
+  border-radius: 18px !important;
+  background: var(--search-panel-bg) !important;
+  box-shadow: none !important;
+}
+.admin-portal :is(
+  .course-admin-grid-page > .course-card-filter,
+  .learner-management-filter,
+  .learner-filter-fields,
+  .results-filter,
+  .analysis-filter-bar
+) .search {
+  order: -1 !important;
+  width: 100% !important;
+  min-width: 100% !important;
+  height: 56px !important;
+  min-height: 56px !important;
+  flex: 1 0 100% !important;
+  box-sizing: border-box !important;
+  padding: 0 18px !important;
+  border: 1px solid var(--ui-line) !important;
+  border-radius: var(--search-control-radius) !important;
+  background: #fff !important;
+}
+.admin-portal :is(
+  .course-admin-grid-page > .course-card-filter,
+  .learner-management-filter,
+  .learner-filter-fields,
+  .results-filter,
+  .analysis-filter-bar,
+  .performance-filter-panel,
+  .notice-admin-filters
+) select {
+  width: auto !important;
+  min-width: 170px !important;
+  max-width: 220px !important;
+  height: var(--search-control-height) !important;
+  min-height: var(--search-control-height) !important;
+  padding: 0 40px 0 15px !important;
+  border-radius: var(--search-control-radius) !important;
+  font-size: 14px !important;
+  font-weight: 400 !important;
+}
+
+/* Compact variant: notice and simple survey lists */
+.admin-portal :is(.notice-admin-filters, .google-form-admin-toolbar, .performance-filter-panel) {
+  display: flex !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  align-items: center !important;
+  flex-wrap: wrap !important;
+  gap: 12px !important;
+  padding: 16px 18px !important;
+  border: 1px solid var(--search-panel-border) !important;
+  border-radius: 18px !important;
+  background: var(--search-panel-bg) !important;
+  box-shadow: none !important;
+}
+.admin-portal :is(.notice-admin-filters, .google-form-admin-toolbar) .search {
+  min-width: 300px !important;
+  height: var(--search-control-height) !important;
+  min-height: var(--search-control-height) !important;
+  flex: 1 1 420px !important;
+  padding: 0 16px !important;
+  border: 1px solid var(--ui-line) !important;
+  border-radius: var(--search-control-radius) !important;
+  background: #fff !important;
+}
+.admin-portal :is(
+  .course-card-filter,
+  .learner-management-filter,
+  .learner-filter-fields,
+  .results-filter,
+  .google-form-admin-toolbar,
+  .analysis-filter-bar,
+  .performance-filter-panel,
+  .notice-admin-filters
+) .filter-reset {
+  order: 98 !important;
+  min-width: 88px !important;
+  height: var(--search-control-height) !important;
+  min-height: var(--search-control-height) !important;
+  margin-left: auto !important;
+  padding: 0 13px !important;
+  color: #344054 !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+}
+.admin-portal .filter-search-button {
+  order: 99;
+  min-width: 92px;
+  height: var(--search-control-height);
+  min-height: var(--search-control-height);
+  padding: 0 22px;
+  border-radius: var(--search-control-radius);
+  font-size: 14px;
+}
+
+@media (max-width: 760px) {
+  .toss-page > .filter-card,
+  .admin-portal :is(
+    .course-admin-grid-page > .course-card-filter,
+    .learner-management-filter,
+    .learner-filter-fields,
+    .results-filter,
+    .analysis-filter-bar,
+    .notice-admin-filters,
+    .google-form-admin-toolbar,
+    .performance-filter-panel
+  ) {
+    padding: 14px !important;
+  }
+  .toss-page > .filter-card .filters select,
+  .admin-portal :is(
+    .course-card-filter,
+    .learner-management-filter,
+    .learner-filter-fields,
+    .results-filter,
+    .analysis-filter-bar,
+    .performance-filter-panel,
+    .notice-admin-filters
+  ) select {
+    min-width: 150px !important;
+    max-width: none !important;
+    flex: 1 1 150px !important;
+  }
+  .toss-page > .filter-card .filter-actions,
+  .admin-portal :is(
+    .course-card-filter,
+    .learner-management-filter,
+    .learner-filter-fields,
+    .results-filter,
+    .google-form-admin-toolbar,
+    .analysis-filter-bar,
+    .performance-filter-panel,
+    .notice-admin-filters
+  ) .filter-reset {
+    margin-left: 0 !important;
+  }
+  .toss-page > .filter-card .filter-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+  .admin-portal :is(.notice-admin-filters, .google-form-admin-toolbar) .search {
+    min-width: 100% !important;
+    flex-basis: 100% !important;
+  }
+}
+
 /* Admin course cards reuse the exact user catalog card structure */
 .admin-course-card-grid {
   grid-template-columns: repeat(3, minmax(0, 1fr)) !important;

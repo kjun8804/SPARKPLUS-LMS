@@ -788,6 +788,7 @@ function g() {
 function CourseAdminGrid({ onEdit }) {
   const [query, setQuery] = r.useState(``);
   const [category, setCategory] = r.useState(`전체 분야`);
+  const [level, setLevel] = r.useState(`전체 레벨`);
   const [status, setStatus] = r.useState(`전체 상태`);
   const [sort, setSort] = r.useState(`최신 등록순`);
   const [courses, setCourses] = r.useState(() => [...a]);
@@ -797,6 +798,7 @@ function CourseAdminGrid({ onEdit }) {
       (course) =>
         (!query || course.title.includes(query)) &&
         (category === `전체 분야` || course.category === category) &&
+        (level === `전체 레벨` || course.level === level) &&
         (status === `전체 상태` || course.status === status),
     )
     .sort((first, second) =>
@@ -816,7 +818,7 @@ function CourseAdminGrid({ onEdit }) {
           <input
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder="교육과정명을 검색해 주세요"
+            placeholder="교육과정명, 키워드 검색"
           />
         </div>
         <select
@@ -828,6 +830,11 @@ function CourseAdminGrid({ onEdit }) {
               <option key={value}>{value}</option>
             ),
           )}
+        </select>
+        <select value={level} onChange={(event) => setLevel(event.target.value)}>
+          {[`전체 레벨`, `레벨 1`, `레벨 2`, `레벨 3`].map((value) => (
+            <option key={value}>{value}</option>
+          ))}
         </select>
         <select
           value={status}
@@ -843,6 +850,7 @@ function CourseAdminGrid({ onEdit }) {
           onClick={() => {
             setQuery(``);
             setCategory(`전체 분야`);
+            setLevel(`전체 레벨`);
             setStatus(`전체 상태`);
           }}
         >
