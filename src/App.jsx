@@ -269,6 +269,7 @@ function f({ logout: e }) {
     [F, I] = (0, r.useState)(!1),
     [noticeCreateSignal, setNoticeCreateSignal] = (0, r.useState)(0),
     [L, R] = (0, r.useState)(a[0]),
+    [isNewCourse, setIsNewCourse] = (0, r.useState)(false),
     z = (0, r.useMemo)(
       () =>
         o.filter(
@@ -393,7 +394,7 @@ function f({ logout: e }) {
         ],
       }),
       (0, i.jsxs)(`main`, {
-        className: `main ${t === `home` ? `admin-home-main` : t === `courses` ? `admin-courses-main` : t === `learners` ? `admin-learners-main` : [`completionAdmin`, `assessmentAdmin`, `rewards`, `notices`].includes(t) ? `admin-results-main` : ``}`,
+        className: `main ${t === `home` ? `admin-home-main` : t === `courses` ? `admin-courses-main` : t === `learners` ? `admin-learners-main` : [`completionAdmin`, `assessmentAdmin`, `rewards`, `notices`, `content`].includes(t) ? `admin-results-main` : ``}`,
         children: [
           (0, i.jsxs)(`div`, {
             className: `page-heading ${t === `home` ? `admin-home-heading home-welcome` : t === `courses` ? `admin-course-heading home-welcome` : t === `learners` ? `admin-learner-heading home-welcome` : [`completionAdmin`, `assessmentAdmin`, `rewards`, `notices`].includes(t) ? `admin-results-heading home-welcome` : ``}`,
@@ -414,7 +415,11 @@ function f({ logout: e }) {
               t === `courses` &&
                 (0, i.jsx)(`button`, {
                   className: `primary`,
-                  onClick: () => M(`새 교육과정 등록`),
+                  onClick: () => {
+                    R({ id: `new`, title: `새 교육과정`, category: `직무역량`, status: `오픈 전`, lessons: 1, learners: 0, rate: 0, curriculum: null });
+                    setIsNewCourse(true);
+                    B(`content`);
+                  },
                   children: [
                     (0, i.jsx)(Icon, { icon: Add01Icon }),
                     `새 교육과정 등록`,
@@ -435,12 +440,13 @@ function f({ logout: e }) {
           t === `courses` &&
             (0, i.jsx)(CourseAdminGrid, {
               onEdit: (e) => {
-                (R(e), B(`content`));
+                (R(e), setIsNewCourse(false), B(`content`));
               },
             }),
           t === `content` &&
             (0, i.jsx)(CourseEditorV2, {
               selected: L,
+              isNew: isNewCourse,
               onBack: () => B(`courses`),
             }),
           t === `learners` &&
@@ -986,7 +992,7 @@ const createDefaultSurveyQuestions = () => [
   },
 ];
 
-function CourseEditorV2({ selected, onBack }) {
+function CourseEditorV2({ selected, onBack, isNew = false }) {
   const defaultDates = {
     1: [`2026-08-01`, `2026-09-30`],
     2: [`2026-08-18`, `2026-10-10`],
@@ -1072,7 +1078,7 @@ function CourseEditorV2({ selected, onBack }) {
     },
   ].slice(0, selected.lessons || 5);
   const [form, setForm] = r.useState({
-    title: selected.title,
+    title: isNew ? `` : selected.title,
     category: selected.category,
     status: selected.status,
     level: `레벨 2`,
@@ -1081,11 +1087,11 @@ function CourseEditorV2({ selected, onBack }) {
     startDate: defaultDates[selected.id]?.[0] || `2026-08-01`,
     endDate: defaultDates[selected.id]?.[1] || `2026-09-30`,
     thumbnail: selected.thumbnail || ``,
-    introduction: `${selected.title} 과정의 핵심 개념을 이해하고 실제 업무에 활용할 수 있도록 구성된 교육과정입니다.`,
+    introduction: isNew ? `` : `${selected.title} 과정의 핵심 개념을 이해하고 실제 업무에 활용할 수 있도록 구성된 교육과정입니다.`,
     curriculumSummary: `기초 개념부터 실무 적용까지 단계적으로 학습합니다.`,
     lessons: selected.curriculum || baseLessons,
     surveyEnabled: true,
-    surveyTitle: `${selected.title} 만족도 조사`,
+    surveyTitle: `${isNew ? `새 교육과정` : selected.title} 만족도 조사`,
     surveyStartDate: `2026-08-01`,
     surveyEndDate: `2026-08-10`,
     surveyDescription: `교육 내용과 운영에 대한 의견을 들려주세요. 응답 내용은 향후 교육 개선에 활용됩니다.`,
@@ -1097,15 +1103,33 @@ function CourseEditorV2({ selected, onBack }) {
   const [activeSurveyQuestion, setActiveSurveyQuestion] = r.useState(0);
   const [surveyAddMenu, setSurveyAddMenu] = r.useState(false);
   const [draggingSurveyQuestion, setDraggingSurveyQuestion] = r.useState(null);
+  const [activeSection, setActiveSection] = r.useState(`basic`);
+  const [dirty, setDirty] = r.useState(false);
+  const [coursePreview, setCoursePreview] = r.useState(false);
+  const [draggingLesson, setDraggingLesson] = r.useState(null);
+  const formMounted = r.useRef(false);
+  const sectionRefs = { basic: r.useRef(null), lessons: r.useRef(null), survey: r.useRef(null) };
+  r.useEffect(() => {
+    const observer = new IntersectionObserver((entries) => {
+      const visible = entries.filter((entry) => entry.isIntersecting).sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+      if (visible?.target?.dataset?.section) setActiveSection(visible.target.dataset.section);
+    }, { rootMargin: `-180px 0px -55%`, threshold: [0, .15, .4] });
+    Object.values(sectionRefs).forEach((ref) => ref.current && observer.observe(ref.current));
+    return () => observer.disconnect();
+  }, []);
+  r.useEffect(() => {
+    if (!formMounted.current) { formMounted.current = true; return; }
+    setDirty(true);
+  }, [form]);
   const update = (key, value) =>
-    setForm((current) => ({ ...current, [key]: value }));
+    (setDirty(true), setForm((current) => ({ ...current, [key]: value })));
   const updateLesson = (key, value) =>
-    setForm((current) => ({
+    (setDirty(true), setForm((current) => ({
       ...current,
       lessons: current.lessons.map((lesson, index) =>
         index === editingIndex ? { ...lesson, [key]: value } : lesson,
       ),
-    }));
+    })));
   const lesson = editingIndex === null ? null : form.lessons[editingIndex];
   const addLesson = () => {
     setForm((current) => ({
@@ -1130,7 +1154,7 @@ function CourseEditorV2({ selected, onBack }) {
   const addQuiz = () =>
     updateLesson(`quiz`, [
       ...(lesson.quiz || []),
-      { question: `새 퀴즈 문항`, type: `객관식`, answer: `` },
+      { question: `새 퀴즈 문항`, type: `객관식`, options: [`선택지 1`, `선택지 2`, `선택지 3`, `선택지 4`], answer: `선택지 1`, explanation: `` },
     ]);
   const updateQuiz = (index, key, value) =>
     updateLesson(
@@ -1189,14 +1213,16 @@ function CourseEditorV2({ selected, onBack }) {
     });
   };
   const save = () => {
-    if (confirm(`변경한 교육과정 정보를 저장하시겠습니까?`)) {
+    if (!form.title.trim()) return alert(`강의 제목을 입력해 주세요.`);
+    if (confirm(isNew ? `새 교육과정을 등록하시겠습니까?` : `변경한 교육과정 정보를 저장하시겠습니까?`)) {
       Object.assign(selected, {
         ...form,
         period: `${form.startDate.replaceAll(`-`, `.`)} ~ ${form.endDate.replaceAll(`-`, `.`)}`,
         lessons: form.lessons.length,
         curriculum: form.lessons,
       });
-      alert(`교육과정이 저장되었습니다.`);
+      setDirty(false);
+      alert(isNew ? `교육과정이 등록되었습니다.` : `교육과정이 저장되었습니다.`);
     }
   };
   const remove = () => {
@@ -1215,7 +1241,7 @@ function CourseEditorV2({ selected, onBack }) {
         <Icon icon={ArrowLeft01Icon} />
         교육과정 목록으로
       </button>
-      <section className="course-editor-v2-hero">
+      <section className="course-editor-v2-hero course-builder-header">
         <div className="course-editor-v2-thumb">
           {form.thumbnail ? (
             <img src={form.thumbnail} alt="강의 썸네일" />
@@ -1242,18 +1268,19 @@ function CourseEditorV2({ selected, onBack }) {
           </label>
         </div>
         <div>
-          <span>교육과정 상세 수정</span>
-          <h2>{form.title}</h2>
-          <p>과정 정보와 차시별 영상·자료·퀴즈를 한 화면에서 관리합니다.</p>
+          <span>{isNew ? `새 교육과정 등록` : `교육과정 수정`}</span>
+          <h2>{form.title || `과정명을 입력해 주세요`}</h2>
+          <p>{form.category} · {form.level} · {form.status}</p>
         </div>
+        <button className="secondary course-preview-button" onClick={() => setCoursePreview(true)}><Icon icon={ViewIcon} />미리보기</button>
       </section>
-      <section className="panel editor-section">
+      <nav className="course-builder-nav">{[[`basic`, `01 기본 정보`], [`lessons`, `02 커리큘럼 및 차시`], [`survey`, `03 수료 후 설문`]].map(([key, label]) => <button key={key} className={activeSection === key ? `active` : ``} onClick={() => sectionRefs[key].current?.scrollIntoView({ behavior: `smooth`, block: `start` })}>{label}</button>)}</nav>
+      <section ref={sectionRefs.basic} data-section="basic" id="course-basic-section" className="panel editor-section course-builder-section">
         <div className="editor-section-head">
           <div>
             <span>01</span>
-            <h3>과정 기본 정보</h3>
+            <div><h3>과정 기본 정보</h3><p>사용자 과정 상세 화면에 표시되는 정보를 설정합니다.</p></div>
           </div>
-          <p>사용자 과정 상세 화면에 표시되는 정보입니다.</p>
         </div>
         <div className="course-edit-grid">
           <label className="wide">
@@ -1357,13 +1384,12 @@ function CourseEditorV2({ selected, onBack }) {
           </label>
         </div>
       </section>
-      <section className="panel editor-section">
+      <section ref={sectionRefs.lessons} data-section="lessons" id="course-lessons-section" className="panel editor-section course-builder-section">
         <div className="editor-section-head">
           <div>
             <span>02</span>
-            <h3>커리큘럼 및 차시</h3>
+            <div><h3>커리큘럼 및 차시</h3><p>차시별 영상·자료·학습 내용·퀴즈를 설정합니다.</p></div>
           </div>
-          <p>차시 수정에서 영상·자료·학습 내용·퀴즈를 설정합니다.</p>
         </div>
         <label className="curriculum-summary">
           커리큘럼 소개
@@ -1377,8 +1403,9 @@ function CourseEditorV2({ selected, onBack }) {
         </label>
         <div className="lesson-manage-list">
           {form.lessons.map((item, index) => (
-            <article key={index}>
-              <span>{String(index + 1).padStart(2, `0`)}</span>
+            <article key={index} onDragOver={(event) => event.preventDefault()} onDrop={() => { if (draggingLesson === null || draggingLesson === index) return; setForm((current) => { const lessons = [...current.lessons]; const [moved] = lessons.splice(draggingLesson, 1); lessons.splice(index, 0, moved); return { ...current, lessons }; }); setDraggingLesson(null); setDirty(true); }}>
+              <span className="lesson-drag" draggable onDragStart={() => setDraggingLesson(index)} title="드래그하여 순서 변경">⋮⋮</span>
+              <span className="lesson-number">{String(index + 1).padStart(2, `0`)}</span>
               <div>
                 <small>
                   {index + 1}차시 · {item.duration}
@@ -1391,6 +1418,7 @@ function CourseEditorV2({ selected, onBack }) {
                   <Icon icon={PlayIcon} size={13} />
                   {item.videoUrl ? `영상 등록` : `영상 미등록`}
                 </span>
+                <span><Icon icon={File01Icon} size={13} />자료 {item.attachments ? `1개` : `없음`}</span>
                 <span className={item.quizEnabled ? `done` : ``}>
                   <Icon icon={Quiz01Icon} size={13} />
                   {item.quizEnabled
@@ -1413,7 +1441,7 @@ function CourseEditorV2({ selected, onBack }) {
           차시 추가
         </button>
       </section>
-      <section className="panel editor-section course-survey-compact">
+      <section ref={sectionRefs.survey} data-section="survey" id="course-survey-section" className="panel editor-section course-survey-compact course-builder-section">
         <div className="editor-section-head survey-builder-head">
           <div>
             <span>03</span>
@@ -1518,15 +1546,8 @@ function CourseEditorV2({ selected, onBack }) {
         </div>
         </div>
       </section>
-      <div className="course-editor-final-actions">
-        <button className="danger-outline" onClick={remove}>
-          <Icon icon={Delete02Icon} />
-          과정 삭제
-        </button>
-        <button className="primary" onClick={save}>
-          변경사항 저장
-        </button>
-      </div>
+      {!isNew && <section className="course-danger-zone"><div><h3>과정 삭제</h3><p>삭제한 교육과정은 복구할 수 없습니다.</p></div><button className="danger-outline" onClick={remove}><Icon icon={Delete02Icon} />과정 삭제</button></section>}
+      <div className="course-editor-final-actions course-builder-savebar"><span>{dirty ? `변경사항이 있습니다.` : `모든 변경사항이 저장되었습니다.`}</span><div><button className="secondary" onClick={() => setCoursePreview(true)}>미리보기</button><button className="primary" onClick={save}>{isNew ? `교육과정 등록` : `변경사항 저장`}</button></div></div>
       {lesson && (
         <div
           className="overlay"
@@ -1560,6 +1581,7 @@ function CourseEditorV2({ selected, onBack }) {
               )}
             </div>
             <div className="lesson-studio-form">
+              <div className="lesson-drawer-section-title"><span>01</span><div><h3>기본 내용</h3><p>차시 제목과 학습 안내를 입력합니다.</p></div></div>
               <label>
                 차시명
                 <input
@@ -1570,7 +1592,7 @@ function CourseEditorV2({ selected, onBack }) {
                 />
               </label>
               <label>
-                차시 소개
+                학습 내용 / 안내
                 <textarea
                   rows="3"
                   value={lesson.description}
@@ -1579,6 +1601,7 @@ function CourseEditorV2({ selected, onBack }) {
                   }
                 />
               </label>
+              <div className="lesson-drawer-section-title"><span>02</span><div><h3>영상 및 자료</h3><p>학습 영상과 제공 자료를 설정합니다.</p></div></div>
               <div className="lesson-inline-fields">
                 <label>
                   학습 시간
@@ -1623,21 +1646,12 @@ function CourseEditorV2({ selected, onBack }) {
                   placeholder="주요 내용을 줄바꿈으로 구분해 주세요"
                 />
               </label>
-              <label>
-                첨부자료
-                <input
-                  value={lesson.attachments}
-                  onChange={(event) =>
-                    updateLesson(`attachments`, event.target.value)
-                  }
-                  placeholder="파일명 또는 자료 링크"
-                />
-              </label>
+              <div className="lesson-attachment-builder"><b>첨부자료</b>{lesson.attachments ? <div><Icon icon={File01Icon} /><span>{lesson.attachments}</span><button onClick={() => updateLesson(`attachments`, `새 첨부자료.pdf`)}>교체</button><button className="delete" onClick={() => updateLesson(`attachments`, ``)}>삭제</button></div> : <p>등록된 첨부자료가 없습니다.</p>}<button className="attachment-add" onClick={() => updateLesson(`attachments`, `새 첨부자료.pdf`)}><Icon icon={Add01Icon} />자료 추가</button></div>
               <div className="lesson-quiz-setting">
                 <div>
                   <div>
                     <b>차시 퀴즈</b>
-                    <span>현재 차시 영상과 자료를 기준으로 설정합니다.</span>
+                    <span>학습 후 간단한 이해도 확인 퀴즈를 제공합니다.</span>
                   </div>
                   <button
                     className={
@@ -1655,42 +1669,12 @@ function CourseEditorV2({ selected, onBack }) {
                     <div className="lesson-quiz-list">
                       {(lesson.quiz || []).map((question, index) => (
                         <article key={index}>
-                          <span>Q{index + 1}</span>
-                          <input
-                            value={question.question}
-                            onChange={(event) =>
-                              updateQuiz(index, `question`, event.target.value)
-                            }
-                          />
-                          <select
-                            value={question.type}
-                            onChange={(event) =>
-                              updateQuiz(index, `type`, event.target.value)
-                            }
-                          >
-                            <option>객관식</option>
-                            <option>복수 선택</option>
-                            <option>주관식</option>
-                          </select>
-                          <input
-                            value={question.answer}
-                            onChange={(event) =>
-                              updateQuiz(index, `answer`, event.target.value)
-                            }
-                            placeholder="정답 또는 예시 답안"
-                          />
-                          <button
-                            onClick={() =>
-                              updateLesson(
-                                `quiz`,
-                                lesson.quiz.filter(
-                                  (_, itemIndex) => itemIndex !== index,
-                                ),
-                              )
-                            }
-                          >
-                            <Icon icon={Delete02Icon} />
-                          </button>
+                          <div className="quiz-builder-head"><b>Q{index + 1}</b><select value={question.type} onChange={(event) => updateQuiz(index, `type`, event.target.value)}><option>객관식</option><option>복수 선택</option><option>주관식</option></select></div>
+                          <input className="quiz-question-input" value={question.question} onChange={(event) => updateQuiz(index, `question`, event.target.value)} />
+                          {question.type !== `주관식` && <div className="quiz-option-list">{(question.options || [`선택지 1`, `선택지 2`, `선택지 3`, `선택지 4`]).map((option, optionIndex) => <div key={optionIndex}><span>{question.type === `객관식` ? `○` : `□`}</span><input value={option} onChange={(event) => { const options = [...(question.options || [`선택지 1`, `선택지 2`, `선택지 3`, `선택지 4`])]; options[optionIndex] = event.target.value; updateQuiz(index, `options`, options); }} /></div>)}</div>}
+                          <label className="quiz-answer-field">정답<input value={question.answer || ``} onChange={(event) => updateQuiz(index, `answer`, event.target.value)} placeholder="정답 또는 예시 답안" /></label>
+                          <label className="quiz-explanation-field">해설<input value={question.explanation || ``} onChange={(event) => updateQuiz(index, `explanation`, event.target.value)} placeholder="선택 사항" /></label>
+                          <div className="quiz-builder-actions"><button onClick={() => updateLesson(`quiz`, [...lesson.quiz.slice(0, index + 1), { ...question, options: [...(question.options || [])] }, ...lesson.quiz.slice(index + 1)])}>복제</button><button className="delete" onClick={() => updateLesson(`quiz`, lesson.quiz.filter((_, itemIndex) => itemIndex !== index))}>삭제</button></div>
                         </article>
                       ))}
                     </div>
@@ -1703,6 +1687,7 @@ function CourseEditorV2({ selected, onBack }) {
               </div>
             </div>
             <div className="lesson-studio-actions">
+              <button className="secondary" onClick={() => setEditingIndex(null)}>취소</button>
               <button className="primary" onClick={() => setEditingIndex(null)}>
                 차시 적용
               </button>
@@ -1743,6 +1728,7 @@ function CourseEditorV2({ selected, onBack }) {
           </div>
         </div>
       )}
+      {coursePreview && <div className="survey-preview-overlay" onMouseDown={(event) => event.target === event.currentTarget && setCoursePreview(false)}><div className="course-builder-preview"><header><div><span>사용자 화면 미리보기</span><h2>{form.title || `제목 없는 교육과정`}</h2><p>{form.category} · {form.level} · {form.status}</p></div><button onClick={() => setCoursePreview(false)}>×</button></header><div className="course-builder-preview-body"><h3>과정 소개</h3><p>{form.introduction || `과정 소개를 입력해 주세요.`}</p><h3>커리큘럼</h3>{form.lessons.map((item, index) => <div key={index}><b>{index + 1}차시 · {item.title}</b><span>{item.duration}</span></div>)}</div></div></div>}
     </div>
   );
 }
