@@ -1079,24 +1079,24 @@ function CourseEditorV2({ selected, onBack, isNew = false }) {
   ].slice(0, selected.lessons || 5);
   const [form, setForm] = r.useState({
     title: isNew ? `` : selected.title,
-    category: selected.category,
-    status: selected.status,
-    level: `레벨 2`,
-    department: `전체 부서`,
-    position: `전체 직급`,
-    startDate: defaultDates[selected.id]?.[0] || `2026-08-01`,
-    endDate: defaultDates[selected.id]?.[1] || `2026-09-30`,
+    category: isNew ? `` : selected.category,
+    status: isNew ? `` : selected.status,
+    level: isNew ? `` : `레벨 2`,
+    department: isNew ? `` : `전체 부서`,
+    position: isNew ? `` : `전체 직급`,
+    startDate: isNew ? `` : defaultDates[selected.id]?.[0] || `2026-08-01`,
+    endDate: isNew ? `` : defaultDates[selected.id]?.[1] || `2026-09-30`,
     thumbnail: selected.thumbnail || ``,
     introduction: isNew ? `` : `${selected.title} 과정의 핵심 개념을 이해하고 실제 업무에 활용할 수 있도록 구성된 교육과정입니다.`,
-    curriculumSummary: `기초 개념부터 실무 적용까지 단계적으로 학습합니다.`,
-    lessons: selected.curriculum || baseLessons,
-    surveyEnabled: true,
-    surveyTitle: `${isNew ? `새 교육과정` : selected.title} 만족도 조사`,
-    surveyStartDate: `2026-08-01`,
-    surveyEndDate: `2026-08-10`,
-    surveyDescription: `교육 내용과 운영에 대한 의견을 들려주세요. 응답 내용은 향후 교육 개선에 활용됩니다.`,
+    curriculumSummary: isNew ? `` : `기초 개념부터 실무 적용까지 단계적으로 학습합니다.`,
+    lessons: isNew ? [] : selected.curriculum || baseLessons,
+    surveyEnabled: isNew ? false : true,
+    surveyTitle: isNew ? `` : `${selected.title} 만족도 조사`,
+    surveyStartDate: isNew ? `` : `2026-08-01`,
+    surveyEndDate: isNew ? `` : `2026-08-10`,
+    surveyDescription: isNew ? `` : `교육 내용과 운영에 대한 의견을 들려주세요. 응답 내용은 향후 교육 개선에 활용됩니다.`,
     surveyAnonymous: true,
-    surveyQuestions: selected.surveyQuestions || createDefaultSurveyQuestions(),
+    surveyQuestions: isNew ? [] : selected.surveyQuestions || createDefaultSurveyQuestions(),
   });
   const [editingIndex, setEditingIndex] = r.useState(null);
   const [surveyPreview, setSurveyPreview] = r.useState(false);
@@ -1137,12 +1137,12 @@ function CourseEditorV2({ selected, onBack, isNew = false }) {
       lessons: [
         ...current.lessons,
         {
-          title: `새 차시`,
-          description: `차시 소개를 입력해 주세요.`,
-          duration: `20분`,
+          title: ``,
+          description: ``,
+          duration: ``,
           videoUrl: ``,
-          goals: `학습 목표를 입력해 주세요.`,
-          contents: `주요 내용을 입력해 주세요.`,
+          goals: ``,
+          contents: ``,
           attachments: ``,
           quizEnabled: false,
           quiz: [],
@@ -1154,7 +1154,7 @@ function CourseEditorV2({ selected, onBack, isNew = false }) {
   const addQuiz = () =>
     updateLesson(`quiz`, [
       ...(lesson.quiz || []),
-      { question: `새 퀴즈 문항`, type: `객관식`, options: [`선택지 1`, `선택지 2`, `선택지 3`, `선택지 4`], answer: `선택지 1`, explanation: `` },
+      { question: ``, type: `객관식`, options: [``, ``], answer: ``, explanation: `` },
     ]);
   const updateQuiz = (index, key, value) =>
     updateLesson(
@@ -1177,12 +1177,12 @@ function CourseEditorV2({ selected, onBack, isNew = false }) {
         ...current.surveyQuestions,
         {
           id: Date.now(),
-          question: type === `주관식` ? `교육에 대한 의견을 자유롭게 작성해 주세요.` : `새 설문 문항`,
+          question: ``,
           type,
           required: false,
-          lowLabel: `매우 그렇지 않다`,
-          highLabel: `매우 그렇다`,
-          options: [`단일 선택`, `복수 선택`].includes(type) ? [`선택지 1`, `선택지 2`] : [],
+          lowLabel: ``,
+          highLabel: ``,
+          options: [`단일 선택`, `복수 선택`].includes(type) ? [``] : [],
         },
       ],
     }));
@@ -1270,7 +1270,7 @@ function CourseEditorV2({ selected, onBack, isNew = false }) {
         <div>
           <span>{isNew ? `새 교육과정 등록` : `교육과정 수정`}</span>
           <h2>{form.title || `과정명을 입력해 주세요`}</h2>
-          <p>{form.category} · {form.level} · {form.status}</p>
+          <p>{[form.category || `분야 미선택`, form.level || `레벨 미선택`, form.status || `상태 미선택`].join(` · `)}</p>
         </div>
         <button className="secondary course-preview-button" onClick={() => setCoursePreview(true)}><Icon icon={ViewIcon} />미리보기</button>
       </section>
@@ -1279,7 +1279,7 @@ function CourseEditorV2({ selected, onBack, isNew = false }) {
         <div className="editor-section-head">
           <div>
             <span>01</span>
-            <div><h3>과정 기본 정보</h3><p>사용자 과정 상세 화면에 표시되는 정보를 설정합니다.</p></div>
+            <div><h3>과정 기본 정보</h3></div>
           </div>
         </div>
         <div className="course-edit-grid">
@@ -1287,6 +1287,7 @@ function CourseEditorV2({ selected, onBack, isNew = false }) {
             강의 제목
             <input
               value={form.title}
+              placeholder="강의 제목을 입력해주세요"
               onChange={(event) => update(`title`, event.target.value)}
             />
           </label>
@@ -1296,6 +1297,7 @@ function CourseEditorV2({ selected, onBack, isNew = false }) {
               value={form.category}
               onChange={(event) => update(`category`, event.target.value)}
             >
+              <option value="" disabled>분야를 선택해주세요</option>
               {[`직무역량`, `리더십`, `AX`, `법정필수`].map((value) => (
                 <option key={value}>{value}</option>
               ))}
@@ -1307,6 +1309,7 @@ function CourseEditorV2({ selected, onBack, isNew = false }) {
               value={form.level}
               onChange={(event) => update(`level`, event.target.value)}
             >
+              <option value="" disabled>레벨을 선택해주세요</option>
               {[`레벨 1`, `레벨 2`, `레벨 3`].map((value) => (
                 <option key={value}>{value}</option>
               ))}
@@ -1318,6 +1321,7 @@ function CourseEditorV2({ selected, onBack, isNew = false }) {
               value={form.status}
               onChange={(event) => update(`status`, event.target.value)}
             >
+              <option value="" disabled>상태를 선택해주세요</option>
               {[`오픈 전`, `운영 중`, `종료`].map((value) => (
                 <option key={value}>{value}</option>
               ))}
@@ -1329,6 +1333,7 @@ function CourseEditorV2({ selected, onBack, isNew = false }) {
               value={form.department}
               onChange={(event) => update(`department`, event.target.value)}
             >
+              <option value="" disabled>대상 부서를 선택해주세요</option>
               {[
                 `전체 부서`,
                 `People팀`,
@@ -1347,6 +1352,7 @@ function CourseEditorV2({ selected, onBack, isNew = false }) {
               value={form.position}
               onChange={(event) => update(`position`, event.target.value)}
             >
+              <option value="" disabled>대상 직급을 선택해주세요</option>
               {[`전체 직급`, `인턴`, `매니저`, `파트장`, `팀장`].map(
                 (value) => (
                   <option key={value}>{value}</option>
@@ -1379,6 +1385,7 @@ function CourseEditorV2({ selected, onBack, isNew = false }) {
             <textarea
               rows="5"
               value={form.introduction}
+              placeholder="교육과정에 대한 소개를 입력해주세요."
               onChange={(event) => update(`introduction`, event.target.value)}
             />
           </label>
@@ -1388,7 +1395,7 @@ function CourseEditorV2({ selected, onBack, isNew = false }) {
         <div className="editor-section-head">
           <div>
             <span>02</span>
-            <div><h3>커리큘럼 및 차시</h3><p>차시별 영상·자료·학습 내용·퀴즈를 설정합니다.</p></div>
+            <div><h3>커리큘럼 및 차시</h3><p>차시별 학습 콘텐츠를 구성합니다.</p></div>
           </div>
         </div>
         <label className="curriculum-summary">
@@ -1396,12 +1403,14 @@ function CourseEditorV2({ selected, onBack, isNew = false }) {
           <textarea
             rows="3"
             value={form.curriculumSummary}
+            placeholder="교육과정의 전체 학습 흐름을 입력해주세요."
             onChange={(event) =>
               update(`curriculumSummary`, event.target.value)
             }
           />
         </label>
         <div className="lesson-manage-list">
+          {form.lessons.length === 0 && <div className="course-builder-empty">등록된 차시가 없습니다.</div>}
           {form.lessons.map((item, index) => (
             <article key={index} onDragOver={(event) => event.preventDefault()} onDrop={() => { if (draggingLesson === null || draggingLesson === index) return; setForm((current) => { const lessons = [...current.lessons]; const [moved] = lessons.splice(draggingLesson, 1); lessons.splice(index, 0, moved); return { ...current, lessons }; }); setDraggingLesson(null); setDirty(true); }}>
               <span className="lesson-drag" draggable onDragStart={() => setDraggingLesson(index)} title="드래그하여 순서 변경">⋮⋮</span>
@@ -1445,7 +1454,7 @@ function CourseEditorV2({ selected, onBack, isNew = false }) {
         <div className="editor-section-head survey-builder-head">
           <div>
             <span>03</span>
-            <div><h3>수료 후 설문</h3><p>교육과정 완료 후 학습자에게 노출할 만족도 설문을 설정합니다.</p></div>
+            <div><h3>수료 후 설문</h3><p>교육 완료 후 노출할 설문을 설정합니다.</p></div>
           </div>
           <div className="survey-editor-actions">
             <label className="setting-switch-label">
@@ -1466,6 +1475,7 @@ function CourseEditorV2({ selected, onBack, isNew = false }) {
             설문명
             <input
               value={form.surveyTitle}
+              placeholder="설문명을 입력해주세요"
               onChange={(event) => update(`surveyTitle`, event.target.value)}
             />
           </label>
@@ -1474,6 +1484,7 @@ function CourseEditorV2({ selected, onBack, isNew = false }) {
             <textarea
               rows="2"
               value={form.surveyDescription}
+              placeholder="설문 안내 문구를 입력해주세요"
               onChange={(event) => update(`surveyDescription`, event.target.value)}
             />
           </label>
@@ -1513,6 +1524,7 @@ function CourseEditorV2({ selected, onBack, isNew = false }) {
           </label>
         </div>
         <div className="survey-question-editor-list">
+          {form.surveyQuestions.length === 0 && <div className="course-builder-empty">등록된 문항이 없습니다.</div>}
           {form.surveyQuestions.map((question, index) => (
             <SurveyQuestionEditor
               key={question.id}
@@ -1559,7 +1571,7 @@ function CourseEditorV2({ selected, onBack, isNew = false }) {
             <div className="drawer-head">
               <div>
                 <span>{editingIndex + 1}차시 편집</span>
-                <h2>{lesson.title}</h2>
+                <h2>{lesson.title || `차시명을 입력해 주세요`}</h2>
               </div>
               <button onClick={() => setEditingIndex(null)}>
                 <Icon icon={Cancel01Icon} />
@@ -1586,6 +1598,7 @@ function CourseEditorV2({ selected, onBack, isNew = false }) {
                 차시명
                 <input
                   value={lesson.title}
+                  placeholder="차시명을 입력해 주세요"
                   onChange={(event) =>
                     updateLesson(`title`, event.target.value)
                   }
@@ -1596,6 +1609,7 @@ function CourseEditorV2({ selected, onBack, isNew = false }) {
                 <textarea
                   rows="3"
                   value={lesson.description}
+                  placeholder="차시 소개를 입력해 주세요"
                   onChange={(event) =>
                     updateLesson(`description`, event.target.value)
                   }
@@ -1670,8 +1684,8 @@ function CourseEditorV2({ selected, onBack, isNew = false }) {
                       {(lesson.quiz || []).map((question, index) => (
                         <article key={index}>
                           <div className="quiz-builder-head"><b>Q{index + 1}</b><select value={question.type} onChange={(event) => updateQuiz(index, `type`, event.target.value)}><option>객관식</option><option>복수 선택</option><option>주관식</option></select></div>
-                          <input className="quiz-question-input" value={question.question} onChange={(event) => updateQuiz(index, `question`, event.target.value)} />
-                          {question.type !== `주관식` && <div className="quiz-option-list">{(question.options || [`선택지 1`, `선택지 2`, `선택지 3`, `선택지 4`]).map((option, optionIndex) => <div key={optionIndex}><span>{question.type === `객관식` ? `○` : `□`}</span><input value={option} onChange={(event) => { const options = [...(question.options || [`선택지 1`, `선택지 2`, `선택지 3`, `선택지 4`])]; options[optionIndex] = event.target.value; updateQuiz(index, `options`, options); }} /></div>)}</div>}
+                          <input className="quiz-question-input" value={question.question} placeholder="질문을 입력해주세요" onChange={(event) => updateQuiz(index, `question`, event.target.value)} />
+                          {question.type !== `주관식` && <div className="quiz-option-list">{(question.options || []).map((option, optionIndex) => <div key={optionIndex}><span>{question.type === `객관식` ? `○` : `□`}</span><input value={option} placeholder="선택지 입력" onChange={(event) => { const options = [...(question.options || [])]; options[optionIndex] = event.target.value; updateQuiz(index, `options`, options); }} /></div>)}</div>}
                           <label className="quiz-answer-field">정답<input value={question.answer || ``} onChange={(event) => updateQuiz(index, `answer`, event.target.value)} placeholder="정답 또는 예시 답안" /></label>
                           <label className="quiz-explanation-field">해설<input value={question.explanation || ``} onChange={(event) => updateQuiz(index, `explanation`, event.target.value)} placeholder="선택 사항" /></label>
                           <div className="quiz-builder-actions"><button onClick={() => updateLesson(`quiz`, [...lesson.quiz.slice(0, index + 1), { ...question, options: [...(question.options || [])] }, ...lesson.quiz.slice(index + 1)])}>복제</button><button className="delete" onClick={() => updateLesson(`quiz`, lesson.quiz.filter((_, itemIndex) => itemIndex !== index))}>삭제</button></div>
@@ -1764,6 +1778,7 @@ function SurveyQuestionEditor({
           <input
             aria-label={`Q${index + 1} 질문`}
             value={question.question}
+            placeholder="질문을 입력해주세요"
             onChange={(event) =>
               onUpdate(index, `question`, event.target.value)
             }
@@ -1786,6 +1801,7 @@ function SurveyQuestionEditor({
             <input
               aria-label="1점 설명"
               value={question.lowLabel || ``}
+              placeholder="매우 그렇지 않다"
               onChange={(event) =>
                 onUpdate(index, `lowLabel`, event.target.value)
               }
@@ -1796,6 +1812,7 @@ function SurveyQuestionEditor({
             <input
               aria-label="5점 설명"
               value={question.highLabel || ``}
+              placeholder="매우 그렇다"
               onChange={(event) =>
                 onUpdate(index, `highLabel`, event.target.value)
               }
@@ -1810,6 +1827,7 @@ function SurveyQuestionEditor({
               <span>{question.type === `단일 선택` ? `○` : `□`}</span>
               <input
                 value={option}
+                placeholder="선택지 입력"
                 onChange={(event) =>
                   updateOption(optionIndex, event.target.value)
                 }
@@ -1831,7 +1849,7 @@ function SurveyQuestionEditor({
             onClick={() =>
               onUpdate(index, `options`, [
                 ...(question.options || []),
-                `새 선택지`,
+                ``,
               ])
             }
           >
