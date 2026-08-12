@@ -218,8 +218,8 @@ var a = [
       `교육과정별 학습자의 수료 현황을 확인하고 수료 처리 상태를 관리합니다.`,
     ],
     assessmentAdmin: [
-      `설문 결과`,
-      `교육과정별 설문 응답과 만족도 결과를 확인합니다.`,
+      `설문 관리`,
+      `교육과정별 Google Forms 연결 상태와 응답 결과를 관리합니다.`,
     ],
     rewards: [`학습 리워드`, `학습 포인트를 기반으로 랭킹과 뱃지 지급 현황을 관리합니다.`],
     assignments: [
@@ -959,6 +959,16 @@ function youtubeEmbedUrl(url) {
     : ``;
 }
 
+const SAMPLE_GOOGLE_FORM_URL = `https://docs.google.com/forms/d/11K1ewTmlScyH4ZNLWQ1uvHgePPCyU_Ls9aQglbAc144/edit?hl=ko`;
+function googleFormId(url = ``) {
+  const match = url.trim().match(/docs\.google\.com\/forms\/d\/(?:e\/)?([a-zA-Z0-9_-]+)/);
+  return match?.[1] || ``;
+}
+function googleFormEmbedUrl(url = ``) {
+  const id = googleFormId(url);
+  return id ? `https://docs.google.com/forms/d/${id}/viewform?embedded=true` : ``;
+}
+
 const createDefaultSurveyQuestions = () => [
   {
     id: 1,
@@ -1091,6 +1101,7 @@ function CourseEditorV2({ selected, onBack, isNew = false }) {
     curriculumSummary: isNew ? `` : `기초 개념부터 실무 적용까지 단계적으로 학습합니다.`,
     lessons: isNew ? [] : selected.curriculum || baseLessons,
     surveyEnabled: isNew ? false : true,
+    googleFormUrl: isNew ? `` : selected.googleFormUrl || SAMPLE_GOOGLE_FORM_URL,
     surveyTitle: isNew ? `` : `${selected.title} 만족도 조사`,
     surveyStartDate: isNew ? `` : `2026-08-01`,
     surveyEndDate: isNew ? `` : `2026-08-10`,
@@ -1100,9 +1111,6 @@ function CourseEditorV2({ selected, onBack, isNew = false }) {
   });
   const [editingIndex, setEditingIndex] = r.useState(null);
   const [surveyPreview, setSurveyPreview] = r.useState(false);
-  const [activeSurveyQuestion, setActiveSurveyQuestion] = r.useState(0);
-  const [surveyAddMenu, setSurveyAddMenu] = r.useState(false);
-  const [draggingSurveyQuestion, setDraggingSurveyQuestion] = r.useState(null);
   const [activeSection, setActiveSection] = r.useState(`basic`);
   const [dirty, setDirty] = r.useState(false);
   const [coursePreview, setCoursePreview] = r.useState(false);
@@ -1454,109 +1462,24 @@ function CourseEditorV2({ selected, onBack, isNew = false }) {
         <div className="editor-section-head survey-builder-head">
           <div>
             <span>03</span>
-            <div><h3>수료 후 설문</h3><p>교육 완료 후 노출할 설문을 설정합니다.</p></div>
+            <div><h3>수료 후 설문</h3><p>교육 완료 후 진행할 Google Forms 설문을 연결합니다.</p></div>
           </div>
           <div className="survey-editor-actions">
             <label className="setting-switch-label">
               <span>설문 사용</span>
               <button type="button" className={form.surveyEnabled ? `rule-switch on` : `rule-switch`} onClick={() => update(`surveyEnabled`, !form.surveyEnabled)}><i /></button>
             </label>
-            <button
-              className="secondary"
-              onClick={() => setSurveyPreview(true)}
-            >
-              미리보기
-            </button>
           </div>
         </div>
-        <div className={`survey-builder-body ${form.surveyEnabled ? `` : `disabled`}`}>
-        <div className="survey-basic-grid survey-builder-basics">
-          <label className="wide">
-            설문명
-            <input
-              value={form.surveyTitle}
-              placeholder="설문명을 입력해주세요"
-              onChange={(event) => update(`surveyTitle`, event.target.value)}
-            />
-          </label>
-          <label className="wide survey-description-field">
-            설문 안내 문구
-            <textarea
-              rows="2"
-              value={form.surveyDescription}
-              placeholder="설문 안내 문구를 입력해주세요"
-              onChange={(event) => update(`surveyDescription`, event.target.value)}
-            />
-          </label>
-          <div className="survey-date-input wide">
-            <label>
-              설문 기간
-              <input
-                type="date"
-                value={form.surveyStartDate}
-                onChange={(event) =>
-                  update(`surveyStartDate`, event.target.value)
-                }
-              />
-            </label>
-            <span>–</span>
-            <label>
-              종료일
-              <input
-                type="date"
-                min={form.surveyStartDate}
-                value={form.surveyEndDate}
-                onChange={(event) =>
-                  update(`surveyEndDate`, event.target.value)
-                }
-              />
-            </label>
+        {!form.surveyEnabled ? (
+          <div className="google-form-empty">현재 연결된 설문이 없습니다.</div>
+        ) : (
+          <div className="google-form-connect">
+            <label>Google Forms 링크<input value={form.googleFormUrl} placeholder="Google Forms 링크를 입력해주세요" onChange={(event) => update(`googleFormUrl`, event.target.value)} /></label>
+            {form.googleFormUrl && !googleFormId(form.googleFormUrl) && <p className="google-form-error">올바른 Google Forms 링크를 입력해주세요.</p>}
+            {googleFormId(form.googleFormUrl) && <div className="google-form-connected"><div><span>Google Forms</span><b>수료 후 만족도 설문</b><small>연결됨</small></div><div><button className="secondary" onClick={() => setSurveyPreview(true)}>설문 미리보기</button><a className="secondary" href={form.googleFormUrl} target="_blank" rel="noreferrer">Google Forms에서 편집 ↗</a></div></div>}
           </div>
-          <label className="survey-anonymous">
-            <input
-              type="checkbox"
-              checked={form.surveyAnonymous}
-              onChange={(event) =>
-                update(`surveyAnonymous`, event.target.checked)
-              }
-            />
-            익명으로 응답받기
-          </label>
-        </div>
-        <div className="survey-question-editor-list">
-          {form.surveyQuestions.length === 0 && <div className="course-builder-empty">등록된 문항이 없습니다.</div>}
-          {form.surveyQuestions.map((question, index) => (
-            <SurveyQuestionEditor
-              key={question.id}
-              question={question}
-              index={index}
-              total={form.surveyQuestions.length}
-              onUpdate={updateSurveyQuestion}
-              onRemove={removeSurveyQuestion}
-              onMove={moveSurveyQuestion}
-              onDuplicate={duplicateSurveyQuestion}
-              active={activeSurveyQuestion === index}
-              onActivate={() => setActiveSurveyQuestion(index)}
-              onDragStart={() => setDraggingSurveyQuestion(index)}
-              onDrop={() => {
-                if (draggingSurveyQuestion === null || draggingSurveyQuestion === index) return;
-                setForm((current) => {
-                  const surveyQuestions = [...current.surveyQuestions];
-                  const [moved] = surveyQuestions.splice(draggingSurveyQuestion, 1);
-                  surveyQuestions.splice(index, 0, moved);
-                  return { ...current, surveyQuestions };
-                });
-                setActiveSurveyQuestion(index);
-                setDraggingSurveyQuestion(null);
-              }}
-            />
-          ))}
-        </div>
-        <div className="survey-add-wrap">
-          <button className="survey-add-button" onClick={() => setSurveyAddMenu((value) => !value)}><Icon icon={Add01Icon} />문항 추가</button>
-          {surveyAddMenu && <div className="survey-add-menu">{[`5점 척도`, `단일 선택`, `복수 선택`, `주관식`].map((type) => <button key={type} onClick={() => { addSurveyQuestion(type); setActiveSurveyQuestion(form.surveyQuestions.length); setSurveyAddMenu(false); }}>{type}</button>)}</div>}
-        </div>
-        </div>
+        )}
       </section>
       {!isNew && <section className="course-danger-zone"><div><h3>과정 삭제</h3><p>삭제한 교육과정은 복구할 수 없습니다.</p></div><button className="danger-outline" onClick={remove}><Icon icon={Delete02Icon} />과정 삭제</button></section>}
       <div className="course-editor-final-actions course-builder-savebar"><span>{dirty ? `변경사항이 있습니다.` : `모든 변경사항이 저장되었습니다.`}</span><div><button className="secondary" onClick={() => setCoursePreview(true)}>미리보기</button><button className="primary" onClick={save}>{isNew ? `교육과정 등록` : `변경사항 저장`}</button></div></div>
@@ -1720,11 +1643,11 @@ function CourseEditorV2({ selected, onBack, isNew = false }) {
             <div className="survey-preview-head">
               <div>
                 <span>학습자 화면 미리보기</span>
-                <h2>{form.surveyTitle}</h2>
+                <h2>수료 후 설문 미리보기</h2>
               </div>
               <button onClick={() => setSurveyPreview(false)}>×</button>
             </div>
-            <SurveyFormView survey={form} mode="response" />
+            <iframe className="google-form-preview-frame" src={googleFormEmbedUrl(form.googleFormUrl)} title="Google Forms 설문 미리보기" />
             <div className="survey-preview-footer">
               <button
                 className="secondary"
@@ -1732,12 +1655,7 @@ function CourseEditorV2({ selected, onBack, isNew = false }) {
               >
                 닫기
               </button>
-              <button
-                className="primary"
-                onClick={() => alert(`미리보기에서는 제출되지 않습니다.`)}
-              >
-                설문 제출
-              </button>
+              <a className="primary" href={googleFormEmbedUrl(form.googleFormUrl).replace(`?embedded=true`, ``)} target="_blank" rel="noreferrer">새 창에서 열기 ↗</a>
             </div>
           </div>
         </div>
@@ -4230,6 +4148,32 @@ function CompletionConditionList({ conditions }) {
 }
 
 function SurveyAssessmentPage() {
+  const [query, setQuery] = r.useState(``);
+  const forms = [
+    { course: `개인정보보호 필수교육`, title: `수료 후 만족도 설문`, connected: true, period: `08.01 ~ 08.31`, url: SAMPLE_GOOGLE_FORM_URL },
+    { course: `신규 입사자 온보딩`, title: `온보딩 만족도 조사`, connected: true, period: `상시`, url: SAMPLE_GOOGLE_FORM_URL },
+    { course: `리더십 기본 과정`, title: `-`, connected: false, period: `-`, url: `` },
+    { course: `생성형 AI 업무 활용`, title: `AI 활용 과정 만족도 조사`, connected: true, period: `08.03 ~ 08.31`, url: SAMPLE_GOOGLE_FORM_URL },
+  ];
+  const visible = forms.filter((item) => !query || `${item.course} ${item.title}`.toLowerCase().includes(query.toLowerCase()));
+  return (
+    <section className="results-section google-form-admin-page">
+      <div className="google-form-admin-toolbar">
+        <div className="search"><Icon icon={Search01Icon} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="교육과정 또는 설문명 검색" /></div>
+        <button className="filter-reset" onClick={() => setQuery(``)}><Icon icon={RefreshIcon} />초기화</button>
+      </div>
+      <div className="results-list-head"><div><h2>설문 관리</h2><span>{visible.length}개 과정</span></div></div>
+      <div className="table-wrap results-table google-form-admin-table">
+        <table>
+          <thead><tr><th>교육과정</th><th>설문</th><th>연결 상태</th><th>설문 기간</th><th>관리</th></tr></thead>
+          <tbody>{visible.map((item) => <tr key={item.course}><td><b>{item.course}</b></td><td>{item.title}</td><td><span className={`google-form-status ${item.connected ? `connected` : ``}`}>{item.connected ? `연결됨` : `미연결`}</span></td><td>{item.period}</td><td>{item.connected ? <div className="google-form-table-actions"><a href={googleFormEmbedUrl(item.url).replace(`?embedded=true`, ``)} target="_blank" rel="noreferrer">설문 열기</a><a href={item.url} target="_blank" rel="noreferrer">응답 결과 보기</a></div> : <button className="analysis-button" onClick={() => alert(`교육과정 수정 화면에서 Google Forms 링크를 연결해 주세요.`)}>설문 연결</button>}</td></tr>)}</tbody>
+        </table>
+      </div>
+    </section>
+  );
+}
+
+function LegacySurveyResultsPage() {
   const [query, setQuery] = r.useState(``);
   const [dept, setDept] = r.useState(`전체 부서`);
   const [surveyStatus, setSurveyStatus] = r.useState(`전체 상태`);
@@ -8615,6 +8559,7 @@ function M() {
                 },
               }),
             e === `lectureDetail` && (0, i.jsx)(ne, { course: Z, go: $ }),
+            e === `courseSurvey` && (0, i.jsx)(GoogleFormSurveyPage, { course: Z, go: $ }),
             e === `player` &&
               (0, i.jsx)(re, {
                 course: Z,
@@ -10231,6 +10176,17 @@ function Z({ value: e, small: t = !1 }) {
     ],
   });
 }
+function GoogleFormSurveyPage({ course, go }) {
+  const responseUrl = googleFormEmbedUrl(SAMPLE_GOOGLE_FORM_URL);
+  return (
+    <main className="page google-form-user-page">
+      <div className="breadcrumb"><button onClick={() => go(`lectureDetail`, course.id)}>나의 학습</button><span>›</span>수료 후 설문</div>
+      <header className="google-form-user-head"><div><h1>수료 후 설문</h1><p>교육에 대한 의견을 남겨주세요.</p></div><a href={responseUrl.replace(`?embedded=true`, ``)} target="_blank" rel="noreferrer">새 창에서 열기 ↗</a></header>
+      <iframe className="google-form-user-frame" src={responseUrl} title={`${course.title} 수료 후 설문`} />
+    </main>
+  );
+}
+
 function ne({ course: e, go: t }) {
   let n = k[e.id] ?? [],
     r = e.progress ?? 0,
@@ -10303,11 +10259,10 @@ function ne({ course: e, go: t }) {
                   (0, i.jsx)(Z, { value: r }),
                 ],
               }),
-              (0, i.jsx)(`button`, {
-                className: `primary`,
-                onClick: () => t(`player`, e.id),
-                children: `학습 이어가기`,
-              }),
+              (0, i.jsxs)(`div`, { className: `lecture-primary-actions`, children: [
+                (0, i.jsx)(`button`, { className: `primary`, onClick: () => t(`player`, e.id), children: `학습 이어가기` }),
+                r >= 100 && (0, i.jsx)(`button`, { className: `secondary`, onClick: () => t(`courseSurvey`, e.id), children: `수료 후 설문` }),
+              ] }),
             ],
           }),
         ],
