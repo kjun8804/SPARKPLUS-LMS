@@ -2,6 +2,7 @@ import * as r from "react";
 import { jsx, jsxs, Fragment } from "react/jsx-runtime";
 import { HugeiconsIcon } from "@hugeicons/react";
 import hiHelloAnimation from "./assets/hi-hello.json";
+import ClassroomPlayer from "./ClassroomPlayer.jsx";
 import {
   Search01Icon,
   FilterIcon,
@@ -10353,6 +10354,7 @@ function re({
   videoProgress: c,
   saveProgress: l,
 }) {
+  return <ClassroomPlayer course={e} lessons={k[e.id] ?? []} go={t} lessonOpen={n} setLessonOpen={a} playing={o} setPlaying={s} videoProgress={c} saveProgress={l} />;
   let [quizAnswer, setQuizAnswer] = (0, r.useState)(null),
     [quizDone, setQuizDone] = (0, r.useState)(!1),
     [u, d] = (0, r.useState)(`goals`),
