@@ -9,6 +9,7 @@ import './user-page-hero.css';
 import './user-visual-system.css';
 import './reward-gamification.css';
 import './completion-quest.css';
+import './notice-simplified.css';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>

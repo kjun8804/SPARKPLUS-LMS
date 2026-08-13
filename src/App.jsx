@@ -7872,21 +7872,13 @@ function T({ createSignal }) {
   return (
     <section className="admin-notice-page">
       <PageHeader kicker="공지사항 관리" title="공지사항 관리" description="임직원에게 노출되는 공지사항을 등록하고 관리합니다." />
-      <SearchFilterPanel
-        variant="compact"
-        value={query}
-        onValueChange={setQuery}
-        placeholder="공지사항 제목 검색"
-        filters={[]}
-        onSearch={() => {}}
-        onReset={() => setQuery(``)}
-      />
+      <div className="notice-admin-search"><span><Icon icon={Search01Icon} size={18} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="공지사항 제목을 검색해주세요" /></span><button className="primary">검색</button></div>
       <div className="notice-admin-summary"><h2>전체 공지 {notices.length}건</h2><button className="notice-create-button" onClick={() => { setForm(emptyNoticeForm()); setScreen(`create`); }}><Icon icon={Add01Icon} size={17} />공지사항 등록</button></div>
       <div className="notice-admin-table-wrap">
         <table className="notice-admin-table">
           <thead><tr><th>제목</th><th>게시 기간</th><th>조회수</th><th>삭제</th></tr></thead>
-          <tbody>{visible.map((notice) => <tr key={notice.id}>
-            <td><button className="notice-title-button" onClick={() => { setViewing(notice); setScreen(`detail`); }}>{notice.important && <span className="notice-pin" aria-label="중요 공지">📌</span>}<b>{notice.title}</b></button></td>
+          <tbody>{visible.map((notice) => <tr className={notice.important ? `notice-important-row` : ``} key={notice.id}>
+            <td><button className="notice-title-button" onClick={() => { setViewing(notice); setScreen(`detail`); }}>{notice.important && <span className="notice-pin" aria-label="중요 공지"><i /></span>}<b>{notice.title}</b></button></td>
             <td><span className="notice-period">{notice.start?.slice(5).replaceAll(`.`, `/`).replaceAll(`-`, `/`)} ~ {notice.end ? notice.end.slice(5).replaceAll(`.`, `/`).replaceAll(`-`, `/`) : `계속`}</span></td>
             <td>{notice.views.toLocaleString()}</td>
             <td className="notice-delete-cell"><button className="notice-delete-button" onClick={() => setDeleteTarget(notice)} aria-label={`${notice.title} 삭제`} title="공지 삭제"><Icon icon={Delete02Icon} size={18} /></button></td>
@@ -7918,7 +7910,7 @@ function NoticeDetailPage({ notice, onBack, onEdit, onDelete }) {
     <PageHeader kicker="공지사항 관리 › 공지사항 상세" title="공지사항 상세" />
     <button className="notice-back-link" onClick={onBack}><Icon icon={ArrowLeft01Icon} size={16} />목록으로</button>
     <article className="notice-document">
-      <header>{notice.important && <span className="notice-pin-label">📌</span>}<h1>{notice.title}</h1><div><time>{notice.start?.replaceAll(`-`, `.`)}</time><span>조회수 {notice.views.toLocaleString()}</span></div></header>
+      <header>{notice.important && <span className="notice-pin notice-pin-label" aria-label="중요 공지"><i /></span>}<h1>{notice.title}</h1><div><time>{notice.start?.replaceAll(`-`, `.`)}</time><span>조회수 {notice.views.toLocaleString()}</span></div></header>
       <div className="notice-document-body">{(notice.content || ``).split(`\n`).map((line, index) => <p key={index}>{line || <br />}</p>)}</div>
     </article>
     <div className="notice-detail-actions"><button className="secondary" onClick={onEdit}><Icon icon={Edit02Icon} size={17} />수정</button><button className="notice-danger-outline" onClick={onDelete}><Icon icon={Delete02Icon} size={17} />삭제</button></div>
@@ -7935,7 +7927,7 @@ function NoticeEditorModal({ form, setForm, onClose, onPreview, onDraft, onPubli
   return <div className="overlay center" onMouseDown={onClose}><section className="notice-editor-modal" onMouseDown={(event) => event.stopPropagation()}>
     <header><div><span>{form.id ? `공지 수정` : `새 공지`}</span><h2>{form.id ? `공지사항 수정` : `공지사항 등록`}</h2><p>노출 대상과 게시 기간을 설정해 정확한 안내를 전달하세요.</p></div><button onClick={onClose}><Icon icon={Cancel01Icon} /></button></header>
     <div className="notice-editor-scroll">
-      <div className="notice-form-section"><h3>기본 정보</h3><div className="notice-form-grid"><label className="full">공지 제목<input value={form.title} onChange={(event) => update(`title`, event.target.value)} placeholder="공지사항 제목을 입력해주세요" /></label><label>공지 분류<select value={form.category} onChange={(event) => update(`category`, event.target.value)}>{[`필수 안내`, `교육 안내`, `시스템 안내`, `일반 공지`].map((item) => <option key={item}>{item}</option>)}</select></label><label className="check-label"><input type="checkbox" checked={form.important} onChange={(event) => update(`important`, event.target.checked)} />중요 공지로 상단 고정</label></div></div>
+      <div className="notice-form-section"><h3>기본 정보</h3><div className="notice-form-grid"><label className="full">공지 제목<input value={form.title} onChange={(event) => update(`title`, event.target.value)} placeholder="공지사항 제목을 입력해주세요" /></label><label className="check-label"><input type="checkbox" checked={form.important} onChange={(event) => update(`important`, event.target.checked)} />중요 공지로 상단 고정</label></div></div>
       <div className="notice-form-section"><h3>게시 대상</h3><div className="notice-target-options">{[`전체 임직원`, `부서 선택`, `교육과정 수강자`].map((item) => <label key={item}><input type="radio" name="target" checked={form.targetType === item} onChange={() => update(`targetType`, item)} />{item}</label>)}</div>{form.targetType === `부서 선택` && <div className="department-checks">{departments.map((item) => <label key={item}><input type="checkbox" checked={form.departments.includes(item)} onChange={() => update(`departments`, form.departments.includes(item) ? form.departments.filter((value) => value !== item) : [...form.departments, item])} />{item}</label>)}</div>}{form.targetType === `교육과정 수강자` && <select className="notice-course-select" value={form.course} onChange={(event) => update(`course`, event.target.value)}>{a.map((course) => <option key={course.id}>{course.title}</option>)}</select>}</div>
       <div className="notice-form-section"><h3>게시 기간</h3><div className="notice-date-grid"><label>게시 시작<input type="date" value={form.start} onChange={(event) => update(`start`, event.target.value)} /></label><label>게시 종료<input type="date" value={form.end} disabled={form.noEnd} onChange={(event) => update(`end`, event.target.value)} /></label></div><label className="check-label inline"><input type="checkbox" checked={form.noEnd} onChange={(event) => update(`noEnd`, event.target.checked)} />종료일 없이 계속 게시</label></div>
       <div className="notice-form-section"><h3>공지 내용</h3><div className="notice-editor-toolbar"><button type="button"><b>B</b></button><button type="button">목록</button><button type="button"><Icon icon={File01Icon} size={15} /> 링크</button></div><textarea value={form.content} onChange={(event) => update(`content`, event.target.value)} placeholder="임직원에게 안내할 내용을 입력해주세요" /></div>
@@ -7948,7 +7940,7 @@ function NoticeEditorModal({ form, setForm, onClose, onPreview, onDraft, onPubli
 function NoticeReadingModal({ notice, preview = false, onClose, onEdit, onEnd }) {
   return <div className="overlay center" onMouseDown={onClose}><article className="notice-reading-modal" onMouseDown={(event) => event.stopPropagation()}>
     <header><span>{preview ? `사용자 화면 미리보기` : `공지 보기`}</span><button onClick={onClose}><Icon icon={Cancel01Icon} /></button></header>
-    <div className="notice-reading-content"><div className="notice-reading-badges"><span>{notice.category}</span>{notice.important && <span className="important">중요</span>}</div><h1>{notice.title || `제목 없는 공지`}</h1><div className="notice-reading-meta"><span>게시 기간 {notice.start} ~ {notice.noEnd || !notice.end ? `계속` : notice.end}</span><span>게시 대상 {notice.target || `전체 임직원`}</span><span>조회 {notice.views || 0}</span></div><div className="notice-reading-body">{(notice.content || `공지 내용이 입력되지 않았습니다.`).split(`\n`).map((line, index) => <p key={index}>{line || <br />}</p>)}</div>{notice.file && <div className="notice-reading-file"><b>첨부파일</b><button><Icon icon={File01Icon} /><span>{notice.file}</span><Icon icon={Download01Icon} /></button></div>}</div>
+    <div className="notice-reading-content">{notice.important && <span className="notice-pin notice-pin-label" aria-label="중요 공지"><i /></span>}<h1>{notice.title || `제목 없는 공지`}</h1><div className="notice-reading-meta"><span>게시 기간 {notice.start} ~ {notice.noEnd || !notice.end ? `계속` : notice.end}</span><span>게시 대상 {notice.target || `전체 임직원`}</span><span>조회 {notice.views || 0}</span></div><div className="notice-reading-body">{(notice.content || `공지 내용이 입력되지 않았습니다.`).split(`\n`).map((line, index) => <p key={index}>{line || <br />}</p>)}</div>{notice.file && <div className="notice-reading-file"><b>첨부파일</b><button><Icon icon={File01Icon} /><span>{notice.file}</span><Icon icon={Download01Icon} /></button></div>}</div>
     {!preview && <footer>{onEdit && <button className="secondary" onClick={onEdit}>수정</button>}{onEnd && <button className="primary" onClick={onEnd}>게시 종료</button>}</footer>}
   </article></div>;
 }
@@ -10815,10 +10807,7 @@ function re({
 }
 function ie({ go: e, notices = j }) {
   let [t, n] = (0, r.useState)(``),
-    [a, o] = (0, r.useState)(`전체`),
-    s = notices.filter(
-      (e) => (a === `전체` || e.category === a) && (!t || e.title.includes(t)),
-    );
+    s = notices.filter((e) => !t || e.title.includes(t));
   return (0, i.jsxs)(`main`, {
     className: `page user-notice-page`,
     children: [
@@ -10843,20 +10832,6 @@ function ie({ go: e, notices = j }) {
               }),
             ],
           }),
-          (0, i.jsxs)(`select`, {
-            value: a,
-            onChange: (e) => o(e.target.value),
-            children: [
-              (0, i.jsx)(`option`, { children: `전체` }),
-              (0, i.jsx)(`option`, { children: `필수 안내` }),
-              (0, i.jsx)(`option`, { children: `교육 안내` }),
-              (0, i.jsx)(`option`, { children: `시스템 안내` }),
-              (0, i.jsx)(`option`, { children: `일반 공지` }),
-              (0, i.jsx)(`option`, { children: `시스템` }),
-              (0, i.jsx)(`option`, { children: `과정 안내` }),
-              (0, i.jsx)(`option`, { children: `이벤트` }),
-            ],
-          }),
           (0, i.jsx)(`button`, { className: `primary`, children: `검색` }),
         ],
       }),
@@ -10874,9 +10849,7 @@ function ie({ go: e, notices = j }) {
           (0, i.jsxs)(`div`, {
             className: `notice-table-head`,
             children: [
-              (0, i.jsx)(`span`, { children: `분류` }),
               (0, i.jsx)(`span`, { children: `제목` }),
-              (0, i.jsx)(`span`, { children: `작성자` }),
               (0, i.jsx)(`span`, { children: `등록일` }),
               (0, i.jsx)(`span`, { children: `조회수` }),
             ],
@@ -10885,22 +10858,16 @@ function ie({ go: e, notices = j }) {
             (0, i.jsxs)(
               `button`,
               {
+                className: t.important ? `notice-important-row` : ``,
                 onClick: () => e(`noticeDetail`, t.id),
                 children: [
-                  (0, i.jsx)(`span`, {
-                    children: (0, i.jsx)(`em`, {
-                      className: t.important ? `important-category` : ``,
-                      children: t.category,
-                    }),
-                  }),
                   (0, i.jsxs)(`span`, {
                     className: `notice-title-cell`,
                     children: [
-                      t.important && (0, i.jsx)(`b`, { children: `중요` }),
+                      t.important && (0, i.jsx)(`span`, { className: `notice-pin`, "aria-label": `중요 공지`, children: (0, i.jsx)(`i`, {}) }),
                       t.title,
                     ],
                   }),
-                  (0, i.jsx)(`span`, { children: t.writer }),
                   (0, i.jsx)(`span`, { children: t.date }),
                   (0, i.jsx)(`span`, { children: t.views }),
                 ],
@@ -10951,23 +10918,10 @@ function ae({ notice: e, go: t, notices = j }) {
           (0, i.jsxs)(`div`, {
             className: `notice-detail-head`,
             children: [
-              (0, i.jsxs)(`div`, {
-                children: [
-                  (0, i.jsx)(`span`, {
-                    className: `badge blue-badge`,
-                    children: e.category,
-                  }),
-                  e.important &&
-                    (0, i.jsx)(`span`, {
-                      className: `badge important-badge`,
-                      children: `중요 공지`,
-                    }),
-                ],
-              }),
+              e.important && (0, i.jsx)(`span`, { className: `notice-pin notice-pin-label`, "aria-label": `중요 공지`, children: (0, i.jsx)(`i`, {}) }),
               (0, i.jsx)(`h1`, { children: e.title }),
               (0, i.jsxs)(`p`, {
                 children: [
-                  (0, i.jsxs)(`span`, { children: [`작성자 `, e.writer] }),
                   (0, i.jsxs)(`span`, { children: [`등록일 `, e.date] }),
                   (0, i.jsxs)(`span`, { children: [`조회수 `, e.views] }),
                 ],
