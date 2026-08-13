@@ -9692,28 +9692,6 @@ function X({ course: e, go: t, apply: n, preview = false }) {
                           }),
                         ],
                       }),
-                      (0, i.jsxs)(`section`, {
-                        children: [
-                          (0, i.jsx)(`h2`, { children: `추천 대상` }),
-                          (0, i.jsxs)(`div`, {
-                            className: `target-tags`,
-                            children: [
-                              (0, i.jsxs)(`span`, {
-                                children: [
-                                  e.category,
-                                  ` 역량을 키우고 싶은 구성원`,
-                                ],
-                              }),
-                              (0, i.jsx)(`span`, {
-                                children: `실무 적용 방법을 배우고 싶은 분`,
-                              }),
-                              (0, i.jsx)(`span`, {
-                                children: `체계적으로 기초를 다지고 싶은 분`,
-                              }),
-                            ],
-                          }),
-                        ],
-                      }),
                     ],
                   })
                 : (0, i.jsx)(`div`, {
@@ -9737,22 +9715,19 @@ function X({ course: e, go: t, apply: n, preview = false }) {
                             (0, i.jsxs)(
                               `div`,
                               {
+                                className: `curriculum-row`,
                                 children: [
                                   (0, i.jsx)(`span`, {
                                     children: String(t + 1).padStart(2, `0`),
                                   }),
                                   (0, i.jsxs)(`div`, {
+                                    className: `curriculum-copy`,
                                     children: [
                                       (0, i.jsx)(`b`, { children: e.title }),
-                                      (0, i.jsxs)(`small`, {
-                                        children: [`영상 · `, e.duration],
-                                      }),
+                                      (0, i.jsx)(`small`, { children: e.description || `핵심 개념과 실무 활용 방법을 학습합니다.` }),
                                     ],
                                   }),
-                                  (0, i.jsx)(`em`, {
-                                    children:
-                                      t < 2 ? `미리보기` : `수강 신청 후 공개`,
-                                  }),
+                                  (0, i.jsx)(`time`, { children: e.duration }),
                                 ],
                               },
                               e.title,

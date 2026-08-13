@@ -18586,3 +18586,76 @@ html[data-theme="dark"] .user-portal .course-wishlist.wishlisted { background:rg
   .user-portal .detail-course-labels { align-items:flex-start; flex-direction:column; }
   .user-portal .detail-course-actions { gap:10px; }
 }
+
+/* Course detail cleanup: one metadata divider and breathable curriculum */
+.user-portal .detail-meta {
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:0!important;
+  max-width:390px;
+}
+.user-portal .detail-meta > span {
+  min-width:0;
+  margin:0!important;
+  padding:0 26px!important;
+  border:0!important;
+}
+.user-portal .detail-meta > span:first-child { padding-left:0!important; }
+.user-portal .detail-meta > span:last-child {
+  border-left:1px solid var(--ui-line)!important;
+  padding-right:0!important;
+}
+.user-portal .curriculum {
+  display:grid;
+  gap:11px;
+  overflow:visible;
+  border:0;
+  border-radius:0;
+}
+.user-portal .curriculum > .curriculum-row {
+  display:grid;
+  grid-template-columns:48px minmax(0,1fr) auto;
+  align-items:center;
+  gap:15px;
+  min-height:76px;
+  padding:18px 20px!important;
+  border:1px solid var(--ui-line)!important;
+  border-radius:14px!important;
+  background:var(--ui-surface-soft)!important;
+}
+.user-portal .curriculum > .curriculum-row > span {
+  width:auto;
+  color:var(--user-primary-strong);
+  font-size:13px;
+  font-weight:650;
+}
+.user-portal .curriculum .curriculum-copy {
+  display:flex;
+  min-width:0;
+  flex-direction:column;
+  gap:7px;
+}
+.user-portal .curriculum .curriculum-copy b {
+  color:var(--ui-text);
+  font-size:13px;
+  font-weight:650;
+  line-height:1.45;
+}
+.user-portal .curriculum .curriculum-copy small {
+  color:var(--ui-sub);
+  font-size:11px;
+  font-weight:400;
+  line-height:1.5;
+}
+.user-portal .curriculum > .curriculum-row > time {
+  color:#6f7d8a;
+  font-size:11px;
+  font-weight:400;
+  white-space:nowrap;
+}
+@media(max-width:620px) {
+  .user-portal .detail-meta > span { padding:0 16px!important; }
+  .user-portal .detail-meta > span:first-child { padding-left:0!important; }
+  .user-portal .curriculum > .curriculum-row { grid-template-columns:38px minmax(0,1fr); gap:12px; padding:16px!important; }
+  .user-portal .curriculum > .curriculum-row > time { grid-column:2; }
+}
