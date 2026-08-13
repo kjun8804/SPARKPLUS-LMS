@@ -8469,7 +8469,7 @@ function M() {
           },
         })
       : (0, i.jsxs)(`div`, {
-          className: `app-shell user-portal`,
+          className: `app-shell user-portal ${e === `userRewards` ? `reward-canvas-active` : ``}`,
           children: [
             (0, i.jsx)(F, {
               role: n,
@@ -9953,7 +9953,8 @@ function UserLearningRewards({ initialTab = `ranking` }) {
   ];
   const tabs = [[`ranking`,RankingIcon,`랭킹`],[`badges`,Award01Icon,`뱃지 컬렉션`],[`points`,SparklesIcon,`포인트`]];
   return <main className="page user-rewards-page reward-game-page">
-    <div className="reward-confetti" aria-hidden="true">{Array.from({length:12},(_,index) => <i key={index} />)}</div>
+    <div className="reward-fullbleed-canvas" aria-hidden="true" />
+    <div className="reward-confetti" aria-hidden="true">{Array.from({length:14},(_,index) => <i key={index} />)}</div>
     <section className="reward-league-hero">
       <div className="reward-hero-pattern" aria-hidden="true" />
       <div className="reward-league-copy"><nav>홈 <span>›</span> 학습 리워드</nav><span className="reward-season">2026 AUGUST SEASON</span><h1>8월 Learning League</h1><p>이번 달 학습으로 쌓은 성과와 다음 목표를 확인해보세요.</p><div className="reward-hero-score"><span><small>내 순위</small><b>8위</b></span><span><small>학습 포인트</small><b>1,040P</b></span></div></div>
