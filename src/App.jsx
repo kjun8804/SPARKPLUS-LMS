@@ -12,6 +12,7 @@ import {
   Moon02Icon,
   Sun03Icon,
   ThumbsUpIcon,
+  FavouriteIcon,
   Award01Icon,
   Quiz01Icon,
   Home01Icon,
@@ -50,6 +51,19 @@ function Icon({ icon, size = 18, className = ``, strokeWidth = 1.7 }) {
       className={className}
     />
   );
+}
+function userLevelLabel(level = ``) {
+  const number = String(level).match(/\d+/)?.[0];
+  return number ? `LV.${number}` : level;
+}
+function userLevelTone(level = ``) {
+  const number = String(level).match(/\d+/)?.[0] || `1`;
+  return `level-${number}`;
+}
+function userRecruitTone(status = ``) {
+  if (status === `모집 중`) return `recruiting`;
+  if (status === `모집 마감`) return `closed`;
+  return `ended`;
 }
 function lottiePath(shape) {
   if (!shape?.v?.length) return ``;
@@ -8139,7 +8153,7 @@ var O = [
       duration: `3시간`,
       level: `레벨 1`,
       format: `오프라인`,
-      status: `모집 예정`,
+      status: `종료`,
       accent: `orange`,
       instructor: `최지민 강사`,
     },
@@ -8152,7 +8166,7 @@ var O = [
       duration: `1시간`,
       level: `레벨 1`,
       format: `온라인`,
-      status: `마감 임박`,
+      status: `모집 마감`,
       accent: `red`,
       instructor: `준법지원팀`,
       progress: 30,
@@ -9383,7 +9397,7 @@ function K({
         filters={[
           { label: `분야`, value: r, onChange: a, options: [`전체 분야`, `직무역량`, `리더십`, `개발`, `커뮤니케이션`, `법정의무`, `AI·DX`] },
           { label: `레벨`, value: o, onChange: s, options: [`전체 레벨`, `레벨 1`, `레벨 2`, `레벨 3`] },
-          { label: `모집 상태`, value: c, onChange: l, options: [`모집 상태`, `모집 중`, `모집 예정`, `마감 임박`] },
+          { label: `모집 상태`, value: c, onChange: l, options: [`모집 상태`, `모집 중`, `모집 마감`, `종료`] },
         ]}
         onSearch={u}
         onReset={d}
@@ -9398,7 +9412,7 @@ function K({
           <option>추천순</option>
           <option>인기순</option>
           <option>최신순</option>
-          <option>마감 임박순</option>
+          <option>모집 마감순</option>
         </select>
       </div>
       {e.length ? (
@@ -9457,7 +9471,7 @@ function Y({ course: e, go: t }) {
       <div className="visual-wrap">
         <J accent={e.accent} label={e.category} />
         <span
-          className={`status-ribbon ${e.status === `마감 임박` ? `danger` : e.status === `모집 예정` ? `muted` : ``}`}
+          className={`status-ribbon ${userRecruitTone(e.status)}`}
         >
           {e.status}
         </span>
@@ -9466,14 +9480,14 @@ function Y({ course: e, go: t }) {
           onClick={toggle}
           aria-label="좋아요"
         >
-          <Icon icon={ThumbsUpIcon} size={16} />
+          <Icon icon={FavouriteIcon} size={17} />
           <span>{base + (liked ? 1 : 0)}</span>
         </button>
       </div>
       <div className="course-card-body">
         <div className="course-labels">
           <span className="category-text">{e.category}</span>
-          <span className="level-badge">{e.level}</span>
+          <span className={`level-badge ${userLevelTone(e.level)}`}>{userLevelLabel(e.level)}</span>
         </div>
         <h2>{e.title}</h2>
         <div className="card-meta">
@@ -9486,7 +9500,7 @@ function Y({ course: e, go: t }) {
             상세 보기
           </button>
           <button
-            className="primary"
+            className={`course-action ${e.enrolled ? `enter-course` : `enroll-course`}`}
             onClick={() =>
               t(e.enrolled ? `lectureDetail` : `courseDetail`, e.id)
             }
@@ -9500,7 +9514,15 @@ function Y({ course: e, go: t }) {
 }
 function X({ course: e, go: t, apply: n, preview = false }) {
   let a = e.curriculum || k[e.id] || [],
-    [o, s] = (0, r.useState)(`intro`);
+    [o, s] = (0, r.useState)(`intro`),
+    likeKey = `sparkplus-like-${e.id}`,
+    [liked, setLiked] = (0, r.useState)(() => localStorage.getItem(likeKey) === `true`),
+    baseLikes = [74, 87, 98, 64, 53, 126][e.id - 1] || 42;
+  const toggleLike = () => {
+    const next = !liked;
+    setLiked(next);
+    localStorage.setItem(likeKey, String(next));
+  };
   return (0, i.jsxs)(`main`, {
     className: `page`,
     children: [
@@ -9527,14 +9549,24 @@ function X({ course: e, go: t, apply: n, preview = false }) {
             className: `detail-intro`,
             children: [
               (0, i.jsxs)(`div`, {
+                className: `detail-course-labels`,
                 children: [
-                  (0, i.jsx)(`span`, {
-                    className: `badge blue-badge`,
-                    children: e.category,
-                  }),
-                  (0, i.jsx)(`span`, {
-                    className: `badge green-badge`,
-                    children: e.status,
+                  (0, i.jsxs)(`div`, { children: [
+                    (0, i.jsx)(`span`, {
+                      className: `badge blue-badge`,
+                      children: e.category,
+                    }),
+                    (0, i.jsx)(`span`, {
+                      className: `course-recruit-badge ${userRecruitTone(e.status)}`,
+                      children: e.status,
+                    }),
+                  ] }),
+                  (0, i.jsxs)(`button`, {
+                    type: `button`,
+                    className: `detail-course-like ${liked ? `liked` : ``}`,
+                    onClick: toggleLike,
+                    "aria-label": `좋아요`,
+                    children: [(0, i.jsx)(Icon, { icon: FavouriteIcon, size: 17 }), (0, i.jsx)(`span`, { children: baseLikes + (liked ? 1 : 0) })],
                   }),
                 ],
               }),
@@ -9545,8 +9577,8 @@ function X({ course: e, go: t, apply: n, preview = false }) {
                 children: [
                   (0, i.jsxs)(`span`, {
                     children: [
-                      (0, i.jsx)(`small`, { children: `레벨` }),
-                      (0, i.jsx)(`b`, { children: e.level }),
+                      (0, i.jsx)(`small`, { children: `난이도` }),
+                      (0, i.jsx)(`b`, { className: `level-badge ${userLevelTone(e.level)}`, children: userLevelLabel(e.level) }),
                     ],
                   }),
                   (0, i.jsxs)(`span`, {
@@ -9715,7 +9747,7 @@ function X({ course: e, go: t, apply: n, preview = false }) {
                 ],
               }),
               (0, i.jsx)(`button`, {
-                className: `primary large`,
+                className: `large course-action ${e.enrolled ? `enter-course` : `enroll-course`}`,
                 onClick: n,
                 children: e.enrolled ? `나의 학습으로 이동` : `수강 신청`,
               }),
@@ -10096,8 +10128,8 @@ function ne({ course: e, go: t }) {
                     children: e.category,
                   }),
                   (0, i.jsx)(`span`, {
-                    className: `level-badge`,
-                    children: e.level,
+                    className: `level-badge ${userLevelTone(e.level)}`,
+                    children: userLevelLabel(e.level),
                   }),
                 ],
               }),

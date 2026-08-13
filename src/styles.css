@@ -18292,3 +18292,146 @@ html:not([data-theme="dark"]) .user-portal::after { box-shadow:none!important; }
   .user-portal .home-welcome-copy > span { margin-bottom:5px; font-size:11px; }
   .user-portal .home-welcome h1 { font-size:27px; }
 }
+
+/* User course discovery: actions, levels, likes and recruitment status */
+.user-portal .course-action {
+  display:inline-flex;
+  min-height:42px;
+  align-items:center;
+  justify-content:center;
+  box-sizing:border-box;
+  padding:0 16px;
+  border-radius:11px;
+  font-size:13px;
+  font-weight:650;
+  transition:transform .16s ease,background-color .16s ease,border-color .16s ease,box-shadow .16s ease;
+}
+.user-portal .course-action.enroll-course {
+  border:1px solid #4f8fcf;
+  background:linear-gradient(180deg,#69a8e3,#4f8fcf);
+  color:#fff;
+  box-shadow:0 5px 12px rgba(58,119,179,.18),inset 0 1px 0 rgba(255,255,255,.24);
+}
+.user-portal .course-action.enroll-course:hover {
+  background:linear-gradient(180deg,#77b2e8,#5798d5);
+  box-shadow:0 8px 16px rgba(58,119,179,.22),inset 0 1px 0 rgba(255,255,255,.28);
+  transform:translateY(-1px);
+}
+.user-portal .course-action.enter-course {
+  border:1px solid #c8def2;
+  background:#edf5fd;
+  color:#3979b6;
+  box-shadow:0 3px 9px rgba(65,112,158,.08);
+}
+.user-portal .course-action.enter-course:hover {
+  border-color:#b7d3ec;
+  background:#e4f0fb;
+  transform:translateY(-1px);
+}
+.user-portal .card-actions .course-action { width:100%; height:42px; }
+.user-portal .apply-card .course-action.large { width:100%; min-height:48px; }
+
+.user-portal .level-badge {
+  display:inline-flex!important;
+  min-width:50px;
+  height:28px!important;
+  align-items:center;
+  justify-content:center;
+  box-sizing:border-box;
+  padding:0 11px!important;
+  border:1px solid #d8e6f3;
+  border-radius:999px!important;
+  color:#567b9d!important;
+  background:#f1f6fb!important;
+  font-size:11px!important;
+  font-weight:650!important;
+  letter-spacing:.015em;
+  line-height:1;
+  white-space:nowrap;
+}
+.user-portal .level-badge.level-1 { border-color:#dceaf6; background:#f4f8fc!important; color:#6486a3!important; }
+.user-portal .level-badge.level-2 { border-color:#cfe1f1; background:#ebf3fa!important; color:#4f7fa8!important; }
+.user-portal .level-badge.level-3 { border-color:#bdd6eb; background:#dfedf8!important; color:#376f9f!important; }
+.user-portal .detail-meta b.level-badge { width:max-content; margin-top:2px; }
+
+.user-portal .status-ribbon,
+.user-portal .course-recruit-badge {
+  display:inline-flex;
+  min-height:29px;
+  align-items:center;
+  box-sizing:border-box;
+  padding:0 11px;
+  border:1px solid transparent;
+  border-radius:999px;
+  font-size:11px;
+  font-weight:650;
+  line-height:1;
+  box-shadow:0 2px 8px rgba(38,68,96,.06);
+}
+.user-portal .status-ribbon { top:13px; left:13px; color:inherit; }
+.user-portal :is(.status-ribbon,.course-recruit-badge).recruiting {
+  border-color:#cfe2f3;
+  background:#eaf4fd;
+  color:#3976ab;
+}
+.user-portal :is(.status-ribbon,.course-recruit-badge).closed {
+  border-color:#dfe4e9;
+  background:#f2f4f6;
+  color:#65717e;
+}
+.user-portal :is(.status-ribbon,.course-recruit-badge).ended {
+  border-color:#d9e0e6;
+  background:#e9eef2;
+  color:#74808b;
+}
+.user-portal .course-recruit-badge { margin-left:6px; vertical-align:middle; }
+
+.user-portal .course-like {
+  border:1px solid rgba(113,143,174,.16);
+  background:rgba(255,255,255,.94);
+  color:#7b8794;
+  box-shadow:0 4px 12px rgba(37,69,101,.1);
+}
+.user-portal .course-like:hover {
+  border-color:#c7ddf1;
+  background:#f2f7fc;
+  color:#4f8fcf;
+}
+.user-portal .course-like.liked {
+  border-color:#c6dff4;
+  background:#e9f3fc;
+  color:#3979b6;
+  box-shadow:0 4px 13px rgba(57,121,182,.13);
+}
+.user-portal .course-like.liked span { color:#3979b6; font-weight:650; }
+.user-portal .detail-course-labels {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+}
+.user-portal .detail-course-labels > div { display:flex; align-items:center; gap:6px; }
+.user-portal .detail-course-like {
+  display:inline-flex;
+  min-height:34px;
+  align-items:center;
+  gap:6px;
+  padding:0 10px;
+  border:1px solid #dfe5eb;
+  border-radius:999px;
+  background:#fff;
+  color:#7b8794;
+  font-size:12px;
+  font-weight:550;
+}
+.user-portal .detail-course-like:hover { border-color:#c7ddf1; background:#f2f7fc; color:#4f8fcf; }
+.user-portal .detail-course-like.liked { border-color:#c6dff4; background:#e9f3fc; color:#3979b6; }
+html[data-theme="dark"] .user-portal .course-action.enter-course,
+html[data-theme="dark"] .user-portal .course-like.liked,
+html[data-theme="dark"] .user-portal .detail-course-like.liked,
+html[data-theme="dark"] .user-portal .level-badge,
+html[data-theme="dark"] .user-portal :is(.status-ribbon,.course-recruit-badge) {
+  background:rgba(79,143,207,.16)!important;
+  border-color:rgba(112,164,213,.28)!important;
+  color:#8bb9e2!important;
+}
