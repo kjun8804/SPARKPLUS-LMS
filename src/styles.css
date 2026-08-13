@@ -17720,3 +17720,30 @@ html[data-theme="dark"] .my-learning-table tbody tr:hover { background:rgba(68,1
   .my-learning-table-wrap { border-radius:15px; }
   .my-learning-table th,.my-learning-table td { padding-right:13px; padding-left:13px; }
 }
+
+/* Administrator learner detail: completed lessons beside progress */
+.learner-detail-course-table {
+  width:100%;
+  min-width:1050px;
+  table-layout:fixed;
+}
+.learner-detail-course-table th:nth-child(1) { width:27%; }
+.learner-detail-course-table th:nth-child(2) { width:20%; }
+.learner-detail-course-table th:nth-child(3) { width:12%; }
+.learner-detail-course-table th:nth-child(4) { width:10%; }
+.learner-detail-course-table th:nth-child(5) { width:10%; }
+.learner-detail-course-table th:nth-child(6) { width:10%; }
+.learner-detail-course-table th:nth-child(7) { width:11%; }
+.learner-detail-course-table th,
+.learner-detail-course-table td {
+  white-space:nowrap;
+}
+.learner-detail-course-table td:first-child {
+  white-space:normal;
+}
+.learner-lesson-count {
+  color:var(--ui-text);
+  font-size:14px!important;
+  font-weight:650;
+  letter-spacing:0;
+}

@@ -3133,9 +3133,16 @@ function LearnerProfilePage({ learner, onBack }) {
       const surveyRequired = index % 2 === 0;
       const surveySubmitted = learningProgress === 100 && index < learner.completed;
       const completed = learningProgress === 100 && (!surveyRequired || surveySubmitted);
+      const totalLessons = course.lessons || 5;
+      const completedLessons = Math.min(
+        totalLessons,
+        Math.floor((learningProgress / 100) * totalLessons),
+      );
       return {
         ...course,
         learningProgress,
+        totalLessons,
+        completedLessons,
         surveyRequired,
         surveySubmitted,
         state: completed ? `수료` : learningProgress > 0 ? `학습 중` : `미수강`,
@@ -3244,12 +3251,13 @@ function LearnerProfilePage({ learner, onBack }) {
           <span>총 {learningCourses.length}개</span>
         </div>
         <div className="table-wrap">
-          <table>
+          <table className="learner-detail-course-table">
             <thead>
               <tr>
                 <th>교육과정</th>
                 <th>교육 기간</th>
                 <th>진도율</th>
+                <th>강의 회차</th>
                 <th>설문 제출</th>
                 <th>학습 상태</th>
                 <th>수료일</th>
@@ -3270,6 +3278,9 @@ function LearnerProfilePage({ learner, onBack }) {
                       </span>
                       <b>{course.learningProgress}%</b>
                     </div>
+                  </td>
+                  <td className="learner-lesson-count">
+                    {course.completedLessons}/{course.totalLessons}
                   </td>
                   <td>
                     {course.surveyRequired
