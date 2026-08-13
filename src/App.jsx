@@ -9536,7 +9536,6 @@ function Y({ course: e, go: t }) {
           <Icon icon={ThumbsUpIcon} size={15} />
           <span>추천 {base + (recommended ? 1 : 0)}</span>
         </button>
-        {e.enrolled && <Z value={e.progress ?? 0} small={true} />}
         <div className="card-actions">
           <button className="secondary" onClick={() => t(`courseDetail`, e.id)}>
             상세 보기
