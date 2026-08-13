@@ -18435,3 +18435,154 @@ html[data-theme="dark"] .user-portal :is(.status-ribbon,.course-recruit-badge) {
   border-color:rgba(112,164,213,.28)!important;
   color:#8bb9e2!important;
 }
+
+/* User course state, recommendation and wishlist semantics */
+.user-portal .course-status-badge {
+  display:inline-flex;
+  min-height:31px;
+  align-items:center;
+  box-sizing:border-box;
+  padding:0 12px;
+  border:1px solid transparent;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:650;
+  line-height:1;
+  white-space:nowrap;
+  box-shadow:0 2px 8px rgba(38,68,96,.055);
+}
+.user-portal .course-status-badge.pre-open {
+  border-color:#c9def2;
+  background:#e9f3fd;
+  color:#3976ad;
+}
+.user-portal .course-status-badge.operating {
+  border-color:#cce7dc;
+  background:#e9f6f0;
+  color:#39765c;
+}
+.user-portal .course-status-badge.ended {
+  border-color:#dce2e7;
+  background:#eef1f4;
+  color:#687480;
+}
+.user-portal .course-status-badge.status-ribbon {
+  position:absolute;
+  top:13px;
+  left:13px;
+  z-index:2;
+}
+.user-portal .detail-course-labels .course-status-badge { margin-left:6px; vertical-align:middle; }
+
+.user-portal .course-wishlist {
+  display:grid;
+  width:38px;
+  height:38px;
+  place-items:center;
+  padding:0;
+  border:1px solid rgba(113,143,174,.2);
+  border-radius:50%;
+  background:rgba(255,255,255,.94);
+  color:#7b8794;
+  box-shadow:0 4px 12px rgba(37,69,101,.1);
+  font-family:Arial,sans-serif!important;
+  font-size:22px;
+  line-height:1;
+  transition:transform .16s ease,background-color .16s ease,color .16s ease,border-color .16s ease;
+}
+.user-portal .visual-wrap > .course-wishlist {
+  position:absolute;
+  z-index:3;
+  top:12px;
+  right:12px;
+}
+.user-portal .course-wishlist:hover {
+  border-color:#f0bfd1;
+  background:#fff4f8;
+  color:#de5b8a;
+  transform:translateY(-1px);
+}
+.user-portal .course-wishlist.wishlisted {
+  border-color:#efb6ca;
+  background:#fff0f5;
+  color:#e34f82;
+  box-shadow:0 4px 13px rgba(218,74,125,.14);
+}
+.user-portal .course-recommend {
+  display:inline-flex;
+  width:max-content;
+  min-height:32px;
+  align-items:center;
+  gap:6px;
+  margin-top:11px;
+  padding:0;
+  border:0;
+  background:transparent;
+  color:#7b8794;
+  font-size:11px;
+  font-weight:550;
+  transition:color .16s ease,transform .16s ease;
+}
+.user-portal .course-recommend:hover { color:#4f8fcf; transform:translateY(-1px); }
+.user-portal .course-recommend.recommended { color:#2377d1; font-weight:650; }
+.user-portal .course-recommend.recommended .hugeicons-icon { transform:scale(1.08); }
+
+.user-portal .detail-course-actions {
+  display:flex;
+  align-items:center;
+  gap:16px;
+}
+.user-portal .detail-course-actions .course-recommend {
+  min-height:36px;
+  margin:0;
+  padding:0 11px;
+  border:1px solid #dfe5eb;
+  border-radius:999px;
+  background:#fff;
+  font-size:12px;
+}
+.user-portal .detail-course-actions .course-recommend:hover,
+.user-portal .detail-course-actions .course-recommend.recommended {
+  border-color:#c4dcf2;
+  background:#edf5fd;
+}
+.user-portal .detail-wishlist { position:static; width:36px; height:36px; box-shadow:none; }
+
+.user-portal .apply-card {
+  display:flex;
+  min-height:310px;
+  box-sizing:border-box;
+  flex-direction:column;
+  padding:26px!important;
+}
+.user-portal .apply-card dl { flex:1; }
+.user-portal .apply-card .course-action.large {
+  width:100%;
+  height:50px;
+  min-height:50px;
+  padding:0 18px;
+  border-radius:12px;
+  font-size:14px;
+  font-weight:650;
+  transition:transform .16s ease,box-shadow .16s ease,background .16s ease;
+}
+.user-portal .apply-card .course-action.large:active {
+  transform:translateY(1px);
+  box-shadow:0 2px 6px rgba(58,119,179,.12)!important;
+}
+.user-portal .course-card .card-actions {
+  align-items:stretch;
+}
+.user-portal .course-card .card-actions button { min-height:42px; border-radius:11px; font-size:13px; font-weight:650; }
+
+html[data-theme="dark"] .user-portal .course-status-badge.pre-open { background:rgba(79,143,207,.18); border-color:rgba(112,164,213,.3); color:#8ebce5; }
+html[data-theme="dark"] .user-portal .course-status-badge.operating { background:rgba(72,145,111,.18); border-color:rgba(104,173,142,.28); color:#8dc9aa; }
+html[data-theme="dark"] .user-portal .course-status-badge.ended { background:rgba(139,149,161,.14); border-color:rgba(160,169,179,.2); color:#aab2bb; }
+html[data-theme="dark"] .user-portal .course-wishlist,
+html[data-theme="dark"] .user-portal .detail-course-actions .course-recommend { background:var(--ui-surface); border-color:var(--ui-line); }
+html[data-theme="dark"] .user-portal .course-wishlist.wishlisted { background:rgba(227,79,130,.14); border-color:rgba(227,79,130,.3); color:#f184aa; }
+
+@media(max-width:700px) {
+  .user-portal .detail-course-labels { align-items:flex-start; flex-direction:column; }
+  .user-portal .detail-course-actions { gap:10px; }
+}

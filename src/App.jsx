@@ -12,7 +12,6 @@ import {
   Moon02Icon,
   Sun03Icon,
   ThumbsUpIcon,
-  FavouriteIcon,
   Award01Icon,
   Quiz01Icon,
   Home01Icon,
@@ -61,9 +60,19 @@ function userLevelTone(level = ``) {
   return `level-${number}`;
 }
 function userRecruitTone(status = ``) {
-  if (status === `모집 중`) return `recruiting`;
-  if (status === `모집 마감`) return `closed`;
+  const label = userCourseStatus(status);
+  if (label === `오픈 전`) return `pre-open`;
+  if (label === `운영 중`) return `operating`;
   return `ended`;
+}
+function userCourseStatus(status = ``) {
+  if ([`오픈 전`, `모집 예정`].includes(status)) return `오픈 전`;
+  if ([`운영 중`, `모집 중`, `마감 임박`].includes(status)) return `운영 중`;
+  return `종료`;
+}
+function CourseStatusBadge({ status, className = `` }) {
+  const label = userCourseStatus(status);
+  return <span className={`course-status-badge ${userRecruitTone(status)} ${className}`}>{label}</span>;
 }
 function lottiePath(shape) {
   if (!shape?.v?.length) return ``;
@@ -8112,7 +8121,7 @@ var O = [
       duration: `2시간 30분`,
       level: `레벨 1`,
       format: `온라인`,
-      status: `모집 중`,
+      status: `운영 중`,
       accent: `blue`,
       instructor: `김현우 강사`,
       progress: 65,
@@ -8127,7 +8136,7 @@ var O = [
       duration: `4시간`,
       level: `레벨 2`,
       format: `혼합`,
-      status: `모집 중`,
+      status: `오픈 전`,
       accent: `green`,
       instructor: `박서연 강사`,
     },
@@ -8140,7 +8149,7 @@ var O = [
       duration: `8시간`,
       level: `레벨 2`,
       format: `온라인`,
-      status: `모집 중`,
+      status: `운영 중`,
       accent: `purple`,
       instructor: `이도윤 강사`,
     },
@@ -8181,7 +8190,7 @@ var O = [
       duration: `5시간`,
       level: `레벨 3`,
       format: `온라인`,
-      status: `모집 중`,
+      status: `운영 중`,
       accent: `cyan`,
       instructor: `정유나 강사`,
     },
@@ -8336,12 +8345,12 @@ function M() {
     [y, b] = (0, r.useState)(``),
     [x, S] = (0, r.useState)(`전체 분야`),
     [C, w] = (0, r.useState)(`전체 레벨`),
-    [T, E] = (0, r.useState)(`모집 상태`),
+    [T, E] = (0, r.useState)(`전체 상태`),
     [D, k] = (0, r.useState)({
       search: ``,
       category: `전체 분야`,
       level: `전체 레벨`,
-      recruit: `모집 상태`,
+      recruit: `전체 상태`,
     }),
     [A, M] = (0, r.useState)(null),
     [P, I] = (0, r.useState)(``),
@@ -8387,7 +8396,7 @@ function M() {
             (!t || `${e.title} ${e.description}`.toLowerCase().includes(t)) &&
             (D.category === `전체 분야` || e.category === D.category) &&
             (D.level === `전체 레벨` || e.level === D.level) &&
-            (D.recruit === `모집 상태` || e.status === D.recruit)
+            (D.recruit === `전체 상태` || userCourseStatus(e.status) === D.recruit)
           );
         }),
       [h, D],
@@ -8489,12 +8498,12 @@ function M() {
                   (b(``),
                     S(`전체 분야`),
                     w(`전체 레벨`),
-                    E(`모집 상태`),
+                    E(`전체 상태`),
                     k({
                       search: ``,
                       category: `전체 분야`,
                       level: `전체 레벨`,
-                      recruit: `모집 상태`,
+                      recruit: `전체 상태`,
                     }));
                 },
                 go: $,
@@ -8503,7 +8512,7 @@ function M() {
               (0, i.jsx)(X, {
                 course: Z,
                 go: $,
-                apply: () => (Z.enrolled ? $(`learning`) : M(`apply`)),
+                apply: () => (Z.enrolled ? $(`lectureDetail`, Z.id) : M(`apply`)),
               }),
             e === `learning` &&
               (0, i.jsx)(te, {
@@ -9229,7 +9238,7 @@ function U({ go: e }) {
                           (0, i.jsx)(`td`, {
                             children: (0, i.jsx)(`span`, {
                               className: `badge blue-badge`,
-                              children: `모집 중`,
+                              children: `운영 중`,
                             }),
                           }),
                         ],
@@ -9397,7 +9406,7 @@ function K({
         filters={[
           { label: `분야`, value: r, onChange: a, options: [`전체 분야`, `직무역량`, `리더십`, `개발`, `커뮤니케이션`, `법정의무`, `AI·DX`] },
           { label: `레벨`, value: o, onChange: s, options: [`전체 레벨`, `레벨 1`, `레벨 2`, `레벨 3`] },
-          { label: `모집 상태`, value: c, onChange: l, options: [`모집 상태`, `모집 중`, `모집 마감`, `종료`] },
+          { label: `과정 상태`, value: c, onChange: l, options: [`전체 상태`, `오픈 전`, `운영 중`, `종료`] },
         ]}
         onSearch={u}
         onReset={d}
@@ -9412,7 +9421,7 @@ function K({
           <option>추천순</option>
           <option>인기순</option>
           <option>최신순</option>
-          <option>모집 마감순</option>
+          <option>종료 임박순</option>
         </select>
       </div>
       {e.length ? (
@@ -9457,31 +9466,37 @@ function J({ accent: e, label: t, compact: n = !1 }) {
 }
 function Y({ course: e, go: t }) {
   const base = [74, 87, 98, 64, 53, 126][e.id - 1] || 42;
-  const key = `sparkplus-like-${e.id}`;
-  const [liked, setLiked] = (0, r.useState)(
-    () => localStorage.getItem(key) === `true`,
+  const recommendKey = `sparkplus-recommend-${e.id}`;
+  const wishlistKey = `sparkplus-wishlist-${e.id}`;
+  const [recommended, setRecommended] = (0, r.useState)(
+    () => localStorage.getItem(recommendKey) === `true`,
   );
-  const toggle = () => {
-    const next = !liked;
-    setLiked(next);
-    localStorage.setItem(key, String(next));
+  const [wishlisted, setWishlisted] = (0, r.useState)(
+    () => localStorage.getItem(wishlistKey) === `true`,
+  );
+  const toggleRecommend = () => {
+    const next = !recommended;
+    setRecommended(next);
+    localStorage.setItem(recommendKey, String(next));
+  };
+  const toggleWishlist = () => {
+    const next = !wishlisted;
+    setWishlisted(next);
+    localStorage.setItem(wishlistKey, String(next));
   };
   return (
     <article className="course-card toss-card">
       <div className="visual-wrap">
         <J accent={e.accent} label={e.category} />
-        <span
-          className={`status-ribbon ${userRecruitTone(e.status)}`}
-        >
-          {e.status}
-        </span>
+        <CourseStatusBadge status={e.status} className="status-ribbon" />
         <button
-          className={`course-like ${liked ? `liked` : ``}`}
-          onClick={toggle}
-          aria-label="좋아요"
+          type="button"
+          className={`course-wishlist ${wishlisted ? `wishlisted` : ``}`}
+          onClick={toggleWishlist}
+          aria-label={wishlisted ? `찜 해제` : `강의 찜하기`}
+          title={wishlisted ? `찜 해제` : `강의 찜하기`}
         >
-          <Icon icon={FavouriteIcon} size={17} />
-          <span>{base + (liked ? 1 : 0)}</span>
+          <span aria-hidden="true">{wishlisted ? `♥` : `♡`}</span>
         </button>
       </div>
       <div className="course-card-body">
@@ -9494,6 +9509,15 @@ function Y({ course: e, go: t }) {
           <span>▣ {e.duration}</span>
           <span>수강 {48 + e.id * 11}명</span>
         </div>
+        <button
+          type="button"
+          className={`course-recommend ${recommended ? `recommended` : ``}`}
+          onClick={toggleRecommend}
+          title="이 강의를 추천해요"
+        >
+          <Icon icon={ThumbsUpIcon} size={15} />
+          <span>추천 {base + (recommended ? 1 : 0)}</span>
+        </button>
         {e.enrolled && <Z value={e.progress ?? 0} small={true} />}
         <div className="card-actions">
           <button className="secondary" onClick={() => t(`courseDetail`, e.id)}>
@@ -9515,13 +9539,20 @@ function Y({ course: e, go: t }) {
 function X({ course: e, go: t, apply: n, preview = false }) {
   let a = e.curriculum || k[e.id] || [],
     [o, s] = (0, r.useState)(`intro`),
-    likeKey = `sparkplus-like-${e.id}`,
-    [liked, setLiked] = (0, r.useState)(() => localStorage.getItem(likeKey) === `true`),
+    recommendKey = `sparkplus-recommend-${e.id}`,
+    wishlistKey = `sparkplus-wishlist-${e.id}`,
+    [recommended, setRecommended] = (0, r.useState)(() => localStorage.getItem(recommendKey) === `true`),
+    [wishlisted, setWishlisted] = (0, r.useState)(() => localStorage.getItem(wishlistKey) === `true`),
     baseLikes = [74, 87, 98, 64, 53, 126][e.id - 1] || 42;
-  const toggleLike = () => {
-    const next = !liked;
-    setLiked(next);
-    localStorage.setItem(likeKey, String(next));
+  const toggleRecommend = () => {
+    const next = !recommended;
+    setRecommended(next);
+    localStorage.setItem(recommendKey, String(next));
+  };
+  const toggleWishlist = () => {
+    const next = !wishlisted;
+    setWishlisted(next);
+    localStorage.setItem(wishlistKey, String(next));
   };
   return (0, i.jsxs)(`main`, {
     className: `page`,
@@ -9556,18 +9587,25 @@ function X({ course: e, go: t, apply: n, preview = false }) {
                       className: `badge blue-badge`,
                       children: e.category,
                     }),
-                    (0, i.jsx)(`span`, {
-                      className: `course-recruit-badge ${userRecruitTone(e.status)}`,
-                      children: e.status,
+                    (0, i.jsx)(CourseStatusBadge, { status: e.status }),
+                  ] }),
+                  (0, i.jsxs)(`div`, { className: `detail-course-actions`, children: [
+                    (0, i.jsxs)(`button`, {
+                      type: `button`,
+                      className: `course-recommend ${recommended ? `recommended` : ``}`,
+                      onClick: toggleRecommend,
+                      title: `이 강의를 추천해요`,
+                      children: [(0, i.jsx)(Icon, { icon: ThumbsUpIcon, size: 16 }), (0, i.jsx)(`span`, { children: `추천 ${baseLikes + (recommended ? 1 : 0)}` })],
+                    }),
+                    (0, i.jsx)(`button`, {
+                      type: `button`,
+                      className: `course-wishlist detail-wishlist ${wishlisted ? `wishlisted` : ``}`,
+                      onClick: toggleWishlist,
+                      title: wishlisted ? `찜 해제` : `강의 찜하기`,
+                      "aria-label": wishlisted ? `찜 해제` : `강의 찜하기`,
+                      children: (0, i.jsx)(`span`, { "aria-hidden": `true`, children: wishlisted ? `♥` : `♡` }),
                     }),
                   ] }),
-                  (0, i.jsxs)(`button`, {
-                    type: `button`,
-                    className: `detail-course-like ${liked ? `liked` : ``}`,
-                    onClick: toggleLike,
-                    "aria-label": `좋아요`,
-                    children: [(0, i.jsx)(Icon, { icon: FavouriteIcon, size: 17 }), (0, i.jsx)(`span`, { children: baseLikes + (liked ? 1 : 0) })],
-                  }),
                 ],
               }),
               (0, i.jsx)(`h1`, { children: e.title }),
@@ -9749,7 +9787,7 @@ function X({ course: e, go: t, apply: n, preview = false }) {
               (0, i.jsx)(`button`, {
                 className: `large course-action ${e.enrolled ? `enter-course` : `enroll-course`}`,
                 onClick: n,
-                children: e.enrolled ? `나의 학습으로 이동` : `수강 신청`,
+                children: e.enrolled ? `강의실 입장` : `수강 신청`,
               }),
               (0, i.jsx)(`small`, {
                 children: `누구나 자유롭게 신청하고 바로 학습할 수 있습니다.`,
