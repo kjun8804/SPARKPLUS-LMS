@@ -9764,6 +9764,44 @@ function ee({ kind: e, course: t, close: n, enroll: r, goLearning: a }) {
     }),
   });
 }
+function LearningCourseTable({ courses, completed = false, completionDates = [], go, issueCertificate }) {
+  const lessonTotals = { 1: 5, 2: 6, 3: 6, 4: 5, 5: 5, 6: 6 };
+  return <div className="my-learning-table-wrap">
+    <table className="my-learning-table">
+      <thead>
+        <tr>
+          <th>교육과정</th>
+          <th>교육 기간</th>
+          <th>진도율</th>
+          <th>강의 회차</th>
+          <th>설문 제출</th>
+          <th>학습 상태</th>
+          <th>수료일</th>
+        </tr>
+      </thead>
+      <tbody>
+        {courses.map((course, index) => {
+          const progress = completed ? 100 : course.progress ?? 0;
+          const totalLessons = lessonTotals[course.id] || k[course.id]?.length || 5;
+          const completedLessons = completed ? totalLessons : Math.min(totalLessons, Math.floor((progress / 100) * totalLessons));
+          return <tr key={course.id}>
+            <td className="my-learning-course-cell">
+              <button onClick={() => go(completed ? `courseDetail` : `lectureDetail`, course.id)}>{course.title}</button>
+              <small>{course.category}</small>
+              {completed && <button className="my-learning-certificate" onClick={() => issueCertificate(course)}>수료증 발급</button>}
+            </td>
+            <td>{course.period}</td>
+            <td className="my-learning-progress-cell"><b>{progress}%</b><span><i style={{ width: `${progress}%` }} /></span></td>
+            <td className="my-learning-lessons"><b>{completedLessons}/{totalLessons}</b></td>
+            <td>{completed ? (index === 0 ? `제출 완료` : `설문 없음`) : `미제출`}</td>
+            <td><span className={`my-learning-status ${completed ? `complete` : `active`}`}>{completed ? `수료` : `학습 중`}</span></td>
+            <td>{completed ? completionDates[index] : `-`}</td>
+          </tr>;
+        })}
+      </tbody>
+    </table>
+  </div>;
+}
 function te({ courses: e, go: t, notify: n }) {
   let [a, o] = (0, r.useState)(`active`),
     [s, c] = (0, r.useState)(null),
@@ -9832,162 +9870,10 @@ function te({ courses: e, go: t, notify: n }) {
                   (0, i.jsx)(Z, { value: d }),
                 ],
               }),
-              (0, i.jsx)(`div`, {
-                className: `learning-list`,
-                children: e.map((e) =>
-                  (0, i.jsxs)(
-                    `article`,
-                    {
-                      className: `learning-card`,
-                      children: [
-                        (0, i.jsx)(J, { accent: e.accent, label: e.category }),
-                        (0, i.jsxs)(`div`, {
-                          className: `learning-info`,
-                          children: [
-                            (0, i.jsxs)(`div`, {
-                              className: `learning-title`,
-                              children: [
-                                (0, i.jsx)(`span`, {
-                                  className: `badge blue-badge`,
-                                  children: e.category,
-                                }),
-                                (0, i.jsxs)(`span`, {
-                                  className: `days`,
-                                  children: [`D-`, e.id === 5 ? 17 : 56],
-                                }),
-                              ],
-                            }),
-                            (0, i.jsx)(`h2`, { children: e.title }),
-                            (0, i.jsxs)(`p`, {
-                              children: [
-                                `교육 기간 `,
-                                e.period,
-                                ` · 최근 학습일 2026.08.05`,
-                              ],
-                            }),
-                            (0, i.jsxs)(`div`, {
-                              className: `learning-course-metrics`,
-                              children: [
-                                (0, i.jsxs)(`div`, {
-                                  className: `learning-progress-metric`,
-                                  children: [
-                                    (0, i.jsxs)(`span`, { children: [`진도율 `, (0, i.jsx)(`b`, { children: `${e.progress ?? 0}%` })] }),
-                                    (0, i.jsx)(Z, { value: e.progress ?? 0 }),
-                                  ],
-                                }),
-                                (0, i.jsxs)(`div`, {
-                                  className: `learning-lesson-metric`,
-                                  children: [
-                                    (0, i.jsx)(`span`, { children: `강의 회차` }),
-                                    (0, i.jsxs)(`b`, { children: [Math.min(k[e.id]?.length || 6, Math.floor(((e.progress ?? 0) / 100) * (k[e.id]?.length || 6))), ` / `, k[e.id]?.length || 6, (0, i.jsx)(`small`, { children: ` 차시` })] }),
-                                  ],
-                                }),
-                              ],
-                            }),
-                            (0, i.jsxs)(`div`, {
-                              className: `learning-actions`,
-                              children: [
-                                (0, i.jsx)(`button`, {
-                                  className: `secondary`,
-                                  onClick: () => t(`courseDetail`, e.id),
-                                  children: `과정 정보`,
-                                }),
-                                (0, i.jsx)(`button`, {
-                                  className: `primary`,
-                                  onClick: () => t(`lectureDetail`, e.id),
-                                  children: `강의실 입장`,
-                                }),
-                              ],
-                            }),
-                          ],
-                        }),
-                      ],
-                    },
-                    e.id,
-                  ),
-                ),
-              }),
+              (0, i.jsx)(LearningCourseTable, { courses: e, go: t, issueCertificate: c }),
             ],
           })
-        : (0, i.jsx)(`div`, {
-            className: `completed-list`,
-            children: l.map((e, t) =>
-              (0, i.jsxs)(
-                `article`,
-                {
-                  className: `completed-card`,
-                  children: [
-                    (0, i.jsx)(J, { accent: e.accent, label: e.category }),
-                    (0, i.jsxs)(`div`, {
-                      className: `completed-info`,
-                      children: [
-                        (0, i.jsxs)(`div`, {
-                          children: [
-                            (0, i.jsx)(`span`, {
-                              className: `badge completed-badge`,
-                              children: `수강 완료`,
-                            }),
-                            (0, i.jsx)(`span`, {
-                              className: `category-text`,
-                              children: e.category,
-                            }),
-                          ],
-                        }),
-                        (0, i.jsx)(`h2`, { children: e.title }),
-                        (0, i.jsxs)(`dl`, {
-                          children: [
-                            (0, i.jsxs)(`div`, {
-                              children: [
-                                (0, i.jsx)(`dt`, { children: `교육 기간` }),
-                                (0, i.jsx)(`dd`, { children: e.period }),
-                              ],
-                            }),
-                            (0, i.jsxs)(`div`, {
-                              children: [
-                                (0, i.jsx)(`dt`, { children: `수료일` }),
-                                (0, i.jsx)(`dd`, { children: u[t] }),
-                              ],
-                            }),
-                            (0, i.jsxs)(`div`, {
-                              children: [
-                                (0, i.jsx)(`dt`, { children: `총 학습 시간` }),
-                                (0, i.jsx)(`dd`, { children: e.duration }),
-                              ],
-                            }),
-                            (0, i.jsxs)(`div`, {
-                              children: [
-                                (0, i.jsx)(`dt`, { children: `진도율` }),
-                                (0, i.jsx)(`dd`, { children: `100%` }),
-                              ],
-                            }),
-                            (0, i.jsxs)(`div`, {
-                              className: `completed-lesson-row`,
-                              children: [
-                                (0, i.jsx)(`dt`, { children: `강의 회차` }),
-                                (0, i.jsxs)(`dd`, { children: [k[e.id]?.length || 6, ` / `, k[e.id]?.length || 6, (0, i.jsx)(`small`, { children: ` 차시` })] }),
-                              ],
-                            }),
-                            (0, i.jsxs)(`div`, {
-                              children: [
-                                (0, i.jsx)(`dt`, { children: `설문 제출` }),
-                                (0, i.jsx)(`dd`, { children: t === 1 ? `제출 완료` : `설문 없음` }),
-                              ],
-                            }),
-                          ],
-                        }),
-                        (0, i.jsx)(`button`, {
-                          className: `secondary certificate-button`,
-                          onClick: () => c(e),
-                          children: `수료증 발급`,
-                        }),
-                      ],
-                    }),
-                  ],
-                },
-                e.id,
-              ),
-            ),
-          }),
+        : (0, i.jsx)(LearningCourseTable, { courses: l, completed: true, completionDates: u, go: t, issueCertificate: c }),
       s &&
         (0, i.jsx)(`div`, {
           className: `modal-backdrop`,
