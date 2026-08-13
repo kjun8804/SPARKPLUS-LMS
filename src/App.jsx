@@ -8952,32 +8952,27 @@ function L({ courses: e, go: t, notices = j, user = CURRENT_USER }) {
         </article>
 
         <article className="home-ranking">
+          <div className="home-reward-confetti" aria-hidden="true"><i /><i /><i /><i /><i /><i /></div>
           <div className="home-card-head">
             <div>
-              <span className="home-icon lavender">
-                <Icon icon={RankingIcon} />
+              <span className="home-reward-title-icon">
+                <RewardObject type="trophy" tone="gold" />
               </span>
               <div>
                 <h2>이달의 학습</h2>
-                <small>8월 TOP 3</small>
+                <small>8월 Learning League TOP 3</small>
               </div>
             </div>
-            <button onClick={() => t(`learning`)}>전체 보기</button>
+            <button className="home-reward-cta" onClick={() => t(`userRewards`, `ranking`)}>전체 보기 <Icon icon={ArrowRight01Icon} size={14} /></button>
           </div>
-          <div className="home-ranking-list">
-            {ranking.map((person) => (
-              <div
-                className={`home-rank-row medal-${person.rank}`}
-                key={person.rank}
-              >
-                <span>
-                  <Icon icon={Medal01Icon} size={21} />
-                </span>
-                <div>
-                  <b>{person.name}</b>
-                  <small>{person.dept}</small>
-                </div>
-                <strong>{person.score.toLocaleString()}</strong>
+          <div className="home-mini-podium">
+            {[ranking[1], ranking[0], ranking[2]].map((person) => (
+              <div className={`home-podium-player rank-${person.rank}`} key={person.rank}>
+                <div className="home-podium-avatar"><RewardAvatar tone={person.rank === 1 ? `coral` : person.rank === 2 ? `indigo` : `mint`} crown={person.rank === 1} /><span>{person.rank}</span></div>
+                <b>{person.name}</b>
+                <small>{person.dept}</small>
+                <strong>{person.score.toLocaleString()}P</strong>
+                <i><span>{person.rank}</span></i>
               </div>
             ))}
           </div>
@@ -9052,30 +9047,27 @@ function L({ courses: e, go: t, notices = j, user = CURRENT_USER }) {
           </div>
         </article>
         <article className="home-badge">
+          <div className="home-reward-confetti badge-confetti" aria-hidden="true"><i /><i /><i /><i /></div>
           <div className="home-card-head">
             <div>
-              <span className="home-icon gold">
-                <Icon icon={Award01Icon} />
+              <span className="home-reward-title-icon badge-title-icon">
+                <RewardObject type="medal" tone="violet" />
               </span>
               <div>
                 <h2>나의 학습 뱃지</h2>
-                <small>이번 달 획득</small>
+                <small>획득한 보상을 모아보세요</small>
               </div>
             </div>
             <button className="home-view-all" onClick={() => t(`userRewards`, `badges`)}>
               전체보기 <Icon icon={ArrowRight01Icon} size={15} />
             </button>
           </div>
-          <div className="home-badge-main">
-            <span className="achievement-badge-object">
-              <Icon icon={Award01Icon} size={38} />
-            </span>
-            <b>이달의 학습 TOP 3</b>
-            <p>꾸준한 학습으로 얻은 뱃지예요</p>
+          <div className="home-badge-preview">
+            {[[`medal`,`gold`,`이달의 TOP 3`],[`trophy`,`blue`,`수료 마스터`],[`star`,`mint`,`필수교육 완료`]].map(([type,tone,title]) => <div className={tone} key={title}><span><RewardObject type={type} tone={tone} /></span><b>{title}</b><small>획득 완료</small></div>)}
           </div>
           <div className="home-next-badge">
-            <span>다음 순위까지</span>
-            <b>160점</b>
+            <span><Icon icon={SparklesIcon} size={14} /> 다음 뱃지까지</span>
+            <b>160P</b>
           </div>
         </article>
       </section>
