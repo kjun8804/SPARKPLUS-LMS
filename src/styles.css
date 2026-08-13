@@ -17791,13 +17791,18 @@ html[data-theme="dark"] .user-portal :is(.my-rank-hero,.user-point-hero,.user-po
 @media(max-width:560px){.user-reward-toolbar,.user-reward-section-head{align-items:flex-start;flex-direction:column}.user-reward-toolbar select{width:100%}.my-rank-hero{padding:24px}.reward-trophy{width:72px;height:72px;border-radius:24px}.my-rank-hero strong{font-size:35px}.point-orbit{display:none}.user-ranking-list>div{grid-template-columns:25px 34px 1fr auto;padding:0 14px}.user-badge-card{min-height:0}}
 @media(prefers-reduced-motion:reduce){.reward-trophy{animation:none}.user-podium-card:hover,.user-badge-card:hover{transform:none}}
 
-/* Learner management: neutral department cards and course comparison */
+/* Learner management: pastel departments and learning overview */
 .learner-department-card.department-card,
 .learner-department-card.department-card:nth-child(n) {
-  background:var(--ui-surface)!important;
   border-color:var(--ui-line)!important;
   box-shadow:0 6px 24px rgba(0,27,55,.045)!important;
 }
+.learner-department-card.department-card:nth-child(1) { background:#f8fbff!important; }
+.learner-department-card.department-card:nth-child(2) { background:#fafaff!important; }
+.learner-department-card.department-card:nth-child(3) { background:#fcfaff!important; }
+.learner-department-card.department-card:nth-child(4) { background:#f8fcfb!important; }
+.learner-department-card.department-card:nth-child(5) { background:#f8fbfd!important; }
+.learner-department-card.department-card:nth-child(6) { background:#fafbfd!important; }
 .learner-department-card.department-card:hover {
   border-color:#c8dced!important;
   box-shadow:0 10px 28px rgba(0,27,55,.075)!important;
@@ -17808,11 +17813,13 @@ html[data-theme="dark"] .user-portal :is(.my-rank-hero,.user-point-hero,.user-po
 }
 .learner-department-card .department-icon,
 .learner-department-card .department-icon:is(.blue,.violet,.coral,.green,.amber,.sky) {
-  background:#e8f3ff!important;
-  color:#3979b6!important;
+  background:rgba(224,237,249,.72)!important;
+  color:#5c83a7!important;
 }
-.learner-department-metrics > div:first-child b { color:#3182f6; }
-.learner-department-metrics .completion-rate b { color:#68a9df; }
+.learner-department-card .department-card-title h3 { font-weight:650!important; }
+.learner-department-metrics b { font-size:20px!important; }
+.learner-department-metrics > div:first-child b { color:#5f89b0; }
+.learner-department-metrics .completion-rate b { color:#86abc7; }
 .department-metric-bar {
   display:block;
   width:100%;
@@ -17820,17 +17827,58 @@ html[data-theme="dark"] .user-portal :is(.my-rank-hero,.user-point-hero,.user-po
   overflow:hidden;
   margin-top:10px;
   border-radius:999px;
-  background:#e9eef4;
+  background:rgba(111,143,172,.12);
 }
 .department-metric-bar i { display:block; height:100%; border-radius:inherit; }
-.department-metric-bar.progress i { background:#3182f6; }
-.department-metric-bar.completion i { background:#7db9e8; }
+.department-metric-bar.progress i { background:#7198ba; }
+.department-metric-bar.completion i { background:#9ab9d0; }
 .learner-department-grid + .learner-list-head { margin-top:68px!important; }
 html[data-theme="dark"] .learner-department-card.department-card,
 html[data-theme="dark"] .learner-department-card.department-card:nth-child(n) {
   background:var(--ui-surface)!important;
   box-shadow:0 8px 24px rgba(0,0,0,.2)!important;
 }
+.learner-overview-panel { min-height:290px; }
+.learner-donut-grid {
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  align-items:center;
+  gap:28px;
+  min-height:190px;
+  padding:8px 14px 0;
+}
+.learner-donut-item {
+  display:flex;
+  align-items:center;
+  flex-direction:column;
+  min-width:0;
+  text-align:center;
+}
+.learner-donut-item + .learner-donut-item { border-left:1px solid var(--ui-line); }
+.learner-donut {
+  --donut-ring:#7198ba;
+  position:relative;
+  display:grid;
+  width:116px;
+  height:116px;
+  place-items:center;
+  margin-bottom:15px;
+  border-radius:50%;
+  background:conic-gradient(var(--donut-ring) var(--donut-value),#edf2f6 0);
+}
+.learner-donut.completion { --donut-ring:#9ab9d0; }
+.learner-donut::before {
+  position:absolute;
+  inset:10px;
+  border-radius:inherit;
+  background:var(--ui-surface);
+  content:"";
+}
+.learner-donut > div { position:relative; z-index:1; }
+.learner-donut strong { color:var(--ui-text); font-size:21px; font-weight:700; letter-spacing:-.5px; }
+.learner-donut-item > b { color:var(--ui-text); font-size:14px; font-weight:650; }
+.learner-donut-item > small { margin-top:6px; color:var(--ui-sub); font-size:11px; }
+html[data-theme="dark"] .learner-donut { background:conic-gradient(var(--donut-ring) var(--donut-value),rgba(137,164,188,.16) 0); }
 .learner-course-bars { display:grid; gap:16px; margin-top:20px; }
 .learner-course-bar-row {
   position:relative;
@@ -17877,4 +17925,8 @@ html[data-theme="dark"] .learner-department-card.department-card:nth-child(n) {
 .learner-course-bar-row:focus .learner-course-tooltip { display:block; }
 @media(max-width:850px) {
   .learner-course-bar-row { grid-template-columns:minmax(150px,.9fr) minmax(180px,1.4fr) 44px; gap:11px; }
+}
+@media(max-width:620px) {
+  .learner-donut-grid { grid-template-columns:1fr; gap:22px; }
+  .learner-donut-item + .learner-donut-item { border-top:1px solid var(--ui-line); border-left:0; padding-top:22px; }
 }

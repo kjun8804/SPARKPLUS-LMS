@@ -3149,6 +3149,11 @@ function LearnerProfilePage({ learner, onBack }) {
         completedAt: completed ? `2026.08.${String(8 - index).padStart(2, `0`)}` : null,
       };
     });
+  const requiredCourseTotal = 5;
+  const requiredCourseCompleted = Math.min(requiredCourseTotal, learner.completed);
+  const overallCompletionRate = learner.courses
+    ? Math.round((learner.completed / learner.courses) * 100)
+    : 0;
   return (
     <section className="learner-profile-page-full">
       <div className="breadcrumb admin-detail-breadcrumb"><button onClick={onBack}>홈</button><span>›</span><button onClick={onBack}>학습자 관리</button><span>›</span>{learner.name}</div>
@@ -3191,20 +3196,34 @@ function LearnerProfilePage({ learner, onBack }) {
         </div>
       </div>
       <div className="learner-profile-grid">
-        <article className="panel learner-progress-history">
+        <article className="panel learner-progress-history learner-overview-panel">
           <div className="panel-head">
             <div>
-              <h2>과정별 학습 진행 현황</h2>
-              <p>과정별 현재 진도율을 비교해보세요.</p>
+              <h2>학습 현황</h2>
+              <p>필수교육 이수와 전체 수료 상태를 확인하세요.</p>
             </div>
           </div>
-          <div className="learner-course-bars">
-            {learningCourses.map((course, index) => <div className="learner-course-bar-row" key={`${course.id}-chart-${index}`} tabIndex="0">
-              <b title={course.title}>{course.title}</b>
-              <span className={`learner-course-bar ${course.learningProgress === 100 ? `complete` : course.learningProgress < 40 ? `low` : `active`}`}><i style={{ width: `${course.learningProgress}%` }} /></span>
-              <strong>{course.learningProgress}%</strong>
-              <span className="learner-course-tooltip"><b>{course.title}</b><small>진도율 <strong>{course.learningProgress}%</strong></small><small>강의 회차 <strong>{course.completedLessons}/{course.totalLessons}</strong></small></span>
-            </div>)}
+          <div className="learner-donut-grid">
+            <div className="learner-donut-item">
+              <div
+                className="learner-donut required"
+                style={{ "--donut-value": `${(requiredCourseCompleted / requiredCourseTotal) * 360}deg` }}
+              >
+                <div><strong>{requiredCourseCompleted} / {requiredCourseTotal}</strong></div>
+              </div>
+              <b>필수교육 이수</b>
+              <small>{requiredCourseTotal}개 중 {requiredCourseCompleted}개 완료</small>
+            </div>
+            <div className="learner-donut-item">
+              <div
+                className="learner-donut completion"
+                style={{ "--donut-value": `${overallCompletionRate * 3.6}deg` }}
+              >
+                <div><strong>{overallCompletionRate}%</strong></div>
+              </div>
+              <b>전체 수료율</b>
+              <small>{learner.courses}개 과정 중 {learner.completed}개 수료</small>
+            </div>
           </div>
         </article>
         <article className="panel learner-badges-panel">
