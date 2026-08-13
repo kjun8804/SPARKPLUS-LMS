@@ -9883,12 +9883,12 @@ function LearningCourseTable({ courses, completed = false, completionDates = [],
             <td className="my-learning-course-cell">
               <button onClick={() => go(completed ? `courseDetail` : `lectureDetail`, course.id)}>{course.title}</button>
               <small>{course.category}</small>
-              {completed && <button className="my-learning-certificate" onClick={() => issueCertificate(course)}>수료증 발급</button>}
+              {completed && <button className="my-learning-certificate" onClick={() => issueCertificate(course)}><Icon icon={Award01Icon} size={14} />수료증 발급 <span>→</span></button>}
             </td>
             <td>{course.period}</td>
             <td className="my-learning-progress-cell"><b>{progress}%</b><span><i style={{ width: `${progress}%` }} /></span></td>
             <td className="my-learning-lessons"><b>{completedLessons}/{totalLessons}</b></td>
-            <td>{completed ? (index === 0 ? `제출 완료` : `설문 없음`) : `미제출`}</td>
+            <td><span className={`my-learning-survey ${completed ? (index === 0 ? `submitted` : `none`) : `pending`}`}>{completed ? (index === 0 ? `제출 완료` : `설문 없음`) : `미제출`}</span></td>
             <td><span className={`my-learning-status ${completed ? `complete` : `active`}`}>{completed ? `수료` : `학습 중`}</span></td>
             <td>{completed ? completionDates[index] : `-`}</td>
           </tr>;
@@ -9975,7 +9975,7 @@ function te({ courses: e, go: t, notify: n }) {
       e.reduce((e, t) => e + (t.progress ?? 0), 0) / Math.max(e.length, 1),
     );
   return (0, i.jsxs)(`main`, {
-    className: `page`,
+    className: `page my-learning-page`,
     children: [
       (0, i.jsx)(PageHeader, {
         kicker: `나의 학습`,
@@ -10010,7 +10010,7 @@ function te({ courses: e, go: t, notify: n }) {
               (0, i.jsxs)(`div`, {
                 className: `learning-summary`,
                 children: [
-                  (0, i.jsxs)(`span`, { children: [`수강 과정 총 `, e.length, `개`] }),
+                  (0, i.jsxs)(`span`, { children: [`수강 중인 과정 `, e.length, `개`] }),
                   (0, i.jsxs)(`b`, { children: [`평균 진도율 `, d, `%`] }),
                   (0, i.jsx)(Z, { value: d }),
                 ],
