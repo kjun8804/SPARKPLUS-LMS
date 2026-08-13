@@ -1,6 +1,7 @@
 import * as r from "react";
 import { jsx, jsxs, Fragment } from "react/jsx-runtime";
 import { HugeiconsIcon } from "@hugeicons/react";
+import hiHelloAnimation from "./assets/hi-hello.json";
 import {
   Search01Icon,
   FilterIcon,
@@ -50,11 +51,43 @@ function Icon({ icon, size = 18, className = ``, strokeWidth = 1.7 }) {
     />
   );
 }
+function lottiePath(shape) {
+  if (!shape?.v?.length) return ``;
+  const point = (value) => `${Number(value[0].toFixed(3))} ${Number(value[1].toFixed(3))}`;
+  let path = `M ${point(shape.v[0])}`;
+  for (let index = 1; index < shape.v.length; index += 1) {
+    const previous = index - 1;
+    const c1 = [shape.v[previous][0] + shape.o[previous][0], shape.v[previous][1] + shape.o[previous][1]];
+    const c2 = [shape.v[index][0] + shape.i[index][0], shape.v[index][1] + shape.i[index][1]];
+    path += ` C ${point(c1)} ${point(c2)} ${point(shape.v[index])}`;
+  }
+  if (shape.c) {
+    const last = shape.v.length - 1;
+    path += ` C ${point([shape.v[last][0] + shape.o[last][0], shape.v[last][1] + shape.o[last][1]])} ${point([shape.v[0][0] + shape.i[0][0], shape.v[0][1] + shape.i[0][1]])} ${point(shape.v[0])} Z`;
+  }
+  return path;
+}
 function HomeGreetingSticker() {
-  return <svg viewBox="-380 -430 760 860" role="img" aria-label="손 흔드는 인사 스티커">
-    <g className="home-greeting-hand">
-      <path fill="#efcbbb" d="M302.614-40.484C272.385-53.858 229.199-35.931 198.642 7.409c-20.069 28.454-25.98 68.971-52.338 73.195-10.068 1.62-15.538-4.506-18.383-13.328-2.999-14.886-2.342-37.892 3.215-70.067l59.975-269.561c4.772-20.598-6.412-40.538-33.335-47.039-26.922-6.501-47.171 6.697-51.964 27.295L52.272-47.685C41.481 6.293 21.474-3.514 26.311-64.649v-.022L41.655-351.24c1.248-22.151-15.782-40.253-40.954-41.216-25.172-.963-43.317 14.139-44.609 36.269L-58.53-62.679c-3.13 59.253-24.34 36.926-28.937-6l-34.015-237.45c-3.48-22.392-24.472-37.868-49.644-33.84-25.172 4.05-40.384 24.866-36.904 47.258l32.724 217.006c12.98 82.849-3.985 105.789-31.915 15.826l-34.89-131.879c-5.691-21.167-26.551-34.299-52.752-26.945-26.201 7.355-37.496 28.433-31.827 49.6l34.103 123.957c14.25 89.242 14.25 124.458 14.25 185.9 0 61.446 28.259 251.747 244.411 251.747 216.154 0 260.607-219.571 262.667-233.468 0 0 2.692-32.397 25.303-62.713 32.152-43.1 54.722-69.079 68.403-84.621 6.936-7.858 13.681-37.364-19.833-52.183Z"/>
-      <path fill="#f7bba3" d="M139.235 80.388c-6.567-2.671-12.124-9.545-12.784-24.497-41.412 5.669-97.426 17.27-140.525 59.431-55.948 54.696-65.49 113.821-65.031 153.374.372 31.89 17.774 46.996 22.874-.262 6.413-59.693 49.95-178.24 195.466-188.046Z"/>
+  const handRef = r.useRef(null);
+  const layer = hiHelloAnimation.layers[0];
+  const paths = layer.shapes.map((group) => ({
+    d: lottiePath(group.it.find((item) => item.ty === `sh`)?.ks?.k),
+    fill: group.it.find((item) => item.ty === `fl`)?.c?.k,
+  }));
+  r.useEffect(() => {
+    if (!handRef.current || matchMedia(`(prefers-reduced-motion: reduce)`).matches) return;
+    const rotation = layer.ks.r.k;
+    const endFrame = hiHelloAnimation.op - hiHelloAnimation.ip;
+    const animation = handRef.current.animate(
+      rotation.map((frame) => ({ transform: `rotate(${frame.s[0]}deg)`, offset: frame.t / endFrame })),
+      { duration: (endFrame / hiHelloAnimation.fr) * 1000, iterations: Infinity, easing: `ease-in-out` },
+    );
+    return () => animation.cancel();
+  }, []);
+  const color = (values) => `rgb(${values.slice(0, 3).map((value) => Math.round(value * 255)).join(`,`)})`;
+  return <svg viewBox="-380 -430 760 860" role="img" aria-label="손 흔드는 인사 애니메이션">
+    <g ref={handRef} className="home-greeting-hand">
+      {paths.map((path, index) => <path key={index} fill={color(path.fill)} d={path.d} />)}
     </g>
   </svg>;
 }
@@ -8369,7 +8402,7 @@ function M() {
           },
         })
       : (0, i.jsxs)(`div`, {
-          className: `app-shell`,
+          className: `app-shell user-portal`,
           children: [
             (0, i.jsx)(F, {
               role: n,
@@ -8962,7 +8995,7 @@ function L({ courses: e, go: t, notices = j }) {
             </div>
           </div>
           <div className="home-badge-main">
-            <span>
+            <span className="achievement-badge-object">
               <Icon icon={Award01Icon} size={38} />
             </span>
             <b>이달의 학습 TOP 3</b>

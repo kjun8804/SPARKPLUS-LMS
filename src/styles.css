@@ -6594,14 +6594,7 @@ b {
   pointer-events:none;
 }
 .home-welcome-sticker > div,.home-welcome-sticker svg { width:100%!important; height:100%!important; }
-.home-greeting-hand { transform-box:fill-box; transform-origin:50% 92%; animation:home-hand-wave 2s ease-in-out infinite; }
-@keyframes home-hand-wave {
-  0%,42%,100% { transform:rotate(0deg); }
-  8% { transform:rotate(12deg); }
-  16% { transform:rotate(-14deg); }
-  24% { transform:rotate(10deg); }
-  32% { transform:rotate(-8deg); }
-}
+.home-greeting-hand { transform-box:fill-box; transform-origin:50% 92%; }
 .home-quick-stats {
   display: flex;
   align-items: center;
@@ -17469,4 +17462,147 @@ html[data-theme="dark"] {
 @media (prefers-reduced-motion:reduce) {
   :is(.app-shell,.admin-portal) button,.course-card,.toss-card { transition:none!important; }
   :is(.app-shell,.admin-portal) button:hover,.course-card:hover,.toss-card:hover { transform:none!important; }
+}
+
+/* User-only friendly depth: rounded, soft and restrained. Admin remains unchanged. */
+.user-portal {
+  --user-blue-top:#66a9f4;
+  --user-blue-bottom:#3f83d2;
+  --user-card-shadow:0 10px 28px rgba(36,79,124,.075),0 2px 7px rgba(36,79,124,.045);
+  --user-card-hover:0 16px 34px rgba(36,79,124,.11),0 4px 10px rgba(36,79,124,.055);
+}
+.user-portal .home-minimal {
+  position:relative;
+}
+.user-portal .home-welcome-sticker {
+  overflow:visible;
+  filter:drop-shadow(0 10px 10px rgba(67,89,116,.11));
+}
+.user-portal .home-welcome-sticker svg {
+  overflow:visible;
+}
+.user-portal :is(.home-continue,.home-ranking,.home-popular-section,.home-notices,.home-badge) {
+  border-color:rgba(113,143,174,.19);
+  box-shadow:var(--user-card-shadow);
+  transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease;
+}
+.user-portal :is(.home-continue,.home-ranking,.home-popular-section,.home-notices,.home-badge):hover {
+  transform:translateY(-2px);
+  border-color:rgba(83,132,183,.26);
+  box-shadow:var(--user-card-hover);
+}
+.user-portal .home-continue {
+  background:
+    radial-gradient(circle at 92% 14%,rgba(145,198,255,.19),transparent 23%),
+    linear-gradient(135deg,#f3f8ff 0%,#fff 64%);
+}
+.user-portal .home-icon,
+.user-portal .home-section-label > span {
+  border:1px solid rgba(255,255,255,.72);
+  background-image:linear-gradient(145deg,rgba(255,255,255,.76),rgba(255,255,255,.16));
+  box-shadow:0 5px 12px rgba(48,83,119,.09),inset 0 1px 0 rgba(255,255,255,.84);
+}
+.user-portal .home-icon.blue { background-color:#e6f2ff; }
+.user-portal .home-icon.lavender { background-color:#efebff; }
+.user-portal .home-icon.mint { background-color:#e4f7f1; }
+.user-portal .home-icon.gold { background-color:#fff2cf; }
+.user-portal :is(.primary,.search-filter-submit,.filter-search-button):not(.danger) {
+  background:linear-gradient(180deg,var(--user-blue-top),var(--user-blue-bottom))!important;
+  box-shadow:0 5px 12px rgba(49,108,170,.18),inset 0 1px 0 rgba(255,255,255,.28)!important;
+}
+.user-portal :is(.primary,.search-filter-submit,.filter-search-button):not(.danger):hover {
+  box-shadow:0 9px 18px rgba(49,108,170,.22),inset 0 1px 0 rgba(255,255,255,.32)!important;
+}
+.user-portal :is(.secondary,.search-filter-reset) {
+  border-color:rgba(117,142,168,.24);
+  background:linear-gradient(180deg,#fff,#f8fafc);
+}
+.user-portal .course-card {
+  border-color:rgba(113,143,174,.2)!important;
+  box-shadow:var(--user-card-shadow)!important;
+  transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease!important;
+}
+.user-portal .course-card:hover {
+  transform:translateY(-3px)!important;
+  border-color:rgba(71,126,181,.32)!important;
+  box-shadow:var(--user-card-hover)!important;
+}
+.user-portal :is(.learning-card,.completed-card,.learning-summary,.lecture-hero,.notice-reader,.profile-panel) {
+  border-color:rgba(113,143,174,.19)!important;
+  box-shadow:var(--user-card-shadow)!important;
+}
+.user-portal :is(.learning-card,.completed-card) {
+  transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease!important;
+}
+.user-portal :is(.learning-card,.completed-card):hover {
+  transform:translateY(-2px);
+  border-color:rgba(71,126,181,.28)!important;
+  box-shadow:var(--user-card-hover)!important;
+}
+.user-portal .course-card .course-visual {
+  position:relative;
+  box-shadow:inset 0 -1px 0 rgba(27,57,88,.07);
+}
+.user-portal .course-card .course-visual::after {
+  position:absolute;
+  inset:0;
+  border-radius:inherit;
+  background:linear-gradient(145deg,rgba(255,255,255,.16),transparent 38%,rgba(24,72,117,.055));
+  pointer-events:none;
+  content:"";
+}
+.user-portal .home-popular-list > button {
+  border-radius:16px;
+  transition:transform .18s ease,background-color .18s ease,box-shadow .18s ease;
+}
+.user-portal .home-popular-list > button:hover {
+  z-index:1;
+  background:#f7fbff;
+  box-shadow:0 8px 18px rgba(44,83,122,.075);
+  transform:translateY(-1px);
+}
+.user-portal .achievement-badge-object {
+  position:relative;
+  background:
+    radial-gradient(circle at 35% 24%,rgba(255,255,255,.88),transparent 18%),
+    linear-gradient(145deg,#ffe7a3,#efbc50)!important;
+  color:#9b6a08!important;
+  border:1px solid rgba(184,130,23,.15);
+  box-shadow:0 9px 18px rgba(155,106,8,.16),inset 0 1px 0 rgba(255,255,255,.62)!important;
+  animation:user-achievement-pop .8s cubic-bezier(.2,.8,.25,1) both;
+}
+.user-portal .achievement-badge-object::before,
+.user-portal .achievement-badge-object::after {
+  position:absolute;
+  width:7px;
+  height:7px;
+  border-radius:50%;
+  background:#ffd66f;
+  box-shadow:0 0 0 4px rgba(255,214,111,.16);
+  content:"";
+  opacity:0;
+  animation:user-achievement-spark 1.1s .3s ease-out 1;
+}
+.user-portal .achievement-badge-object::before { top:-5px; right:1px; }
+.user-portal .achievement-badge-object::after { bottom:2px; left:-7px; animation-delay:.42s; }
+@keyframes user-achievement-pop {
+  0% { opacity:0; transform:translateY(5px) scale(.9); }
+  65% { opacity:1; transform:translateY(-2px) scale(1.035); }
+  100% { opacity:1; transform:none; }
+}
+@keyframes user-achievement-spark {
+  0% { opacity:0; transform:scale(.4); }
+  35% { opacity:1; }
+  100% { opacity:0; transform:translateY(-9px) scale(1.15); }
+}
+html[data-theme="dark"] .user-portal :is(.home-continue,.home-ranking,.home-popular-section,.home-notices,.home-badge,.course-card) {
+  border-color:rgba(133,164,196,.2)!important;
+  box-shadow:0 10px 28px rgba(0,0,0,.2)!important;
+}
+html[data-theme="dark"] .user-portal .home-continue {
+  background:linear-gradient(135deg,rgba(42,74,108,.42),var(--ui-surface) 64%);
+}
+@media (prefers-reduced-motion:reduce) {
+  .user-portal :is(.achievement-badge-object,.achievement-badge-object::before,.achievement-badge-object::after) { animation:none!important; }
+  .user-portal :is(.home-continue,.home-ranking,.home-popular-section,.home-notices,.home-badge):hover { transform:none; }
 }
