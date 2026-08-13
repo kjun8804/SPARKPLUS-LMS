@@ -9899,54 +9899,66 @@ function LearningCourseTable({ courses, completed = false, completionDates = [],
     </table>
   </div>;
 }
+function RewardAvatar({ tone = `blue`, crown = false, small = false }) {
+  return <span className={`reward-avatar-3d ${tone} ${small ? `small` : ``}`} aria-hidden="true"><i className="avatar-hair" /><i className="avatar-face" /><i className="avatar-body" />{crown && <i className="avatar-crown" />}</span>;
+}
+function RewardObject({ type, tone = `violet` }) {
+  return <span className={`reward-object-3d ${type} ${tone}`} aria-hidden="true"><i /><b>{type === `coin` ? `P` : ``}</b></span>;
+}
+function MonthlyChallenges() {
+  const challenges = [
+    { title:`과정 3개 수료`, current:2, total:3, reward:`+100P`, tone:`blue` },
+    { title:`퀴즈 5회 완료`, current:4, total:5, reward:`특별 뱃지`, tone:`violet` },
+    { title:`3일 연속 학습`, current:3, total:3, reward:`+50P`, tone:`mint`, complete:true },
+  ];
+  return <section className="monthly-challenge"><header><div><span>MONTHLY CHALLENGE</span><h2>8월 도전</h2><p>작은 목표를 달성하고 추가 보상을 받아보세요.</p></div><RewardObject type="target" tone="pink" /></header><div className="challenge-grid">{challenges.map((challenge) => <article className={`${challenge.tone} ${challenge.complete ? `complete` : ``}`} key={challenge.title}><div><b>{challenge.title}</b><span>{challenge.complete ? `완료` : `${challenge.current} / ${challenge.total}`}</span></div><div className="challenge-track"><i style={{width:`${challenge.current / challenge.total * 100}%`}} /></div><small>보상 <strong>{challenge.reward}</strong></small></article>)}</div></section>;
+}
 function UserLearningRewards({ initialTab = `ranking` }) {
   const [tab, setTab] = r.useState(initialTab);
   const [month, setMonth] = r.useState(`2026.08`);
   const ranking = [
-    { rank: 1, name: `이지은`, dept: `마케팅팀`, points: 1320 },
-    { rank: 2, name: `김민지`, dept: `People팀`, points: 1180 },
-    { rank: 3, name: `박서연`, dept: `개발팀`, points: 1090 },
-    { rank: 4, name: `최유진`, dept: `운영팀`, points: 1080 },
-    { rank: 5, name: `정현우`, dept: `영업팀`, points: 1070 },
-    { rank: 6, name: `한서준`, dept: `개발팀`, points: 1060 },
-    { rank: 7, name: `윤하늘`, dept: `마케팅팀`, points: 1050 },
-    { rank: 8, name: `김지수`, dept: `People팀`, points: 1040, me: true },
-    { rank: 9, name: `이민호`, dept: `재무팀`, points: 980 },
-    { rank: 10, name: `조아라`, dept: `운영팀`, points: 940 },
+    { rank:1, name:`이지은`, dept:`마케팅팀`, points:1420, streak:`5일 연속 학습`, tone:`coral` },
+    { rank:2, name:`김민지`, dept:`People팀`, points:1280, streak:`과정 3개 수료`, tone:`indigo` },
+    { rank:3, name:`박서연`, dept:`개발팀`, points:1190, streak:`퀴즈 정답률 96%`, tone:`mint` },
+    { rank:4, name:`정유진`, dept:`운영팀`, points:1120, tone:`violet` },
+    { rank:5, name:`최현우`, dept:`영업팀`, points:1100, tone:`orange` },
+    { rank:6, name:`한서준`, dept:`개발팀`, points:1080, tone:`blue` },
+    { rank:7, name:`윤하늘`, dept:`마케팅팀`, points:1085, tone:`pink` },
+    { rank:8, name:`김수민`, dept:`People팀`, points:1040, me:true, tone:`indigo` },
+    { rank:9, name:`이민호`, dept:`재무팀`, points:980, tone:`mint` },
+    { rank:10, name:`조아라`, dept:`운영팀`, points:940, tone:`coral` },
   ];
   const badges = [
-    { icon: Medal01Icon, title: `이달의 TOP 3`, condition: `월간 학습 랭킹 3위 이내`, date: `2026.07 획득`, tone: `gold` },
-    { icon: Award01Icon, title: `수료 마스터`, condition: `과정 5개 수료`, date: `2026.08 획득`, tone: `blue` },
-    { icon: CheckmarkCircle02Icon, title: `필수교육 완료`, condition: `필수 과정 전체 수료`, date: `2026.08 획득`, tone: `mint` },
-    { icon: SparklesIcon, title: `꾸준한 학습자`, condition: `3주 연속 학습`, date: `2026.08 획득`, tone: `violet` },
-    { icon: Quiz01Icon, title: `퀴즈 마스터`, condition: `퀴즈 정답률 90% 달성 시 획득`, date: `아직 획득하지 않았어요`, tone: `locked`, locked: true },
-    { icon: RankingIcon, title: `성장의 달인`, condition: `한 달 동안 500P 적립 시 획득`, date: `320 / 500P`, tone: `locked`, locked: true },
+    { type:`medal`, title:`이달의 TOP 3`, condition:`월간 학습 랭킹 3위 이내`, date:`2026.07 획득`, tone:`gold` },
+    { type:`trophy`, title:`수료 마스터`, condition:`과정 5개 수료`, date:`2026.08 획득`, tone:`blue` },
+    { type:`star`, title:`필수교육 완료`, condition:`필수 과정 전체 수료`, date:`2026.08 획득`, tone:`mint` },
+    { type:`flame`, title:`꾸준한 학습자`, condition:`3주 연속 학습`, date:`2026.08 획득`, tone:`violet` },
+    { type:`quiz`, title:`퀴즈 마스터`, condition:`퀴즈 정답률 90% 달성 시 획득`, date:`아직 획득하지 않았어요`, tone:`pink`, locked:true },
+    { type:`badge`, title:`성장의 달인`, condition:`한 달 동안 500P 적립 시 획득`, date:`320 / 500P`, tone:`orange`, locked:true },
   ];
   const pointHistory = [
-    { icon: Award01Icon, type: `과정 수료`, detail: `데이터 분석 기초 입문`, points: 100, date: `08.12`, tone: `blue` },
-    { icon: CheckmarkCircle02Icon, type: `차시 완료`, detail: `생성형 AI 업무 활용 3차시`, points: 20, date: `08.11`, tone: `mint` },
-    { icon: Quiz01Icon, type: `퀴즈 완료`, detail: `개인정보보호 필수 확인 문제`, points: 50, date: `08.10`, tone: `violet` },
-    { icon: File01Icon, type: `설문 제출`, detail: `리더십 기본 과정 만족도 조사`, points: 10, date: `08.08`, tone: `gold` },
+    { type:`trophy`, label:`과정 수료`, detail:`데이터 분석 기초 입문`, points:100, date:`08.12`, tone:`blue` },
+    { type:`check`, label:`차시 완료`, detail:`생성형 AI 업무 활용 3차시`, points:20, date:`08.11`, tone:`mint` },
+    { type:`quiz`, label:`퀴즈 완료`, detail:`개인정보보호 필수 확인 문제`, points:50, date:`08.10`, tone:`violet` },
+    { type:`badge`, label:`설문 제출`, detail:`리더십 기본 과정 만족도 조사`, points:10, date:`08.08`, tone:`gold` },
   ];
-  return <main className="page user-rewards-page">
-    <PageHeader kicker="학습 리워드" title="학습 리워드" description="나의 학습 성과와 포인트를 한눈에 확인해보세요." hero heroVariant="rewards" />
-    <div className="user-reward-tabs" role="tablist">
-      {[`ranking`, `badges`, `points`].map((value, index) => <button key={value} className={tab === value ? `active` : ``} onClick={() => setTab(value)}>{[`학습 랭킹`, `나의 뱃지`, `나의 포인트`][index]}</button>)}
-    </div>
-    {tab === `ranking` && <section className="user-ranking-view">
-      <div className="user-reward-toolbar"><div><h2>이번 달 학습 랭킹</h2><p>학습 활동으로 적립한 포인트 순위예요.</p></div><select aria-label="조회 월" value={month} onChange={(event) => setMonth(event.target.value)}><option>2026.08</option><option>2026.07</option><option>2026.06</option></select></div>
-      <article className="my-rank-hero"><div className="reward-trophy"><Icon icon={Award01Icon} size={38} /></div><div><span>이번 달 나의 순위</span><strong>8위</strong><b>1,040P</b><small><Icon icon={ArrowRight01Icon} size={13} /> 지난달보다 3계단 상승</small></div></article>
-      <div className="user-podium">
-        {[ranking[1], ranking[0], ranking[2]].map((person) => <article className={`user-podium-card rank-${person.rank}`} key={person.rank}><span className="podium-medal"><Icon icon={person.rank === 1 ? Award01Icon : Medal01Icon} size={27} /></span><em>{person.rank}위</em><h3>{person.name}</h3><p>{person.dept}</p><strong>{person.points.toLocaleString()}P</strong></article>)}
-      </div>
-      <div className="user-ranking-list"><header><h3>전체 랭킹</h3><span>{month.replace(`.`, `년 `)}월</span></header>{ranking.slice(3).map((person) => <div className={person.me ? `me` : ``} key={person.rank}><b>{person.rank}</b><span className="ranking-avatar">{person.name[0]}</span><p><strong>{person.name}{person.me && <em>나</em>}</strong><small>{person.dept}</small></p><strong>{person.points.toLocaleString()}P</strong></div>)}</div>
+  const tabs = [[`ranking`,RankingIcon,`랭킹`],[`badges`,Award01Icon,`뱃지 컬렉션`],[`points`,SparklesIcon,`포인트`]];
+  return <main className="page user-rewards-page reward-game-page">
+    <section className="reward-league-hero">
+      <div className="reward-hero-pattern" aria-hidden="true" />
+      <div className="reward-league-copy"><nav>홈 <span>›</span> 학습 리워드</nav><span className="reward-season">2026 AUGUST SEASON</span><h1>8월 Learning League</h1><p>이번 달 학습으로 쌓은 성과와 다음 목표를 확인해보세요.</p><div className="reward-hero-score"><span><small>내 순위</small><b>8위</b></span><span><small>학습 포인트</small><b>1,040P</b></span></div></div>
+      <article className="reward-me-card"><RewardAvatar tone="indigo" /><div><span>김수민 · People팀</span><strong>현재 8위</strong><small>지난달보다 <b>3계단 상승</b></small></div><div className="next-rank"><p><b>7위까지 45P</b><span>1,040 / 1,085P</span></p><div><i style={{width:`74%`}} /></div></div></article>
+      <div className="reward-hero-object"><RewardObject type="trophy" tone="gold" /><i className="hero-spark one" /><i className="hero-spark two" /></div>
+    </section>
+    <div className="user-reward-tabs reward-tabs" role="tablist">{tabs.map(([value,icon,label]) => <button key={value} className={tab === value ? `active` : ``} onClick={() => setTab(value)}><Icon icon={icon} size={17} />{label}</button>)}</div>
+    {tab === `ranking` && <section className="user-ranking-view reward-ranking-view">
+      <div className="user-reward-toolbar"><div><span className="section-eyebrow">LEADERBOARD</span><h2>이번 달 TOP 3</h2><p>꾸준히 학습한 멤버들이 시상대에 올랐어요.</p></div><label className="reward-month-picker"><span>조회 월</span><select aria-label="조회 월" value={month} onChange={(event) => setMonth(event.target.value)}>{Array.from({length:12},(_,index) => <option key={index + 1} value={`2026.${String(index + 1).padStart(2,`0`)}`}>2026년 {index + 1}월</option>)}</select></label></div>
+      <div className="reward-podium">{[ranking[1],ranking[0],ranking[2]].map((person) => <article className={`reward-podium-card rank-${person.rank}`} key={person.rank}><div className="podium-avatar"><RewardAvatar tone={person.tone} crown={person.rank === 1} /><span>{person.rank}</span></div><div className="podium-card-copy"><em>{person.rank === 1 ? `CHAMPION` : `${person.rank}ND PLACE`.replace(`3ND`,`3RD`)}</em><h3>{person.name}</h3><p>{person.dept}</p><strong>{person.points.toLocaleString()}P</strong><small>{person.streak}</small></div><div className="podium-base"><b>{person.rank}</b></div></article>)}</div>
+      <div className="reward-leaderboard"><header><div><span className="section-eyebrow">ALL RANKING</span><h2>전체 랭킹</h2></div><span>{month.replace(`.`,`년 `)}월</span></header><div className="leaderboard-list">{ranking.map((person) => <div className={`leaderboard-row ${person.me ? `me` : ``}`} key={person.rank}><b className="leaderboard-rank">{String(person.rank).padStart(2,`0`)}</b><RewardAvatar tone={person.tone} small /><p><strong>{person.name}{person.me && <em>나</em>}</strong><small>{person.dept}</small></p><strong className="leaderboard-points">{person.points.toLocaleString()}P</strong></div>)}</div></div>
+      <MonthlyChallenges />
     </section>}
-    {tab === `badges` && <section className="user-badge-view"><div className="user-reward-section-head"><div><h2>나의 뱃지 컬렉션</h2><p>획득한 뱃지 4개 · 다음 목표에도 도전해보세요.</p></div><span>4 / 6</span></div><div className="user-badge-grid">{badges.map((badge) => <article className={`user-badge-card ${badge.tone} ${badge.locked ? `locked` : ``}`} key={badge.title}><span><Icon icon={badge.locked ? LockPasswordIcon : badge.icon} size={30} /></span><div><small>{badge.locked ? `도전 중` : `획득 완료`}</small><h3>{badge.title}</h3><p>{badge.condition}</p><time>{badge.date}</time></div></article>)}</div></section>}
-    {tab === `points` && <section className="user-point-view">
-      <article className="user-point-hero"><span><Icon icon={SparklesIcon} size={31} /></span><div><small>나의 학습 포인트</small><strong>1,040P</strong><p>이번 달 <b>+320P</b></p></div><div className="point-orbit" aria-hidden="true">P</div></article>
-      <div className="user-point-grid"><section className="point-history-card"><div className="user-reward-section-head"><div><h2>최근 적립 내역</h2><p>학습할수록 포인트가 차곡차곡 쌓여요.</p></div></div><div className="point-history-list">{pointHistory.map((item) => <div key={`${item.type}-${item.date}`}><span className={item.tone}><Icon icon={item.icon} size={19} /></span><p><b>{item.type}</b><small>{item.detail}</small></p><strong>+{item.points}P</strong><time>{item.date}</time></div>)}</div></section>
-      <section className="point-guide-card"><div className="user-reward-section-head"><div><h2>포인트 적립 방법</h2><p>관리자가 설정한 현재 지급 기준이에요.</p></div></div><div className="point-guide-list">{[[PlayIcon,`차시 완료`,`+20P`,`blue`],[Award01Icon,`과정 수료`,`+100P`,`gold`],[Quiz01Icon,`퀴즈 완료`,`+50P`,`violet`],[File01Icon,`설문 제출`,`+10P`,`mint`]].map(([icon,label,value,tone]) => <div key={label}><span className={tone}><Icon icon={icon} size={18} /></span><b>{label}</b><strong>{value}</strong></div>)}</div></section></div>
-    </section>}
+    {tab === `badges` && <section className="user-badge-view reward-badge-view"><div className="user-reward-section-head"><div><span className="section-eyebrow">ACHIEVEMENT COLLECTION</span><h2>나의 뱃지 컬렉션</h2><p>획득한 뱃지 4개 · 다음 목표에도 도전해보세요.</p></div><span>4 / 6</span></div><div className="reward-badge-grid">{badges.map((badge) => <article className={`${badge.tone} ${badge.locked ? `locked` : ``}`} key={badge.title}><div className="badge-object-wrap"><RewardObject type={badge.type} tone={badge.tone} />{badge.locked && <span className="badge-lock"><Icon icon={LockPasswordIcon} size={14} /></span>}</div><small>{badge.locked ? `도전 중` : `획득 완료`}</small><h3>{badge.title}</h3><p>{badge.condition}</p><time>{badge.date}</time></article>)}</div><MonthlyChallenges /></section>}
+    {tab === `points` && <section className="user-point-view reward-point-view"><article className="reward-wallet"><div><span className="section-eyebrow">MY LEARNING WALLET</span><small>나의 학습 포인트</small><strong>1,040P</strong><p>이번 달 <b>+320P</b></p></div><RewardObject type="coin" tone="gold" /><i /><i /></article><div className="reward-point-grid"><section className="reward-activity"><div className="user-reward-section-head"><div><h2>최근 적립 내역</h2><p>학습할수록 포인트가 차곡차곡 쌓여요.</p></div></div><div>{pointHistory.map((item) => <article key={`${item.label}-${item.date}`}><RewardObject type={item.type} tone={item.tone} /><p><b>{item.label}</b><small>{item.detail}</small></p><strong>+{item.points}P</strong><time>{item.date}</time></article>)}</div></section><section className="reward-rules"><div className="user-reward-section-head"><div><h2>포인트 적립 방법</h2><p>현재 적용 중인 보상 기준이에요.</p></div></div><div>{[[`play`,`차시 완료`,`+20P`,`blue`],[`trophy`,`과정 수료`,`+100P`,`gold`],[`quiz`,`퀴즈 완료`,`+50P`,`violet`],[`badge`,`설문 제출`,`+10P`,`mint`]].map(([type,label,value,tone]) => <article key={label}><RewardObject type={type} tone={tone} /><b>{label}</b><strong>{value}</strong></article>)}</div></section></div><MonthlyChallenges /></section>}
   </main>;
 }
 function te({ courses: e, go: t, notify: n }) {
