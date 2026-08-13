@@ -18028,3 +18028,133 @@ html[data-theme="dark"] .department-ranking-table tbody tr.top-department { back
   .department-reward-top .reward-podium-card.rank-2,
   .department-reward-top .reward-podium-card.rank-3 { min-height:160px; order:initial; }
 }
+
+/* User LMS color system: soft blue for interaction, progress and data */
+.user-portal {
+  --user-primary:#4f8fcf;
+  --user-primary-strong:#3979b6;
+  --user-primary-soft:#eaf3fd;
+  --user-primary-softer:#f3f8fd;
+  --user-sky:#86b4d7;
+  --user-blue-gray:#b9cbd9;
+  --user-progress-track:#e8eef4;
+  --user-active-neutral:#f2f4f6;
+}
+
+.user-portal :is(
+  .progress-track,
+  .progress,
+  .table-progress .progress,
+  .compact-progress,
+  .popularity-bar,
+  .bar-row > div
+) { background-color:var(--user-progress-track); }
+.user-portal :is(
+  .progress-track i,
+  .progress span,
+  .table-progress .progress span,
+  .compact-progress span,
+  .popularity-bar i,
+  .bar-row i,
+  .my-learning-progress-cell > span > i
+) {
+  background:linear-gradient(90deg,var(--user-sky),var(--user-primary))!important;
+}
+.user-portal :is(.progress-block.high,.progress-block.middle,.progress-block.low) b,
+.user-portal :is(.lecture-progress,.learning-progress-metric,.my-learning-progress-cell) b,
+.user-portal :is(.bar-row,.metric,.chart-card) strong {
+  color:var(--user-primary-strong)!important;
+}
+.user-portal :is(.progress-block.high,.progress-block.middle,.progress-block.low) .progress-track i,
+.user-portal .lecture-progress .progress-track i {
+  background:linear-gradient(90deg,var(--user-sky),var(--user-primary))!important;
+}
+.user-portal :is(.progress-track,.my-learning-progress-cell > span) {
+  background:var(--user-progress-track)!important;
+}
+
+.user-portal .chart-line.participation { stroke:var(--user-primary)!important; }
+.user-portal .chart-dot.participation { fill:var(--user-primary)!important; }
+.user-portal .chart-line.completion { stroke:var(--user-sky)!important; }
+.user-portal .chart-dot.completion { fill:var(--user-sky)!important; }
+.user-portal .chart-legend .learners::before { background:var(--user-primary)!important; }
+.user-portal .chart-legend .completion::before { background:var(--user-sky)!important; }
+.user-portal .bar-chart .bar-low { background:linear-gradient(180deg,#c4d9ea,#eaf2f8)!important; }
+.user-portal .bar-chart .bar-middle { background:linear-gradient(180deg,#91b9d9,#c9ddec)!important; }
+.user-portal .bar-chart .bar-high { background:linear-gradient(180deg,#5c98d2,#9bc1e2)!important; }
+
+.user-portal .pagination {
+  align-items:center;
+  gap:4px;
+}
+.user-portal .pagination button {
+  width:32px;
+  height:32px;
+  border:0;
+  border-radius:50%;
+  background:transparent;
+  color:#7b8794;
+  font-weight:500;
+  transition:background-color .15s ease,color .15s ease;
+}
+.user-portal .pagination button:hover:not(:disabled) {
+  background:var(--user-primary-softer);
+  color:var(--user-primary-strong);
+}
+.user-portal .pagination button.selected,
+.user-portal .pagination button.active {
+  border:0!important;
+  background:var(--user-primary-soft)!important;
+  color:var(--user-primary-strong)!important;
+  font-weight:650;
+  box-shadow:none!important;
+}
+.user-portal .pagination button:disabled { color:#c5cbd2; background:transparent; }
+
+.user-portal :is(
+  .tabs button.active,
+  .sub-tabs button.active,
+  .player-tabs button.active,
+  .user-reward-tabs button.active
+) {
+  color:var(--user-primary-strong)!important;
+  border-color:var(--user-primary)!important;
+}
+.user-portal :is(
+  .profile-side button.active,
+  .sidebar-lessons button.current,
+  .quiz-options button.selected,
+  .dropdown button.selected
+) {
+  border-color:#d5e6f7!important;
+  background:var(--user-primary-soft)!important;
+  color:var(--user-primary-strong)!important;
+  box-shadow:none!important;
+}
+.user-portal :is(.target-tags span.selected,.filter-chip.active,.category-chip.active) {
+  border-color:#cfe1f3!important;
+  background:var(--user-primary-soft)!important;
+  color:var(--user-primary-strong)!important;
+}
+.user-portal .topbar-inner nav > button.active,
+.user-portal .main-nav .nav-button.active {
+  background:transparent!important;
+  color:var(--user-primary-strong)!important;
+}
+.user-portal .topbar-inner nav > button.active::after,
+.user-portal .main-nav .nav-button.active::after { background:var(--user-primary)!important; }
+
+.user-portal :is(.course-search-button,.primary,.search-filter-submit,.filter-search-button):not(.danger) {
+  border-color:var(--user-primary)!important;
+  background:linear-gradient(180deg,#69a8e3,var(--user-primary))!important;
+  color:#fff!important;
+}
+.user-portal :is(.course-search-button,.primary,.search-filter-submit,.filter-search-button):not(.danger):hover {
+  background:linear-gradient(180deg,#5f9ed9,#4383c1)!important;
+}
+html[data-theme="dark"] .user-portal {
+  --user-primary-soft:rgba(79,143,207,.18);
+  --user-primary-softer:rgba(79,143,207,.1);
+  --user-progress-track:rgba(151,174,195,.16);
+  --user-active-neutral:rgba(151,174,195,.12);
+}
