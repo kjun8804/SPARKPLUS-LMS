@@ -8865,9 +8865,9 @@ function F({
     }),
   });
 }
-function PageHeader({ kicker: e, title: t, description: n, action: r }) {
+function PageHeader({ kicker: e, title: t, description: n, action: r, hero = false, heroVariant = `default` }) {
   return (0, i.jsxs)(`div`, {
-    className: `page-head`,
+    className: `page-head ${hero ? `page-hero page-hero-${heroVariant}` : ``}`,
     children: [
       (0, i.jsxs)(`div`, {
         children: [
@@ -9417,6 +9417,8 @@ function K({
         kicker="교육과정 조회"
         title="교육과정 조회"
         description="성장을 위한 다양한 교육과정을 찾아보세요."
+        hero
+        heroVariant="catalog"
       />
       <SearchFilterPanel
         value={t}
@@ -9927,7 +9929,7 @@ function UserLearningRewards({ initialTab = `ranking` }) {
     { icon: File01Icon, type: `설문 제출`, detail: `리더십 기본 과정 만족도 조사`, points: 10, date: `08.08`, tone: `gold` },
   ];
   return <main className="page user-rewards-page">
-    <PageHeader kicker="학습 리워드" title="학습 리워드" description="나의 학습 성과와 포인트를 한눈에 확인해보세요." />
+    <PageHeader kicker="학습 리워드" title="학습 리워드" description="나의 학습 성과와 포인트를 한눈에 확인해보세요." hero heroVariant="rewards" />
     <div className="user-reward-tabs" role="tablist">
       {[`ranking`, `badges`, `points`].map((value, index) => <button key={value} className={tab === value ? `active` : ``} onClick={() => setTab(value)}>{[`학습 랭킹`, `나의 뱃지`, `나의 포인트`][index]}</button>)}
     </div>
@@ -9981,6 +9983,8 @@ function te({ courses: e, go: t, notify: n }) {
         kicker: `나의 학습`,
         title: `나의 학습`,
         description: `수강 중인 과정과 완료한 학습 내역을 확인하세요.`,
+        hero: !0,
+        heroVariant: `learning`,
       }),
       (0, i.jsxs)(`div`, {
         className: `tabs standalone`,
@@ -10771,12 +10775,14 @@ function ie({ go: e, notices = j }) {
       (e) => (a === `전체` || e.category === a) && (!t || e.title.includes(t)),
     );
   return (0, i.jsxs)(`main`, {
-    className: `page`,
+    className: `page user-notice-page`,
     children: [
       (0, i.jsx)(PageHeader, {
         kicker: `공지사항`,
         title: `공지사항`,
         description: `교육 운영과 시스템 이용에 필요한 소식을 확인하세요.`,
+        hero: !0,
+        heroVariant: `notices`,
       }),
       (0, i.jsxs)(`section`, {
         className: `notice-search`,
