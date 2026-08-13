@@ -99,6 +99,19 @@
 html[data-theme="dark"] .user-portal .my-learning-page .learning-summary,
 html[data-theme="dark"] .user-portal .my-learning-page .my-learning-table-wrap { border-color:var(--ui-line)!important; background:var(--ui-surface)!important; box-shadow:none!important; }
 html[data-theme="dark"] .user-portal .my-learning-page .my-learning-table th { border-color:var(--ui-line); background:var(--ui-surface-soft); color:#b6c0ca; }
+
+/* Wishlist tab reuses the catalog course card system. */
+.user-portal .my-learning-page .tabs.standalone{flex-wrap:wrap}
+.user-portal .my-learning-page .my-learning-wishlist-grid{margin-top:30px;margin-bottom:8px}
+.user-portal .my-learning-page .my-learning-wishlist-grid>.course-card{min-width:0}
+.user-portal .my-learning-page .my-learning-wishlist-empty{display:grid;min-height:300px;margin-top:30px;place-items:center;align-content:center;gap:10px;padding:42px;border:1px solid #e5e9ee;border-radius:22px;text-align:center;background:rgba(255,255,255,.82);box-shadow:0 10px 28px rgba(37,56,78,.05)}
+.user-portal .my-learning-page .my-learning-wishlist-empty>.wishlist-heart-icon{color:#a8b0ba}
+.user-portal .my-learning-page .my-learning-wishlist-empty h3{margin:4px 0 0;color:#283342;font-size:18px}
+.user-portal .my-learning-page .my-learning-wishlist-empty p{margin:0 0 8px;color:#727d89;font-size:13px}
+.user-portal .my-learning-page .my-learning-wishlist-empty button{min-width:150px;height:44px}
+html[data-theme="dark"] .user-portal .my-learning-page .my-learning-wishlist-empty{border-color:var(--ui-line);background:var(--ui-surface)}
+html[data-theme="dark"] .user-portal .my-learning-page .my-learning-wishlist-empty h3{color:var(--ui-text)}
+@media(max-width:700px){.user-portal .my-learning-page .my-learning-wishlist-grid{margin-top:24px}.user-portal .my-learning-page .my-learning-wishlist-empty{min-height:250px;margin-top:24px;padding:28px 18px}}
 html[data-theme="dark"] .user-portal .my-learning-page .my-learning-table td { color:#c5cdd5; }
 html[data-theme="dark"] .user-portal .my-learning-page .my-learning-course-cell > small { color:#aab5c0!important; }
 html[data-theme="dark"] .user-portal .my-learning-page .learning-summary > span { color:var(--ui-text); }

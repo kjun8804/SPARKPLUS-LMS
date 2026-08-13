@@ -8377,6 +8377,7 @@ function M() {
     [G, q] = (0, r.useState)(38),
     [J, Y] = (0, r.useState)(1),
     [rewardInitialTab, setRewardInitialTab] = (0, r.useState)(`ranking`),
+    [wishlistIds, setWishlistIds] = (0, r.useState)(() => O.filter((course) => localStorage.getItem(`sparkplus-wishlist-${course.id}`) === `true`).map((course) => course.id)),
     [userNotices, setUserNotices] = (0, r.useState)(getUserNoticeData);
   ((0, r.useEffect)(() => {
     let e = localStorage.getItem(`sparkplus-lms-courses`);
@@ -8443,6 +8444,10 @@ function M() {
       e.map((e) => (e.id === Z.id ? { ...e, enrolled: !0, progress: 0 } : e)),
     ),
       M(`done`));
+  }
+  function toggleWishlist(courseId, next) {
+    localStorage.setItem(`sparkplus-wishlist-${courseId}`, String(next));
+    setWishlistIds((current) => next ? [...new Set([...current, courseId])] : current.filter((id) => id !== courseId));
   }
   function fe(complete = !1) {
     let e = complete ? 100 : Math.min(100, Math.max(Z.progress ?? 0, 72));
@@ -8524,16 +8529,23 @@ function M() {
                     }));
                 },
                 go: $,
+                wishlistIds: wishlistIds,
+                onWishlistChange: toggleWishlist,
               }),
             e === `courseDetail` &&
               (0, i.jsx)(X, {
                 course: Z,
                 go: $,
                 apply: () => (Z.enrolled ? $(`lectureDetail`, Z.id) : M(`apply`)),
+                wishlisted: wishlistIds.includes(Z.id),
+                onWishlistChange: toggleWishlist,
               }),
             e === `learning` &&
               (0, i.jsx)(te, {
                 courses: Q,
+                allCourses: h,
+                wishlistIds: wishlistIds,
+                toggleWishlist: toggleWishlist,
                 go: $,
                 notify: (e) => {
                   (I(e), setTimeout(() => I(``), 2600));
@@ -9398,6 +9410,8 @@ function K({
   quickTag: p,
   reset: d,
   go: f,
+  wishlistIds = [],
+  onWishlistChange,
 }) {
   const tags = [`신입사원`, `리더십`, `AI`, `보안`, `필수교육`];
   const useTag = (tag) => p(tag);
@@ -9438,7 +9452,7 @@ function K({
       {e.length ? (
         <div className="course-grid">
           {e.map((course) => (
-            <Y course={course} go={f} key={course.id} />
+            <Y course={course} go={f} key={course.id} wishlisted={wishlistIds.includes(course.id)} onWishlistChange={onWishlistChange} />
           ))}
         </div>
       ) : (
@@ -9475,16 +9489,17 @@ function J({ accent: e, label: t, compact: n = !1 }) {
     ],
   });
 }
-function Y({ course: e, go: t }) {
+function Y({ course: e, go: t, wishlisted: controlledWishlisted, onWishlistChange }) {
   const base = [74, 87, 98, 64, 53, 126][e.id - 1] || 42;
   const recommendKey = `sparkplus-recommend-${e.id}`;
   const wishlistKey = `sparkplus-wishlist-${e.id}`;
   const [recommended, setRecommended] = (0, r.useState)(
     () => localStorage.getItem(recommendKey) === `true`,
   );
-  const [wishlisted, setWishlisted] = (0, r.useState)(
+  const [localWishlisted, setLocalWishlisted] = (0, r.useState)(
     () => localStorage.getItem(wishlistKey) === `true`,
   );
+  const wishlisted = controlledWishlisted ?? localWishlisted;
   const toggleRecommend = () => {
     const next = !recommended;
     setRecommended(next);
@@ -9492,8 +9507,11 @@ function Y({ course: e, go: t }) {
   };
   const toggleWishlist = () => {
     const next = !wishlisted;
-    setWishlisted(next);
-    localStorage.setItem(wishlistKey, String(next));
+    if (onWishlistChange) onWishlistChange(e.id, next);
+    else {
+      setLocalWishlisted(next);
+      localStorage.setItem(wishlistKey, String(next));
+    }
   };
   return (
     <article className="course-card toss-card">
@@ -9546,14 +9564,15 @@ function Y({ course: e, go: t }) {
     </article>
   );
 }
-function X({ course: e, go: t, apply: n, preview = false }) {
+function X({ course: e, go: t, apply: n, preview = false, wishlisted: controlledWishlisted, onWishlistChange }) {
   let a = e.curriculum || k[e.id] || [],
     [o, s] = (0, r.useState)(`intro`),
     recommendKey = `sparkplus-recommend-${e.id}`,
     wishlistKey = `sparkplus-wishlist-${e.id}`,
     [recommended, setRecommended] = (0, r.useState)(() => localStorage.getItem(recommendKey) === `true`),
-    [wishlisted, setWishlisted] = (0, r.useState)(() => localStorage.getItem(wishlistKey) === `true`),
+    [localWishlisted, setLocalWishlisted] = (0, r.useState)(() => localStorage.getItem(wishlistKey) === `true`),
     baseLikes = [74, 87, 98, 64, 53, 126][e.id - 1] || 42;
+  const wishlisted = controlledWishlisted ?? localWishlisted;
   const toggleRecommend = () => {
     const next = !recommended;
     setRecommended(next);
@@ -9561,8 +9580,11 @@ function X({ course: e, go: t, apply: n, preview = false }) {
   };
   const toggleWishlist = () => {
     const next = !wishlisted;
-    setWishlisted(next);
-    localStorage.setItem(wishlistKey, String(next));
+    if (onWishlistChange) onWishlistChange(e.id, next);
+    else {
+      setLocalWishlisted(next);
+      localStorage.setItem(wishlistKey, String(next));
+    }
   };
   return (0, i.jsxs)(`main`, {
     className: `page`,
@@ -9964,7 +9986,7 @@ function UserLearningRewards({ initialTab = `ranking` }) {
     {tab === `points` && <section className="user-point-view reward-point-view"><article className="reward-wallet"><div><span className="section-eyebrow">MY LEARNING WALLET</span><small>나의 학습 포인트</small><strong>1,040P</strong><p>이번 달 <b>+320P</b></p></div><PointCoin large /><i /><i /></article><div className="reward-point-grid"><section className="reward-activity"><div className="user-reward-section-head"><div><h2>최근 적립 내역</h2><p>학습할수록 포인트가 차곡차곡 쌓여요.</p></div></div><div>{pointHistory.map((item) => <article key={`${item.label}-${item.date}`}><PointCoin type={item.type} /><p><b>{item.label}</b><small>{item.detail}</small></p><strong>+{item.points}P</strong><time>{item.date}</time></article>)}</div></section><section className="reward-rules"><div className="user-reward-section-head"><div><h2>포인트 적립 방법</h2><p>현재 적용 중인 보상 기준이에요.</p></div></div><div>{[[`completion`,`차시 완료`,`+20P`],[`course`,`과정 수료`,`+100P`],[`quiz`,`퀴즈 완료`,`+50P`],[`survey`,`설문 제출`,`+10P`]].map(([type,label,value]) => <article key={label}><PointCoin type={type} /><b>{label}</b><strong>{value}</strong></article>)}</div></section></div><MonthlyChallenges /></section>}
   </main>;
 }
-function te({ courses: e, go: t, notify: n }) {
+function te({ courses: e, allCourses = [], wishlistIds = [], toggleWishlist, go: t, notify: n }) {
   let [a, o] = (0, r.useState)(`active`),
     [s, c] = (0, r.useState)(null),
     l = [
@@ -9990,7 +10012,8 @@ function te({ courses: e, go: t, notify: n }) {
     u = [`2026.04.30`, `2026.03.31`, `2026.02.15`],
     d = Math.round(
       e.reduce((e, t) => e + (t.progress ?? 0), 0) / Math.max(e.length, 1),
-    );
+    ),
+    wishlistCourses = allCourses.filter((course) => wishlistIds.includes(course.id));
   return (0, i.jsxs)(`main`, {
     className: `page my-learning-page`,
     children: [
@@ -10021,6 +10044,14 @@ function te({ courses: e, go: t, notify: n }) {
               (0, i.jsx)(`span`, { children: l.length }),
             ],
           }),
+          (0, i.jsxs)(`button`, {
+            className: a === `wishlist` ? `active` : ``,
+            onClick: () => o(`wishlist`),
+            children: [
+              `찜한 강의 `,
+              (0, i.jsx)(`span`, { children: wishlistCourses.length }),
+            ],
+          }),
         ],
       }),
       a === `active`
@@ -10037,7 +10068,16 @@ function te({ courses: e, go: t, notify: n }) {
               (0, i.jsx)(LearningCourseTable, { courses: e, go: t, issueCertificate: c }),
             ],
           })
-        : (0, i.jsx)(LearningCourseTable, { courses: l, completed: true, completionDates: u, go: t, issueCertificate: c }),
+        : a === `completed`
+          ? (0, i.jsx)(LearningCourseTable, { courses: l, completed: true, completionDates: u, go: t, issueCertificate: c })
+          : wishlistCourses.length
+            ? (0, i.jsx)(`div`, { className: `course-grid my-learning-wishlist-grid`, children: wishlistCourses.map((course) => (0, i.jsx)(Y, { course, go: t, wishlisted: true, onWishlistChange: toggleWishlist }, course.id)) })
+            : (0, i.jsxs)(`div`, { className: `my-learning-wishlist-empty`, children: [
+                (0, i.jsx)(WishlistHeart, { size: 34 }),
+                (0, i.jsx)(`h3`, { children: `아직 찜한 강의가 없어요.` }),
+                (0, i.jsx)(`p`, { children: `관심 있는 교육과정을 찜해두면 여기에서 한 번에 확인할 수 있어요.` }),
+                (0, i.jsx)(`button`, { className: `primary`, onClick: () => t(`catalog`), children: `교육과정 둘러보기` }),
+              ] }),
       s &&
         (0, i.jsx)(`div`, {
           className: `modal-backdrop`,
