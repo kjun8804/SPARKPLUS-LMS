@@ -1,123 +1,40 @@
-/* User LMS page heroes: image-free soft blue banners with restrained CSS patterns. */
+/* Shared user LMS hero: variants change tokens and restrained pattern geometry. */
 .user-portal .page-head.page-hero {
-  position:relative;
-  isolation:isolate;
-  min-height:164px;
-  align-items:center;
-  overflow:hidden;
-  margin:0 0 28px!important;
-  padding:27px 34px!important;
-  border:1px solid rgba(255,255,255,.28);
-  border-radius:22px;
-  background:
-    radial-gradient(circle at 86% 24%,rgba(255,255,255,.13) 0 68px,transparent 69px),
-    radial-gradient(circle at 77% 118%,rgba(255,255,255,.09) 0 112px,transparent 113px),
-    linear-gradient(112deg,#4f86bd 0%,#5d96cc 52%,#76aad5 100%);
-  box-shadow:0 10px 26px rgba(45,93,139,.12);
+  --hero-start:#4f8fd0; --hero-mid:#63a5d8; --hero-end:#82bfe1; --hero-shadow:79,143,208;
+  --page-hero-asset:linear-gradient(transparent,transparent);
+  position:relative; isolation:isolate; min-height:164px; align-items:center; overflow:hidden;
+  margin:0 0 28px!important; padding:27px 34px!important;
+  border:1px solid rgba(255,255,255,.3); border-radius:22px;
+  background-image:var(--page-hero-asset),radial-gradient(circle at 86% 24%,rgba(255,255,255,.13) 0 68px,transparent 69px),radial-gradient(circle at 77% 118%,rgba(255,255,255,.09) 0 112px,transparent 113px),linear-gradient(112deg,var(--hero-start),var(--hero-mid) 54%,var(--hero-end));
+  background-position:center; background-size:cover; box-shadow:0 11px 28px rgba(var(--hero-shadow),.16);
 }
-.user-portal .page-head.page-hero::before,
-.user-portal .page-head.page-hero::after {
-  position:absolute;
-  z-index:-1;
-  pointer-events:none;
-  content:"";
-}
-.user-portal .page-head.page-hero::before {
-  top:22px;
-  right:36px;
-  width:214px;
-  height:112px;
-  opacity:.22;
-  background-image:radial-gradient(circle,rgba(255,255,255,.74) 1.4px,transparent 1.6px);
-  background-size:18px 18px;
-  -webkit-mask-image:linear-gradient(90deg,transparent,#000 34%,#000);
-  mask-image:linear-gradient(90deg,transparent,#000 34%,#000);
-}
-.user-portal .page-head.page-hero::after {
-  right:88px;
-  bottom:-35px;
-  width:120px;
-  height:120px;
-  border:1px solid rgba(255,255,255,.19);
-  border-radius:28px;
-  transform:rotate(18deg);
-  box-shadow:
-    54px -62px 0 -35px rgba(255,255,255,.16),
-    -70px -36px 0 -43px rgba(255,255,255,.2);
-}
-.user-portal .page-head.page-hero > div {
-  position:relative;
-  z-index:1;
-  max-width:680px;
-}
-.user-portal .page-head.page-hero .breadcrumb {
-  margin:0 0 13px;
-  color:rgba(255,255,255,.68)!important;
-  font-size:11px;
-  font-weight:550;
-}
-.user-portal .page-head.page-hero .breadcrumb span { color:rgba(255,255,255,.48)!important; }
-.user-portal .page-head.page-hero h1 {
-  margin:0!important;
-  color:#fff!important;
-  font-size:29px!important;
-  font-weight:700!important;
-  letter-spacing:-.035em;
-  line-height:1.25;
-  text-shadow:0 1px 1px rgba(29,66,102,.08);
-}
-.user-portal .page-head.page-hero p {
-  margin:9px 0 0!important;
-  color:rgba(255,255,255,.82)!important;
-  font-size:13px!important;
-  font-weight:400;
-  line-height:1.55;
-}
+.user-portal .page-head.page-hero::before,.user-portal .page-head.page-hero::after { position:absolute; z-index:-1; pointer-events:none; content:""; }
+.user-portal .page-head.page-hero::before { top:22px; right:36px; width:214px; height:112px; opacity:.2; background-image:radial-gradient(circle,rgba(255,255,255,.76) 1.4px,transparent 1.6px); background-size:18px 18px; -webkit-mask-image:linear-gradient(90deg,transparent,#000 34%,#000); mask-image:linear-gradient(90deg,transparent,#000 34%,#000); }
+.user-portal .page-head.page-hero::after { right:88px; bottom:-35px; width:120px; height:120px; border:1px solid rgba(255,255,255,.2); border-radius:28px; transform:rotate(18deg); box-shadow:54px -62px 0 -35px rgba(255,255,255,.17),-70px -36px 0 -43px rgba(255,255,255,.2); }
+.user-portal .page-head.page-hero > div { position:relative; z-index:1; max-width:680px; }
+.user-portal .page-head.page-hero .breadcrumb { margin:0 0 13px; color:rgba(255,255,255,.7)!important; font-size:11px; font-weight:550; }
+.user-portal .page-head.page-hero .breadcrumb span { color:rgba(255,255,255,.5)!important; }
+.user-portal .page-head.page-hero h1 { margin:0!important; color:#fff!important; font-size:29px!important; font-weight:700!important; letter-spacing:-.035em; line-height:1.25; text-shadow:0 1px 1px rgba(24,43,77,.09); }
+.user-portal .page-head.page-hero p { margin:9px 0 0!important; color:rgba(255,255,255,.84)!important; font-size:13px!important; font-weight:400; line-height:1.55; }
 .user-portal .page-head.page-hero > :last-child:not(:first-child) { position:relative; z-index:1; }
 
-/* Same blue system, with only subtle pattern placement changes per page. */
-.user-portal .page-hero-learning {
-  background:
-    radial-gradient(circle at 88% 20%,rgba(255,255,255,.14) 0 62px,transparent 63px),
-    radial-gradient(circle at 72% 125%,rgba(255,255,255,.09) 0 122px,transparent 123px),
-    linear-gradient(112deg,#4c82b9,#6098ca 58%,#79abd2)!important;
-}
-.user-portal .page-hero-learning::before { right:54px; transform:rotate(-3deg); }
-.user-portal .page-hero-rewards {
-  background:
-    radial-gradient(circle at 82% 17%,rgba(255,255,255,.13) 0 72px,transparent 73px),
-    radial-gradient(circle at 96% 112%,rgba(255,255,255,.08) 0 124px,transparent 125px),
-    linear-gradient(112deg,#507fb5,#6599c8 56%,#7badd4)!important;
-}
-.user-portal .page-hero-rewards::after { right:116px; bottom:-42px; transform:rotate(45deg); }
-.user-portal .page-hero-notices::before { right:72px; background-size:21px 21px; transform:skewX(-8deg); }
-.user-portal .page-hero-notices::after { right:48px; bottom:-46px; border-radius:50%; transform:none; }
+/* Functional families share matching brightness and saturation. */
+.user-portal .page-hero-catalog { --hero-start:#4789ca; --hero-mid:#62a6d8; --hero-end:#82c1e2; --hero-shadow:71,137,202; }
+.user-portal .page-hero-learning { --hero-start:#5c61b8; --hero-mid:#7777ca; --hero-end:#9993dc; --hero-shadow:92,97,184; }
+.user-portal .page-hero-learning::before { right:56px; border:1px solid rgba(255,255,255,.55); border-radius:50%; background:none; box-shadow:inset 0 0 0 22px rgba(255,255,255,.09),-76px 42px 0 -50px rgba(255,255,255,.28); transform:rotate(-8deg); }
+.user-portal .page-hero-rewards { --hero-start:#7960b7; --hero-mid:#9277c8; --hero-end:#b197d9; --hero-shadow:121,96,183; }
+.user-portal .page-hero-rewards::before { background-image:radial-gradient(circle,rgba(255,255,255,.85) 0 2px,transparent 2.5px); background-size:34px 34px; transform:rotate(14deg); }
+.user-portal .page-hero-rewards::after { right:116px; bottom:-42px; border-radius:24px 50% 24px 50%; transform:rotate(45deg); }
+.user-portal .page-hero-notices { --hero-start:#398d89; --hero-mid:#55a69e; --hero-end:#7bbdb0; --hero-shadow:57,141,137; }
+.user-portal .page-hero-notices::before { right:72px; background-size:22px 22px; transform:skewX(-8deg); }
+.user-portal .page-hero-notices::after { right:48px; bottom:-46px; border-radius:50%; transform:none; box-shadow:62px -46px 0 -42px rgba(255,255,255,.24),-62px -26px 0 -44px rgba(255,255,255,.2); }
 
-/* The hero owns page rhythm; content begins close enough to stay above the fold. */
-.user-portal .toss-page > .page-hero + .search-filter-panel,
-.user-portal .my-learning-page > .page-hero + .tabs,
-.user-portal .user-rewards-page > .page-hero + .user-reward-tabs,
-.user-portal .user-notice-page > .page-hero + .notice-search {
-  margin-top:0!important;
-}
-
-html[data-theme="dark"] .user-portal .page-head.page-hero {
-  border-color:rgba(132,172,211,.2);
-  background:
-    radial-gradient(circle at 86% 24%,rgba(255,255,255,.07) 0 68px,transparent 69px),
-    linear-gradient(112deg,#294e72,#346487 55%,#416f91)!important;
-  box-shadow:0 10px 28px rgba(0,0,0,.22);
-}
-
+.user-portal .toss-page > .page-hero + .search-filter-panel,.user-portal .my-learning-page > .page-hero + .tabs,.user-portal .user-rewards-page > .page-hero + .user-reward-tabs,.user-portal .user-notice-page > .page-hero + .notice-search { margin-top:0!important; }
+html[data-theme="dark"] .user-portal .page-head.page-hero { filter:saturate(.82) brightness(.78); border-color:rgba(180,201,226,.18); box-shadow:0 10px 28px rgba(0,0,0,.24); }
 @media(max-width:700px) {
-  .user-portal .page-head.page-hero {
-    min-height:142px;
-    margin-bottom:22px!important;
-    padding:23px 22px!important;
-    border-radius:18px;
-  }
-  .user-portal .page-head.page-hero::before { right:-20px; width:150px; opacity:.17; }
-  .user-portal .page-head.page-hero::after { right:20px; opacity:.65; }
+  .user-portal .page-head.page-hero { min-height:142px; margin-bottom:22px!important; padding:23px 22px!important; border-radius:18px; }
+  .user-portal .page-head.page-hero::before { right:-20px; width:150px; opacity:.15; }
+  .user-portal .page-head.page-hero::after { right:20px; opacity:.62; }
   .user-portal .page-head.page-hero h1 { font-size:25px!important; }
   .user-portal .page-head.page-hero p { max-width:80%; font-size:12px!important; }
 }

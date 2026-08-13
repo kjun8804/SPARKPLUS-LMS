@@ -6,6 +6,7 @@ import './dark-mode-fixes.css';
 import './course-cta-theme.css';
 import './my-learning-polish.css';
 import './user-page-hero.css';
+import './user-visual-system.css';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
