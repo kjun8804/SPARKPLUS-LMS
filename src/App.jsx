@@ -9897,6 +9897,17 @@ function RewardAvatar({ tone = `blue`, crown = false, small = false }) {
 function RewardObject({ type, tone = `violet` }) {
   return <span className={`reward-object-3d ${type} ${tone}`} aria-hidden="true"><i /><b>{type === `coin` ? `P` : ``}</b></span>;
 }
+function PointCoin({ type = `points`, large = false }) {
+  const icons = {
+    completion: CheckmarkCircle02Icon,
+    course: Award01Icon,
+    quiz: Quiz01Icon,
+    survey: File01Icon,
+  };
+  return <span className={`point-coin ${large ? `large` : ``}`} aria-hidden="true">
+    {type === `points` ? <b>P</b> : <Icon icon={icons[type] || CheckmarkCircle02Icon} size={large ? 42 : 18} strokeWidth={2.2} />}
+  </span>;
+}
 function MonthlyChallenges() {
   const challenges = [
     { title:`과정 3개 수료`, current:2, total:3, reward:`+100P`, tone:`blue` },
@@ -9929,13 +9940,14 @@ function UserLearningRewards({ initialTab = `ranking` }) {
     { type:`badge`, title:`성장의 달인`, condition:`한 달 동안 500P 적립 시 획득`, date:`320 / 500P`, tone:`orange`, locked:true },
   ];
   const pointHistory = [
-    { type:`trophy`, label:`과정 수료`, detail:`데이터 분석 기초 입문`, points:100, date:`08.12`, tone:`blue` },
-    { type:`check`, label:`차시 완료`, detail:`생성형 AI 업무 활용 3차시`, points:20, date:`08.11`, tone:`mint` },
-    { type:`quiz`, label:`퀴즈 완료`, detail:`개인정보보호 필수 확인 문제`, points:50, date:`08.10`, tone:`violet` },
-    { type:`badge`, label:`설문 제출`, detail:`리더십 기본 과정 만족도 조사`, points:10, date:`08.08`, tone:`gold` },
+    { type:`course`, label:`과정 수료`, detail:`데이터 분석 기초 입문`, points:100, date:`08.12` },
+    { type:`completion`, label:`차시 완료`, detail:`생성형 AI 업무 활용 3차시`, points:20, date:`08.11` },
+    { type:`quiz`, label:`퀴즈 완료`, detail:`개인정보보호 필수 확인 문제`, points:50, date:`08.10` },
+    { type:`survey`, label:`설문 제출`, detail:`리더십 기본 과정 만족도 조사`, points:10, date:`08.08` },
   ];
   const tabs = [[`ranking`,RankingIcon,`랭킹`],[`badges`,Award01Icon,`뱃지 컬렉션`],[`points`,SparklesIcon,`포인트`]];
   return <main className="page user-rewards-page reward-game-page">
+    <div className="reward-confetti" aria-hidden="true">{Array.from({length:12},(_,index) => <i key={index} />)}</div>
     <section className="reward-league-hero">
       <div className="reward-hero-pattern" aria-hidden="true" />
       <div className="reward-league-copy"><nav>홈 <span>›</span> 학습 리워드</nav><span className="reward-season">2026 AUGUST SEASON</span><h1>8월 Learning League</h1><p>이번 달 학습으로 쌓은 성과와 다음 목표를 확인해보세요.</p><div className="reward-hero-score"><span><small>내 순위</small><b>8위</b></span><span><small>학습 포인트</small><b>1,040P</b></span></div></div>
@@ -9950,7 +9962,7 @@ function UserLearningRewards({ initialTab = `ranking` }) {
       <MonthlyChallenges />
     </section>}
     {tab === `badges` && <section className="user-badge-view reward-badge-view"><div className="user-reward-section-head"><div><span className="section-eyebrow">ACHIEVEMENT COLLECTION</span><h2>나의 뱃지 컬렉션</h2><p>획득한 뱃지 4개 · 다음 목표에도 도전해보세요.</p></div><span>4 / 6</span></div><div className="reward-badge-grid">{badges.map((badge) => <article className={`${badge.tone} ${badge.locked ? `locked` : ``}`} key={badge.title}><div className="badge-object-wrap"><RewardObject type={badge.type} tone={badge.tone} />{badge.locked && <span className="badge-lock"><Icon icon={LockPasswordIcon} size={14} /></span>}</div><small>{badge.locked ? `도전 중` : `획득 완료`}</small><h3>{badge.title}</h3><p>{badge.condition}</p><time>{badge.date}</time></article>)}</div><MonthlyChallenges /></section>}
-    {tab === `points` && <section className="user-point-view reward-point-view"><article className="reward-wallet"><div><span className="section-eyebrow">MY LEARNING WALLET</span><small>나의 학습 포인트</small><strong>1,040P</strong><p>이번 달 <b>+320P</b></p></div><RewardObject type="coin" tone="gold" /><i /><i /></article><div className="reward-point-grid"><section className="reward-activity"><div className="user-reward-section-head"><div><h2>최근 적립 내역</h2><p>학습할수록 포인트가 차곡차곡 쌓여요.</p></div></div><div>{pointHistory.map((item) => <article key={`${item.label}-${item.date}`}><RewardObject type={item.type} tone={item.tone} /><p><b>{item.label}</b><small>{item.detail}</small></p><strong>+{item.points}P</strong><time>{item.date}</time></article>)}</div></section><section className="reward-rules"><div className="user-reward-section-head"><div><h2>포인트 적립 방법</h2><p>현재 적용 중인 보상 기준이에요.</p></div></div><div>{[[`play`,`차시 완료`,`+20P`,`blue`],[`trophy`,`과정 수료`,`+100P`,`gold`],[`quiz`,`퀴즈 완료`,`+50P`,`violet`],[`badge`,`설문 제출`,`+10P`,`mint`]].map(([type,label,value,tone]) => <article key={label}><RewardObject type={type} tone={tone} /><b>{label}</b><strong>{value}</strong></article>)}</div></section></div><MonthlyChallenges /></section>}
+    {tab === `points` && <section className="user-point-view reward-point-view"><article className="reward-wallet"><div><span className="section-eyebrow">MY LEARNING WALLET</span><small>나의 학습 포인트</small><strong>1,040P</strong><p>이번 달 <b>+320P</b></p></div><PointCoin large /><i /><i /></article><div className="reward-point-grid"><section className="reward-activity"><div className="user-reward-section-head"><div><h2>최근 적립 내역</h2><p>학습할수록 포인트가 차곡차곡 쌓여요.</p></div></div><div>{pointHistory.map((item) => <article key={`${item.label}-${item.date}`}><PointCoin type={item.type} /><p><b>{item.label}</b><small>{item.detail}</small></p><strong>+{item.points}P</strong><time>{item.date}</time></article>)}</div></section><section className="reward-rules"><div className="user-reward-section-head"><div><h2>포인트 적립 방법</h2><p>현재 적용 중인 보상 기준이에요.</p></div></div><div>{[[`completion`,`차시 완료`,`+20P`],[`course`,`과정 수료`,`+100P`],[`quiz`,`퀴즈 완료`,`+50P`],[`survey`,`설문 제출`,`+10P`]].map(([type,label,value]) => <article key={label}><PointCoin type={type} /><b>{label}</b><strong>{value}</strong></article>)}</div></section></div><MonthlyChallenges /></section>}
   </main>;
 }
 function te({ courses: e, go: t, notify: n }) {
