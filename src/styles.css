@@ -17930,3 +17930,101 @@ html[data-theme="dark"] .learner-donut { background:conic-gradient(var(--donut-r
   .learner-donut-grid { grid-template-columns:1fr; gap:22px; }
   .learner-donut-item + .learner-donut-item { border-top:1px solid var(--ui-line); border-left:0; padding-top:22px; }
 }
+
+/* Shared typography hierarchy and ranking readability */
+:root {
+  --ui-text-primary:#191f28;
+  --ui-text-secondary:#596574;
+  --ui-text-muted:#8b95a1;
+  --ui-border-readable:#dfe4ea;
+  --ui-weight-regular:400;
+  --ui-weight-medium:550;
+  --ui-weight-semibold:650;
+  --ui-weight-bold:720;
+}
+html[data-theme="dark"] {
+  --ui-text-primary:#f2f4f6;
+  --ui-text-secondary:#b4bdc7;
+  --ui-text-muted:#89939e;
+  --ui-border-readable:#3a424c;
+}
+.user-portal :is(.page-head,.user-page-head),
+.admin-portal .page-head { color:var(--ui-text-primary); }
+.user-portal :is(h1,h2),
+.admin-portal :is(h1,h2) { font-weight:var(--ui-weight-bold); }
+.user-portal h3,
+.admin-portal h3,
+.user-portal :is(.course-card-title,.notice-title,.card-title),
+.admin-portal :is(.course-title,.learner-name,.department-card-title h3,.notice-title) {
+  color:var(--ui-text-primary);
+  font-weight:var(--ui-weight-semibold);
+}
+.user-portal :is(.course-card p,.course-card small,time),
+.admin-portal :is(table td,time,.meta,.helper-text) {
+  font-weight:var(--ui-weight-regular);
+}
+.user-portal :is(.section-label,label),
+.admin-portal :is(.section-label,label,table th) { font-weight:var(--ui-weight-medium); }
+.admin-portal table td { color:var(--ui-text-secondary); }
+.admin-portal table td :is(b,strong),
+.user-portal :is(.course-card h3,.home-ranking-list b,.home-notices b) {
+  color:var(--ui-text-primary);
+  font-weight:var(--ui-weight-semibold);
+}
+
+.department-reward-top .reward-podium-grid {
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  align-items:end;
+}
+.department-reward-top .reward-podium-card { min-height:170px; }
+.department-reward-top .reward-podium-card.rank-1 {
+  min-height:190px;
+  padding:21px;
+  order:2;
+}
+.department-reward-top .reward-podium-card.rank-2 { order:1; }
+.department-reward-top .reward-podium-card.rank-3 { order:3; }
+.reward-podium-card h3,
+.reward-podium-card strong { color:var(--ui-text-primary); font-weight:var(--ui-weight-semibold); }
+.reward-podium-card p,
+.reward-podium-card small { color:var(--ui-text-secondary); font-weight:var(--ui-weight-regular); }
+
+.reward-ranking-table,
+.department-ranking-table {
+  border:1px solid var(--ui-border-readable);
+  border-radius:16px;
+}
+.reward-ranking-table tbody tr,
+.department-ranking-table tbody tr {
+  background:var(--ui-surface);
+  border-bottom:1px solid var(--ui-border-readable);
+  transition:background-color .16s ease;
+}
+.reward-ranking-table tbody tr:last-child,
+.department-ranking-table tbody tr:last-child { border-bottom:0; }
+.reward-ranking-table tbody tr:hover,
+.department-ranking-table tbody tr:hover { background:#f5f8fb; }
+.reward-ranking-table tbody tr.ranking-list-top.rank-1,
+.department-ranking-table tbody tr.top-department:nth-child(1) { background:#fffcf3; }
+.reward-ranking-table tbody tr.ranking-list-top.rank-2,
+.department-ranking-table tbody tr.top-department:nth-child(2) { background:#f7f9fb; }
+.reward-ranking-table tbody tr.ranking-list-top.rank-3,
+.department-ranking-table tbody tr.top-department:nth-child(3) { background:#fcf8f4; }
+.reward-ranking-table td:nth-child(1),
+.department-ranking-table td:nth-child(1) { color:var(--ui-text-primary); font-weight:var(--ui-weight-semibold); }
+.reward-ranking-table td:nth-child(2) b,
+.department-ranking-table td:nth-child(2) b { color:var(--ui-text-primary); font-weight:var(--ui-weight-semibold); }
+.reward-ranking-table td:nth-child(4) strong,
+.department-ranking-table td:nth-child(3) strong { color:#3979b6; font-weight:var(--ui-weight-semibold); }
+.reward-ranking-table td:nth-child(3),
+.department-ranking-table td :is(small) { color:var(--ui-text-secondary); }
+html[data-theme="dark"] .reward-ranking-table tbody tr:hover,
+html[data-theme="dark"] .department-ranking-table tbody tr:hover { background:rgba(100,137,171,.12); }
+html[data-theme="dark"] .reward-ranking-table tbody tr.ranking-list-top,
+html[data-theme="dark"] .department-ranking-table tbody tr.top-department { background:rgba(100,137,171,.08); }
+@media(max-width:900px) {
+  .department-reward-top .reward-podium-grid { grid-template-columns:1fr; }
+  .department-reward-top .reward-podium-card.rank-1,
+  .department-reward-top .reward-podium-card.rank-2,
+  .department-reward-top .reward-podium-card.rank-3 { min-height:160px; order:initial; }
+}

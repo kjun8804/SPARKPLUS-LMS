@@ -5737,8 +5737,8 @@ function LearningRewardsPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredRanking.slice(3).map((item) => (
-                    <tr key={item.rank}>
+                  {filteredRanking.map((item) => (
+                    <tr key={item.rank} className={item.rank <= 3 ? `ranking-list-top rank-${item.rank}` : ``}>
                       <td>
                         <span className={`rank-number top-${item.rank}`}>
                           {item.rank <= 3 ? (
@@ -5772,7 +5772,7 @@ function LearningRewardsPage() {
             </div>
             </>
           ) : (
-            <><RewardTopThree items={departmentRanking.slice(0, 3)} type="department" /><DepartmentRankingTable departments={departmentRanking.slice(3)} period={period} /></>
+            <><RewardTopThree items={departmentRanking.slice(0, 3)} type="department" /><DepartmentRankingTable departments={departmentRanking} period={period} /></>
           )}
         </>
       ) : tab === `points` ? (
@@ -5846,7 +5846,7 @@ function LearningRewardsPage() {
 
 function RewardTopThree({ items, type }) {
   return (
-    <div className="reward-top-section">
+    <div className={`reward-top-section ${type}-reward-top`}>
       <div className="reward-section-title">
         <h2>TOP 3</h2>
       </div>
