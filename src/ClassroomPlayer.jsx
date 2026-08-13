@@ -72,6 +72,7 @@ export default function ClassroomPlayer({
   );
   const youtubeCourse = course.id === 6;
   const lastLesson = Math.max(lessons.length - 1, 0);
+  const demoProgress = 72;
 
   useEffect(() => {
     setQuizAnswer(null);
@@ -94,22 +95,23 @@ export default function ClassroomPlayer({
           <button onClick={() => setLessonOpen(false)} aria-label="차시 목록 닫기"><Icon icon={Cancel01Icon} /></button>
         </div>
         <div className="side-progress">
-          <div className="classroom-progress-copy"><span>전체 진도율</span><b>{course.progress ?? 0}%</b></div>
-          <div className="classroom-progress-track"><i style={{ width: `${course.progress ?? 0}%` }} /></div>
+          <div className="classroom-progress-copy"><span>전체 진도율</span><b>{demoProgress}%</b></div>
+          <div className="classroom-progress-track"><i style={{ width: `${demoProgress}%` }} /></div>
         </div>
         <div className="sidebar-lessons">
           {lessons.map((lesson, index) => {
-            const current = index === activeLesson;
-            const completed = index < activeLesson;
-            const status = current ? "수강 중" : completed ? "수강 완료" : "미수강";
+            const selected = index === activeLesson;
+            const completed = index < 2;
+            const inProgress = index === 2;
+            const status = completed ? "수강 완료" : inProgress ? "수강 중" : "미수강";
             return (
               <button
                 key={`${lesson.title}-${index}`}
-                className={current ? "current" : completed ? "lesson-completed" : ""}
+                className={`${selected ? "selected" : ""} ${completed ? "lesson-completed" : inProgress ? "lesson-in-progress" : "lesson-not-started"}`}
                 onClick={() => selectLesson(index)}
-                aria-current={current ? "step" : undefined}
+                aria-current={selected ? "step" : undefined}
               >
-                <span className={completed ? "completed" : current ? "active-number" : ""}>{completed ? "✓" : index + 1}</span>
+                <span className={completed ? "completed" : inProgress ? "in-progress-number" : ""}>{completed ? "✓" : index + 1}</span>
                 <div><small>{index + 1}차시 · {status}</small><b>{lesson.title}</b><em>{lesson.duration}</em></div>
               </button>
             );
@@ -162,7 +164,7 @@ export default function ClassroomPlayer({
           <button className={activeTab === "goals" ? "active" : ""} onClick={() => setActiveTab("goals")}>학습 목표</button>
           <button className={activeTab === "contents" ? "active" : ""} onClick={() => setActiveTab("contents")}>주요 내용</button>
           <button className={activeTab === "files" ? "active" : ""} onClick={() => setActiveTab("files")}>첨부 자료 <span>{detail.files.length}</span></button>
-          <button className={`ai-quiz-tab ${activeTab === "quiz" ? "active" : ""}`} onClick={() => setActiveTab("quiz")}>AI 퀴즈 <span>NEW</span></button>
+          <button className={`ai-quiz-tab ${activeTab === "quiz" ? "active" : ""}`} onClick={() => setActiveTab("quiz")}>AI 퀴즈</button>
         </div>
 
         <div className="player-tab-content">
@@ -171,7 +173,7 @@ export default function ClassroomPlayer({
           {activeTab === "files" && <div className="player-files">{detail.files.map((file) => <button key={file.name}><span>{file.type}</span><div><b>{file.name}</b><small>{file.size}</small></div><em><Icon icon={Download01Icon} size={16} />다운로드</em></button>)}</div>}
           {activeTab === "quiz" && (
             <div className="ai-quiz-panel">
-              <div className="ai-quiz-head"><span><Icon icon={SparklesIcon} size={20} /></span><div><div className="ai-title-line"><h3>AI 퀴즈</h3><small>NEW</small></div><p>이번 차시의 핵심 내용을 확인해보세요.</p></div></div>
+              <div className="ai-quiz-head"><span><Icon icon={SparklesIcon} size={20} /></span><div><div className="ai-title-line"><h3>AI 퀴즈</h3></div><p>이번 차시의 핵심 내용을 확인해보세요.</p></div></div>
               <div className="quiz-question"><span>Q1.</span><b>{detail.question}</b></div>
               <div className="quiz-options">
                 {["목표와 현재 상황을 확인한다", "도구부터 새로 구매한다", "모든 업무를 한 번에 변경한다", "검토 없이 바로 실행한다"].map((option, index) => (
@@ -188,7 +190,7 @@ export default function ClassroomPlayer({
 
         <div className="player-actions">
           <button className="lesson-nav previous" disabled={activeLesson === 0} onClick={() => selectLesson(activeLesson - 1)}><Icon icon={ArrowLeft01Icon} size={17} />이전 차시</button>
-          <button className="lesson-nav next" disabled={activeLesson === lastLesson} onClick={() => { saveProgress?.(); selectLesson(activeLesson + 1); }}>다음 차시<Icon icon={ArrowRight01Icon} size={17} /></button>
+          <button className="lesson-nav next" disabled={activeLesson === lastLesson} onClick={() => selectLesson(activeLesson + 1)}>다음 차시<Icon icon={ArrowRight01Icon} size={17} /></button>
         </div>
       </section>
     </main>
