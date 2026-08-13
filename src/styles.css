@@ -16964,6 +16964,171 @@ html[data-theme="dark"] .fixed-badge-card {
 .admin-chart-dot.progress-dot { fill:#3182f6; }
 .admin-chart-y-axis,.admin-chart-months { font-size:12px!important; }
 
+/* Admin home: monthly education volume */
+.admin-chart-legend .active-legend::before,
+.admin-chart-tooltip .active-color {
+  background: #8ebce8;
+}
+.admin-chart-legend .course-legend::before,
+.admin-chart-tooltip .course-color {
+  background: #d7e5f2;
+  border: 1px solid #9eb8cf;
+}
+.admin-monthly-bars {
+  height: 306px !important;
+}
+.admin-monthly-bars .admin-chart-y-axis {
+  padding: 2px 8px 51px 0 !important;
+}
+.admin-bar-canvas {
+  position: relative;
+  min-width: 0;
+  height: 100%;
+}
+.admin-bar-grid {
+  position: absolute;
+  inset: 0 0 51px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  pointer-events: none;
+}
+.admin-bar-grid i {
+  display: block;
+  width: 100%;
+  height: 1px;
+  background: var(--ui-line);
+}
+.admin-bar-groups {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: repeat(6, minmax(42px, 1fr));
+  gap: 8px;
+}
+.admin-bar-group {
+  position: relative;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) 19px 18px;
+  min-width: 0;
+  padding: 0 5px;
+  color: var(--ui-sub);
+  cursor: crosshair;
+  text-align: center;
+}
+.admin-bar-group > b {
+  color: #7d8895;
+  font-size: 11px;
+  font-weight: 650;
+}
+.admin-bar-group > small {
+  color: #9aa4af;
+  font-size: 10px;
+  white-space: nowrap;
+}
+.admin-bar-pair {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 5px;
+  min-height: 0;
+  padding: 5px 2px 0;
+}
+.admin-bar-pair i {
+  display: block;
+  width: min(22px, 38%);
+  min-height: 3px;
+  border-radius: 6px 6px 2px 2px;
+  transition: filter 160ms ease, transform 160ms ease;
+}
+.admin-bar-pair .completed-bar {
+  background: #4f91d3;
+}
+.admin-bar-pair .active-bar {
+  background: #9ac4ea;
+}
+.admin-bar-group:hover .admin-bar-pair i,
+.admin-bar-group:focus-visible .admin-bar-pair i {
+  filter: brightness(1.035);
+  transform: translateY(-1px);
+}
+.admin-bar-group .admin-chart-tooltip {
+  top: 16px;
+  width: 178px;
+}
+.admin-bar-group:first-child .admin-chart-tooltip {
+  left: 0;
+  transform: none;
+}
+.admin-bar-group:last-child .admin-chart-tooltip {
+  right: 0;
+  left: auto;
+  transform: none;
+}
+
+/* User learning: progress and completed lesson count stay equally visible */
+.learning-course-metrics {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 128px;
+  gap: 24px;
+  align-items: end;
+  margin-top: 17px;
+}
+.learning-progress-metric > span,
+.learning-lesson-metric > span {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--ui-sub, #6b7684);
+  font-size: 11px;
+  font-weight: 600;
+}
+.learning-progress-metric > span b {
+  margin-left: 5px;
+  color: var(--ui-text, #191f28);
+  font-size: 12px;
+}
+.learning-progress-metric .progress-block {
+  margin: 0;
+}
+.learning-lesson-metric {
+  padding-left: 20px;
+  border-left: 1px solid var(--ui-line, #e5e8eb);
+}
+.learning-lesson-metric > b,
+.completed-lesson-row dd {
+  color: var(--ui-text, #191f28);
+  font-size: 15px;
+  font-weight: 750;
+  letter-spacing: -0.01em;
+}
+.learning-lesson-metric > b small,
+.completed-lesson-row dd small {
+  color: var(--ui-sub, #6b7684);
+  font-size: 10px;
+  font-weight: 550;
+}
+.completed-info dl {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: 18px;
+}
+.completed-info dl div {
+  min-width: 0;
+}
+.completed-info .completed-lesson-row dd {
+  font-size: 12px;
+}
+
+@media (max-width: 720px) {
+  .admin-bar-groups { gap: 2px; }
+  .admin-bar-group { padding-inline: 1px; }
+  .admin-bar-pair { gap: 2px; }
+  .admin-bar-group > small { font-size: 8px; }
+  .learning-course-metrics { grid-template-columns: minmax(0, 1fr) 105px; gap: 14px; }
+  .learning-lesson-metric { padding-left: 14px; }
+  .completed-info dl { grid-template-columns: 1fr; }
+}
+
 html[data-theme="dark"] .learner-department-card.department-card { background:var(--ui-surface)!important; box-shadow:inset 4px 0 0 var(--department-accent)!important; }
 html[data-theme="dark"] .learner-soft-tag.department,
 html[data-theme="dark"] .learner-soft-tag.position { background:#252b32; color:#d4dae1; }

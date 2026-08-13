@@ -511,22 +511,14 @@ function f({ logout: e }) {
 }
 function p({ onGo: e }) {
   const data = [
-    { month: `3월`, progress: 61, completion: 58 },
-    { month: `4월`, progress: 66, completion: 62 },
-    { month: `5월`, progress: 69, completion: 65 },
-    { month: `6월`, progress: 72, completion: 69 },
-    { month: `7월`, progress: 75, completion: 73 },
-    { month: `8월`, progress: 79, completion: 78 },
+    { month: `3월`, completed: 42, active: 68, courses: 5 },
+    { month: `4월`, completed: 51, active: 73, courses: 6 },
+    { month: `5월`, completed: 58, active: 81, courses: 7 },
+    { month: `6월`, completed: 63, active: 88, courses: 8 },
+    { month: `7월`, completed: 72, active: 94, courses: 9 },
+    { month: `8월`, completed: 78, active: 102, courses: 8 },
   ];
   const [hovered, setHovered] = (0, r.useState)(null);
-  const x = (index) => 54 + index * 96;
-  const y = (value) => 214 - value * 1.82;
-  const progressLine = data
-    .map((item, index) => `${x(index)},${y(item.progress)}`)
-    .join(` `);
-  const completionLine = data
-    .map((item, index) => `${x(index)},${y(item.completion)}`)
-    .join(` `);
 
   const tasks = [
     {
@@ -559,7 +551,7 @@ function p({ onGo: e }) {
         aria-label="교육 운영 요약"
       >
         {[
-          [`운영 중인 과정`, `12`, `지난달 대비 +2개`],
+          [`교육과정 수`, `12개`, `총 강의 회차 86차시`],
           [`전체 학습자`, `248명`, `지난달 대비 +8명`],
           [`평균 진도율`, `79%`, `지난달 대비 +4.0%p`],
           [`평균 수료율`, `78%`, `지난달 대비 +4.2%p`],
@@ -576,98 +568,45 @@ function p({ onGo: e }) {
         <article className="panel trend-panel admin-home-trend">
           <div className="panel-head admin-chart-head">
             <div>
-              <h2>학습 진행 및 수료 추이</h2>
-              <p>최근 6개월의 평균 진도율과 수료율 변화를 확인하세요.</p>
+              <h2>월별 교육 현황</h2>
             </div>
           </div>
 
           <div className="admin-chart-legend" aria-label="그래프 범례">
-            <span className="progress-legend">평균 진도율</span>
-            <span className="completion-legend">수료율</span>
+            <span className="completion-legend">수료 인원</span>
+            <span className="active-legend">신청·수강 중</span>
+            <span className="course-legend">수료 과정</span>
           </div>
 
           <div
-            className="admin-progress-chart"
+            className="admin-progress-chart admin-monthly-bars"
             role="img"
-            aria-label="최근 6개월 평균 진도율과 수료율 라인 그래프"
+            aria-label="최근 6개월 수료 인원과 신청 및 수강 중 인원을 비교한 막대그래프"
           >
             <div className="admin-chart-y-axis">
-              {[100, 75, 50, 25, 0].map((value) => (
-                <span key={value}>{value}%</span>
+              {[120, 90, 60, 30, 0].map((value) => (
+                <span key={value}>{value}명</span>
               ))}
             </div>
-            <div className="admin-chart-canvas">
-              <svg
-                viewBox="0 0 588 230"
-                preserveAspectRatio="none"
-                aria-hidden="true"
-              >
-                {[32, 77.5, 123, 168.5, 214].map((lineY) => (
-                  <line
-                    key={lineY}
-                    x1="54"
-                    x2="534"
-                    y1={lineY}
-                    y2={lineY}
-                    className="grid-line"
-                  />
-                ))}
-                <polyline
-                  points={progressLine}
-                  className="admin-chart-line progress-line"
-                />
-                <polyline
-                  points={completionLine}
-                  className="admin-chart-line completion-line"
-                />
-                {data.map((item, index) => (
-                  <g key={item.month}>
-                    <circle
-                      cx={x(index)}
-                      cy={y(item.progress)}
-                      r="5"
-                      className="admin-chart-dot progress-dot"
-                    />
-                    <circle
-                      cx={x(index)}
-                      cy={y(item.completion)}
-                      r="5"
-                      className="admin-chart-dot completion-dot"
-                    />
-                  </g>
-                ))}
-              </svg>
-              <div className="admin-chart-hover-zones">
-                {data.map((item, index) => (
-                  <button
-                    key={item.month}
-                    type="button"
-                    aria-label={`${item.month} 평균 진도율 ${item.progress}%, 수료율 ${item.completion}%`}
-                    onMouseEnter={() => setHovered(index)}
-                    onMouseLeave={() => setHovered(null)}
-                    onFocus={() => setHovered(index)}
-                    onBlur={() => setHovered(null)}
-                  >
-                    {hovered === index && (
-                      <span className="admin-chart-tooltip">
-                        <b>{item.month}</b>
-                        <em>
-                          <i className="progress-color" />
-                          평균 진도율 <strong>{item.progress}%</strong>
-                        </em>
-                        <em>
-                          <i className="completion-color" />
-                          수료율 <strong>{item.completion}%</strong>
-                        </em>
-                      </span>
-                    )}
-                  </button>
-                ))}
-              </div>
-              <div className="admin-chart-months">
-                {data.map((item) => (
-                  <span key={item.month}>{item.month}</span>
-                ))}
+            <div className="admin-bar-canvas">
+              <div className="admin-bar-grid" aria-hidden="true">{[0, 1, 2, 3, 4].map((line) => <i key={line} />)}</div>
+              <div className="admin-bar-groups">
+                {data.map((item, index) => <button key={item.month} type="button" className="admin-bar-group"
+                  aria-label={`${item.month} 수료 인원 ${item.completed}명, 신청 및 수강 중 ${item.active}명, 수료 과정 ${item.courses}개`}
+                  onMouseEnter={() => setHovered(index)} onMouseLeave={() => setHovered(null)} onFocus={() => setHovered(index)} onBlur={() => setHovered(null)}>
+                  <span className="admin-bar-pair" aria-hidden="true">
+                    <i className="completed-bar" style={{ height: `${item.completed / 1.2}%` }} />
+                    <i className="active-bar" style={{ height: `${item.active / 1.2}%` }} />
+                  </span>
+                  <b>{item.month}</b>
+                  <small>{item.courses}개 과정</small>
+                  {hovered === index && <span className="admin-chart-tooltip">
+                    <b>{item.month}</b>
+                    <em><i className="completion-color" />수료 인원 <strong>{item.completed}명</strong></em>
+                    <em><i className="active-color" />신청·수강 중 <strong>{item.active}명</strong></em>
+                    <em><i className="course-color" />수료 과정 <strong>{item.courses}개</strong></em>
+                  </span>}
+                </button>)}
               </div>
             </div>
           </div>
@@ -9855,7 +9794,7 @@ function te({ courses: e, go: t, notify: n }) {
               (0, i.jsxs)(`div`, {
                 className: `learning-summary`,
                 children: [
-                  (0, i.jsx)(`span`, { children: `전체 학습 현황` }),
+                  (0, i.jsxs)(`span`, { children: [`수강 과정 총 `, e.length, `개`] }),
                   (0, i.jsxs)(`b`, { children: [`평균 진도율 `, d, `%`] }),
                   (0, i.jsx)(Z, { value: d }),
                 ],
@@ -9893,19 +9832,28 @@ function te({ courses: e, go: t, notify: n }) {
                                 ` · 최근 학습일 2026.08.05`,
                               ],
                             }),
-                            (0, i.jsx)(Z, { value: e.progress ?? 0 }),
+                            (0, i.jsxs)(`div`, {
+                              className: `learning-course-metrics`,
+                              children: [
+                                (0, i.jsxs)(`div`, {
+                                  className: `learning-progress-metric`,
+                                  children: [
+                                    (0, i.jsxs)(`span`, { children: [`진도율 `, (0, i.jsx)(`b`, { children: `${e.progress ?? 0}%` })] }),
+                                    (0, i.jsx)(Z, { value: e.progress ?? 0 }),
+                                  ],
+                                }),
+                                (0, i.jsxs)(`div`, {
+                                  className: `learning-lesson-metric`,
+                                  children: [
+                                    (0, i.jsx)(`span`, { children: `강의 회차` }),
+                                    (0, i.jsxs)(`b`, { children: [Math.min(k[e.id]?.length || 6, Math.floor(((e.progress ?? 0) / 100) * (k[e.id]?.length || 6))), ` / `, k[e.id]?.length || 6, (0, i.jsx)(`small`, { children: ` 차시` })] }),
+                                  ],
+                                }),
+                              ],
+                            }),
                             (0, i.jsxs)(`div`, {
                               className: `learning-actions`,
                               children: [
-                                (0, i.jsxs)(`span`, {
-                                  children: [
-                                    Math.min(
-                                      5,
-                                      Math.floor((e.progress ?? 0) / 20),
-                                    ),
-                                    `/5 차시 완료`,
-                                  ],
-                                }),
                                 (0, i.jsx)(`button`, {
                                   className: `secondary`,
                                   onClick: () => t(`courseDetail`, e.id),
@@ -9971,6 +9919,25 @@ function te({ courses: e, go: t, notify: n }) {
                               children: [
                                 (0, i.jsx)(`dt`, { children: `총 학습 시간` }),
                                 (0, i.jsx)(`dd`, { children: e.duration }),
+                              ],
+                            }),
+                            (0, i.jsxs)(`div`, {
+                              children: [
+                                (0, i.jsx)(`dt`, { children: `진도율` }),
+                                (0, i.jsx)(`dd`, { children: `100%` }),
+                              ],
+                            }),
+                            (0, i.jsxs)(`div`, {
+                              className: `completed-lesson-row`,
+                              children: [
+                                (0, i.jsx)(`dt`, { children: `강의 회차` }),
+                                (0, i.jsxs)(`dd`, { children: [k[e.id]?.length || 6, ` / `, k[e.id]?.length || 6, (0, i.jsx)(`small`, { children: ` 차시` })] }),
+                              ],
+                            }),
+                            (0, i.jsxs)(`div`, {
+                              children: [
+                                (0, i.jsx)(`dt`, { children: `설문 제출` }),
+                                (0, i.jsx)(`dd`, { children: t === 1 ? `제출 완료` : `설문 없음` }),
                               ],
                             }),
                           ],
