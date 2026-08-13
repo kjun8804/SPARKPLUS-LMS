@@ -61,10 +61,13 @@ export default function ClassroomPlayer({
   saveProgress,
 }) {
   const initialIndex = course.id === 6 ? 0 : Math.min(2, Math.max(lessons.length - 1, 0));
-  const [activeLesson, setActiveLesson] = useState(initialIndex);
+  const storedLesson = Number(sessionStorage.getItem(`sparkplus-active-lesson-${course.id}`));
+  const [activeLesson, setActiveLesson] = useState(Number.isInteger(storedLesson) && storedLesson >= 0 && storedLesson < lessons.length ? storedLesson : initialIndex);
   const [activeTab, setActiveTab] = useState("goals");
   const [quizAnswer, setQuizAnswer] = useState(null);
   const [quizDone, setQuizDone] = useState(false);
+  const [completionOpen, setCompletionOpen] = useState(false);
+  const [courseCompleted, setCourseCompleted] = useState(() => localStorage.getItem(`sparkplus-lessons-complete-${course.id}`) === "true");
   const mainRef = useRef(null);
   const detail = useMemo(
     () => lessonDetails(course, lessons[activeLesson], activeLesson),
@@ -72,7 +75,7 @@ export default function ClassroomPlayer({
   );
   const youtubeCourse = course.id === 6;
   const lastLesson = Math.max(lessons.length - 1, 0);
-  const demoProgress = 72;
+  const demoProgress = courseCompleted ? 100 : 72;
 
   useEffect(() => {
     setQuizAnswer(null);
@@ -83,8 +86,16 @@ export default function ClassroomPlayer({
   const selectLesson = (index) => {
     if (index < 0 || index > lastLesson || index === activeLesson) return;
     setActiveLesson(index);
+    sessionStorage.setItem(`sparkplus-active-lesson-${course.id}`, String(index));
     setActiveTab("goals");
     mainRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  const finishCourse = () => {
+    localStorage.setItem(`sparkplus-lessons-complete-${course.id}`, "true");
+    setCourseCompleted(true);
+    saveProgress?.(true);
+    setCompletionOpen(true);
   };
 
   return (
@@ -101,8 +112,8 @@ export default function ClassroomPlayer({
         <div className="sidebar-lessons">
           {lessons.map((lesson, index) => {
             const selected = index === activeLesson;
-            const completed = index < 2;
-            const inProgress = index === 2;
+            const completed = courseCompleted || index < 2;
+            const inProgress = !courseCompleted && index === 2;
             const status = completed ? "수강 완료" : inProgress ? "수강 중" : "미수강";
             return (
               <button
@@ -190,9 +201,12 @@ export default function ClassroomPlayer({
 
         <div className="player-actions">
           <button className="lesson-nav previous" disabled={activeLesson === 0} onClick={() => selectLesson(activeLesson - 1)}><Icon icon={ArrowLeft01Icon} size={17} />이전 차시</button>
-          <button className="lesson-nav next" disabled={activeLesson === lastLesson} onClick={() => selectLesson(activeLesson + 1)}>다음 차시<Icon icon={ArrowRight01Icon} size={17} /></button>
+          {activeLesson === lastLesson
+            ? <button className="lesson-nav next course-finish-button" onClick={finishCourse}>수강 완료<Icon icon={CheckmarkCircle02Icon} size={17} /></button>
+            : <button className="lesson-nav next" onClick={() => selectLesson(activeLesson + 1)}>다음 차시<Icon icon={ArrowRight01Icon} size={17} /></button>}
         </div>
       </section>
+      {completionOpen && <div className="classroom-completion-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && setCompletionOpen(false)}><section className="classroom-completion-modal" role="dialog" aria-modal="true" aria-labelledby="classroom-completion-title"><button className="completion-modal-close" onClick={() => setCompletionOpen(false)} aria-label="완료 안내 닫기"><Icon icon={Cancel01Icon} /></button><span className="completion-check-object"><Icon icon={CheckmarkCircle02Icon} size={30} /></span><h2 id="classroom-completion-title">학습을 모두 완료했어요!</h2><p>모든 강의 차시를 수강했습니다.<br />설문을 완료하면 수료 처리가 완료됩니다.</p><div><button className="completion-exit" onClick={() => go("lectureDetail", course.id)}>강의실 나가기</button><button className="completion-survey" onClick={() => go("courseSurvey", course.id)}>설문하기<Icon icon={ArrowRight01Icon} size={16} /></button></div></section></div>}
     </main>
   );
 }

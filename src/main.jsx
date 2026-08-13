@@ -8,6 +8,7 @@ import './my-learning-polish.css';
 import './user-page-hero.css';
 import './user-visual-system.css';
 import './reward-gamification.css';
+import './completion-quest.css';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
