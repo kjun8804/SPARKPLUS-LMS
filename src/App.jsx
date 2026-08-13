@@ -38,6 +38,7 @@ import {
   LockPasswordIcon,
   ArrowDown01Icon,
   Analytics01Icon,
+  Pin02Icon,
 } from "@hugeicons/core-free-icons";
 
 const i = { jsx, jsxs, Fragment };
@@ -51,6 +52,11 @@ function Icon({ icon, size = 18, className = ``, strokeWidth = 1.7 }) {
       className={className}
     />
   );
+}
+function NoticePin({ label = false }) {
+  return <span className={`notice-pin ${label ? `notice-pin-label` : ``}`} aria-label="중요 공지">
+    <Icon icon={Pin02Icon} size={label ? 25 : 22} strokeWidth={1.9} />
+  </span>;
 }
 function WishlistHeart({ filled = false, size = 27 }) {
   return <svg
@@ -7878,7 +7884,7 @@ function T({ createSignal }) {
         <table className="notice-admin-table">
           <thead><tr><th>제목</th><th>게시 기간</th><th>조회수</th><th>삭제</th></tr></thead>
           <tbody>{visible.map((notice) => <tr className={notice.important ? `notice-important-row` : ``} key={notice.id}>
-            <td><button className="notice-title-button" onClick={() => { setViewing(notice); setScreen(`detail`); }}>{notice.important && <span className="notice-pin" aria-label="중요 공지"><i /></span>}<b>{notice.title}</b></button></td>
+            <td><button className="notice-title-button" onClick={() => { setViewing(notice); setScreen(`detail`); }}>{notice.important && <NoticePin />}<b>{notice.title}</b></button></td>
             <td><span className="notice-period">{notice.start?.slice(5).replaceAll(`.`, `/`).replaceAll(`-`, `/`)} ~ {notice.end ? notice.end.slice(5).replaceAll(`.`, `/`).replaceAll(`-`, `/`) : `계속`}</span></td>
             <td>{notice.views.toLocaleString()}</td>
             <td className="notice-delete-cell"><button className="notice-delete-button" onClick={() => setDeleteTarget(notice)} aria-label={`${notice.title} 삭제`} title="공지 삭제"><Icon icon={Delete02Icon} size={18} /></button></td>
@@ -7910,7 +7916,7 @@ function NoticeDetailPage({ notice, onBack, onEdit, onDelete }) {
     <PageHeader kicker="공지사항 관리 › 공지사항 상세" title="공지사항 상세" />
     <button className="notice-back-link" onClick={onBack}><Icon icon={ArrowLeft01Icon} size={16} />목록으로</button>
     <article className="notice-document">
-      <header>{notice.important && <span className="notice-pin notice-pin-label" aria-label="중요 공지"><i /></span>}<h1>{notice.title}</h1><div><time>{notice.start?.replaceAll(`-`, `.`)}</time><span>조회수 {notice.views.toLocaleString()}</span></div></header>
+      <header>{notice.important && <NoticePin label />}<h1>{notice.title}</h1><div><time>{notice.start?.replaceAll(`-`, `.`)}</time><span>조회수 {notice.views.toLocaleString()}</span></div></header>
       <div className="notice-document-body">{(notice.content || ``).split(`\n`).map((line, index) => <p key={index}>{line || <br />}</p>)}</div>
     </article>
     <div className="notice-detail-actions"><button className="secondary" onClick={onEdit}><Icon icon={Edit02Icon} size={17} />수정</button><button className="notice-danger-outline" onClick={onDelete}><Icon icon={Delete02Icon} size={17} />삭제</button></div>
@@ -7940,7 +7946,7 @@ function NoticeEditorModal({ form, setForm, onClose, onPreview, onDraft, onPubli
 function NoticeReadingModal({ notice, preview = false, onClose, onEdit, onEnd }) {
   return <div className="overlay center" onMouseDown={onClose}><article className="notice-reading-modal" onMouseDown={(event) => event.stopPropagation()}>
     <header><span>{preview ? `사용자 화면 미리보기` : `공지 보기`}</span><button onClick={onClose}><Icon icon={Cancel01Icon} /></button></header>
-    <div className="notice-reading-content">{notice.important && <span className="notice-pin notice-pin-label" aria-label="중요 공지"><i /></span>}<h1>{notice.title || `제목 없는 공지`}</h1><div className="notice-reading-meta"><span>게시 기간 {notice.start} ~ {notice.noEnd || !notice.end ? `계속` : notice.end}</span><span>게시 대상 {notice.target || `전체 임직원`}</span><span>조회 {notice.views || 0}</span></div><div className="notice-reading-body">{(notice.content || `공지 내용이 입력되지 않았습니다.`).split(`\n`).map((line, index) => <p key={index}>{line || <br />}</p>)}</div>{notice.file && <div className="notice-reading-file"><b>첨부파일</b><button><Icon icon={File01Icon} /><span>{notice.file}</span><Icon icon={Download01Icon} /></button></div>}</div>
+    <div className="notice-reading-content">{notice.important && <NoticePin label />}<h1>{notice.title || `제목 없는 공지`}</h1><div className="notice-reading-meta"><span>게시 기간 {notice.start} ~ {notice.noEnd || !notice.end ? `계속` : notice.end}</span><span>게시 대상 {notice.target || `전체 임직원`}</span><span>조회 {notice.views || 0}</span></div><div className="notice-reading-body">{(notice.content || `공지 내용이 입력되지 않았습니다.`).split(`\n`).map((line, index) => <p key={index}>{line || <br />}</p>)}</div>{notice.file && <div className="notice-reading-file"><b>첨부파일</b><button><Icon icon={File01Icon} /><span>{notice.file}</span><Icon icon={Download01Icon} /></button></div>}</div>
     {!preview && <footer>{onEdit && <button className="secondary" onClick={onEdit}>수정</button>}{onEnd && <button className="primary" onClick={onEnd}>게시 종료</button>}</footer>}
   </article></div>;
 }
@@ -10876,7 +10882,7 @@ function ie({ go: e, notices = j }) {
                   (0, i.jsxs)(`span`, {
                     className: `notice-title-cell`,
                     children: [
-                      t.important && (0, i.jsx)(`span`, { className: `notice-pin`, "aria-label": `중요 공지`, children: (0, i.jsx)(`i`, {}) }),
+                      t.important && (0, i.jsx)(NoticePin, {}),
                       t.title,
                     ],
                   }),
@@ -10930,7 +10936,7 @@ function ae({ notice: e, go: t, notices = j }) {
           (0, i.jsxs)(`div`, {
             className: `notice-detail-head`,
             children: [
-              e.important && (0, i.jsx)(`span`, { className: `notice-pin notice-pin-label`, "aria-label": `중요 공지`, children: (0, i.jsx)(`i`, {}) }),
+              e.important && (0, i.jsx)(NoticePin, { label: true }),
               (0, i.jsx)(`h1`, { children: e.title }),
               (0, i.jsxs)(`p`, {
                 children: [
