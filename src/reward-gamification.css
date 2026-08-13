@@ -142,6 +142,33 @@ html,body,#root{min-height:100%}
 .app-shell.user-portal.reward-canvas-active>main.reward-game-page>.reward-confetti{position:absolute!important;z-index:0!important;top:0!important;right:auto!important;bottom:0!important;left:50%!important;width:100vw!important;height:auto!important;min-height:100%!important;margin:0!important;padding:0!important;overflow:hidden!important;pointer-events:none!important;transform:translateX(-50%)}
 .reward-game-page>.reward-league-hero,.reward-game-page>.reward-tabs,.reward-game-page>.reward-ranking-view,.reward-game-page>.reward-badge-view,.reward-game-page>.reward-point-view{position:relative!important;z-index:2!important}
 .app-shell.user-portal.reward-canvas-active>main.reward-game-page{padding-top:22px!important;margin-top:0!important}
+
+/* Compact game achievement collection */
+.reward-badge-view .reward-badge-grid{grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:16px!important}
+.reward-badge-view .reward-badge-grid>article{--badge-card-a:#fffdf7;--badge-card-b:#f2eee4;--badge-line:#e5dac2;--badge-accent:#bb8b28;position:relative;isolation:isolate;min-height:228px!important;overflow:hidden;padding:15px 16px 16px!important;border:1px solid var(--badge-line)!important;border-radius:20px!important;color:#253047!important;text-align:left!important;background:linear-gradient(155deg,var(--badge-card-a),var(--badge-card-b))!important;box-shadow:0 14px 28px rgba(3,7,25,.24),inset 0 1px 0 rgba(255,255,255,.9)!important}
+.reward-badge-view .reward-badge-grid>article.blue{--badge-card-a:#f4f9ff;--badge-card-b:#dfeafa;--badge-line:#c6d8ef;--badge-accent:#4a79c4}
+.reward-badge-view .reward-badge-grid>article.mint{--badge-card-a:#f3fcf8;--badge-card-b:#dcefe8;--badge-line:#c3dfd5;--badge-accent:#3f967d}
+.reward-badge-view .reward-badge-grid>article.violet{--badge-card-a:#f8f5ff;--badge-card-b:#e8e0f5;--badge-line:#d2c4e8;--badge-accent:#7555b5}
+.reward-badge-view .reward-badge-grid>article.pink{--badge-card-a:#fff7fa;--badge-card-b:#f2e2e9;--badge-line:#e3ccd6;--badge-accent:#b66388}
+.reward-badge-view .reward-badge-grid>article.orange{--badge-card-a:#fff9f2;--badge-card-b:#f3e4d4;--badge-line:#e4cfb9;--badge-accent:#b8793f}
+.reward-badge-view .reward-badge-grid>article:before{position:absolute;z-index:-1;top:-52px;right:-38px;width:132px;height:132px;border:26px solid color-mix(in srgb,var(--badge-accent) 14%,transparent);border-radius:50%;content:""}
+.reward-badge-view .reward-badge-grid>article:after{position:absolute;z-index:3;top:48px;right:24px;width:7px;height:7px;border-radius:2px;background:var(--badge-accent);content:"";opacity:.55;transform:rotate(45deg);box-shadow:17px 15px 0 -1px color-mix(in srgb,var(--badge-accent) 55%,white),-9px 28px 0 -2px color-mix(in srgb,var(--badge-accent) 40%,white)}
+.reward-badge-view .badge-rarity{position:relative;z-index:4;display:inline-flex;min-height:23px;align-items:center;padding:0 9px;border:1px solid color-mix(in srgb,var(--badge-accent) 24%,transparent);border-radius:999px;color:var(--badge-accent);font-size:9px;font-weight:850;letter-spacing:.09em;background:rgba(255,255,255,.52)}
+.reward-badge-view .badge-object-wrap{position:relative;display:grid;width:100%;height:96px!important;margin:3px 0 1px;place-items:center}
+.reward-badge-view .badge-ring{position:absolute;width:88px;height:88px;border:1px solid color-mix(in srgb,var(--badge-accent) 24%,transparent);border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.8) 0 35%,color-mix(in srgb,var(--badge-accent) 12%,transparent) 36% 62%,transparent 63%);box-shadow:0 0 22px color-mix(in srgb,var(--badge-accent) 20%,transparent)}
+.reward-badge-view .badge-object-wrap>.reward-object-3d{z-index:2;width:88px!important;height:88px!important;filter:saturate(1.08) drop-shadow(0 9px 9px rgba(39,37,76,.18));transform:translateY(-1px)}
+.reward-badge-view .badge-lock{z-index:5;right:calc(50% - 48px);bottom:4px;width:29px;height:29px;border-color:#fff!important;color:#677082!important;background:#dfe3ea!important;box-shadow:0 5px 10px rgba(41,47,65,.16)}
+.reward-badge-view .badge-state{display:inline-flex!important;align-items:center;gap:4px;margin:1px 0 0!important;color:var(--badge-accent)!important;font-size:10px!important;font-weight:750!important}
+.reward-badge-view .reward-badge-grid h3{margin:5px 0 4px!important;color:#242d42!important;font-size:16px!important;font-weight:800!important;line-height:1.3;letter-spacing:-.025em}
+.reward-badge-view .reward-badge-grid p{min-height:0!important;margin:0!important;color:#667087!important;font-size:11.5px!important;line-height:1.45}
+.reward-badge-view .reward-badge-grid time{margin-top:7px!important;color:#8b92a1!important;font-size:10.5px!important;line-height:1.3}
+.reward-badge-view .reward-badge-grid>article:hover{transform:translateY(-5px) rotate(.2deg);box-shadow:0 20px 38px rgba(3,7,25,.3),0 0 0 1px color-mix(in srgb,var(--badge-accent) 20%,transparent),inset 0 1px 0 rgba(255,255,255,.95)!important}
+.reward-badge-view .reward-badge-grid>article.locked{filter:none!important;opacity:.7!important;--badge-card-a:#eef1f5;--badge-card-b:#dce1e8;--badge-line:#cbd1da;--badge-accent:#7c8492}
+.reward-badge-view .reward-badge-grid>article.locked .reward-object-3d{filter:grayscale(1) saturate(.2) opacity(.58) drop-shadow(0 6px 7px rgba(39,43,55,.12))}
+.reward-badge-view .reward-badge-grid>article.locked:after{opacity:.18}
+@media(max-width:980px){.reward-badge-view .reward-badge-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important}}
+@media(max-width:700px){.reward-badge-view .reward-badge-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:13px!important}.reward-badge-view .reward-badge-grid>article{min-height:218px!important;padding:14px!important}}
+@media(max-width:430px){.reward-badge-view .reward-badge-grid{grid-template-columns:1fr!important}.reward-badge-view .reward-badge-grid>article{min-height:210px!important}}
 .reward-confetti i{opacity:.9!important;filter:saturate(1.18) drop-shadow(0 7px 12px rgba(3,7,28,.22))!important}
 .reward-confetti i:nth-child(1){width:116px!important;height:27px!important}
 .reward-confetti i:nth-child(2){width:54px!important;height:54px!important}
