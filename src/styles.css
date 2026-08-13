@@ -18659,3 +18659,111 @@ html[data-theme="dark"] .user-portal .course-wishlist.wishlisted { background:rg
   .user-portal .curriculum > .curriculum-row { grid-template-columns:38px minmax(0,1fr); gap:12px; padding:16px!important; }
   .user-portal .curriculum > .curriculum-row > time { grid-column:2; }
 }
+
+/* Wishlist heart and course-detail CTA parity */
+.user-portal .course-wishlist,
+.user-portal .course-wishlist:hover,
+.user-portal .course-wishlist.wishlisted,
+.user-portal .detail-wishlist,
+.user-portal .detail-wishlist:hover,
+.user-portal .detail-wishlist.wishlisted {
+  width:38px;
+  height:38px;
+  padding:0;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+}
+.user-portal .course-wishlist { color:#8b95a1; }
+.user-portal .course-wishlist:hover {
+  color:#d85b87;
+  transform:scale(1.07);
+}
+.user-portal .course-wishlist.wishlisted { color:#ed3d7b; }
+.user-portal .wishlist-heart-icon {
+  display:block;
+  overflow:visible;
+  transition:transform .16s ease,color .16s ease,opacity .16s ease;
+}
+.user-portal .course-wishlist:hover .wishlist-heart-icon { transform:scale(1.04); }
+.user-portal .course-wishlist:active .wishlist-heart-icon { transform:scale(.94); }
+.user-portal .wishlist-heart-icon.filled { filter:drop-shadow(0 2px 3px rgba(237,61,123,.18)); }
+
+.user-portal .detail-layout > .apply-card {
+  width:100%;
+  height:310px!important;
+  min-height:310px!important;
+  max-height:310px!important;
+  box-sizing:border-box!important;
+  padding:26px!important;
+  border:1px solid var(--ui-line)!important;
+  border-radius:24px!important;
+  background:var(--ui-surface)!important;
+  box-shadow:none!important;
+  overflow:hidden;
+}
+.user-portal .detail-layout > .apply-card h2 {
+  flex:0 0 auto;
+  margin:0!important;
+}
+.user-portal .detail-layout > .apply-card dl {
+  flex:0 0 auto;
+  margin:18px 0 0!important;
+}
+.user-portal .detail-layout > .apply-card > :is(.progress-block,.progress-track,.lecture-progress,.learning-progress-metric),
+.user-portal .detail-layout > .apply-card [class*="progress"] { display:none!important; }
+.user-portal .detail-layout > .apply-card .course-action.large {
+  width:100%!important;
+  height:50px!important;
+  min-height:50px!important;
+  margin-top:auto!important;
+  padding:0 18px!important;
+  border-radius:12px!important;
+  font-size:14px!important;
+  font-weight:650!important;
+  transform:translateY(0);
+  transition:transform .16s ease,box-shadow .16s ease,background .16s ease!important;
+}
+.user-portal .detail-layout > .apply-card .course-action.enroll-course {
+  border:1px solid #4f8fcf!important;
+  background:linear-gradient(180deg,#70afe8 0%,#4f8fcf 100%)!important;
+  color:#fff!important;
+  box-shadow:0 6px 12px rgba(58,119,179,.2),inset 0 1px 0 rgba(255,255,255,.34)!important;
+}
+.user-portal .detail-layout > .apply-card .course-action.enter-course {
+  border:1px solid #bed7ed!important;
+  background:linear-gradient(180deg,#f4f9fe 0%,#dcecf9 100%)!important;
+  color:#3979b6!important;
+  box-shadow:0 6px 12px rgba(58,119,179,.14),inset 0 1px 0 rgba(255,255,255,.9)!important;
+}
+.user-portal .detail-layout > .apply-card .course-action.large:hover {
+  transform:translateY(-1px)!important;
+}
+.user-portal .detail-layout > .apply-card .course-action.enroll-course:hover {
+  background:linear-gradient(180deg,#7ab6ec 0%,#5797d3 100%)!important;
+  box-shadow:0 8px 15px rgba(58,119,179,.23),inset 0 1px 0 rgba(255,255,255,.38)!important;
+}
+.user-portal .detail-layout > .apply-card .course-action.enter-course:hover {
+  background:linear-gradient(180deg,#f8fbff 0%,#d5e8f7 100%)!important;
+  box-shadow:0 8px 15px rgba(58,119,179,.17),inset 0 1px 0 rgba(255,255,255,.95)!important;
+}
+.user-portal .detail-layout > .apply-card .course-action.large:active {
+  transform:translateY(1px)!important;
+  box-shadow:0 2px 5px rgba(58,119,179,.12),inset 0 1px 0 rgba(255,255,255,.28)!important;
+}
+.user-portal .detail-layout > .apply-card > small {
+  flex:0 0 auto;
+  margin-top:10px!important;
+}
+html[data-theme="dark"] .user-portal .course-wishlist,
+html[data-theme="dark"] .user-portal .course-wishlist:hover,
+html[data-theme="dark"] .user-portal .course-wishlist.wishlisted { background:transparent!important; border:0!important; }
+html[data-theme="dark"] .user-portal .course-wishlist.wishlisted { color:#f06a9b!important; }
+@media(max-width:700px) {
+  .user-portal .detail-layout > .apply-card {
+    height:310px!important;
+    min-height:310px!important;
+    max-height:310px!important;
+  }
+}

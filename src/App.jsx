@@ -51,6 +51,24 @@ function Icon({ icon, size = 18, className = ``, strokeWidth = 1.7 }) {
     />
   );
 }
+function WishlistHeart({ filled = false, size = 27 }) {
+  return <svg
+    className={`wishlist-heart-icon ${filled ? `filled` : ``}`}
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    aria-hidden="true"
+  >
+    <path
+      d="M12 20.35C10.9 19.34 5.15 15.05 3.12 11.34C1.35 8.1 2.72 4.5 6.15 3.76C8.22 3.31 10.18 4.13 12 6.03C13.82 4.13 15.78 3.31 17.85 3.76C21.28 4.5 22.65 8.1 20.88 11.34C18.85 15.05 13.1 19.34 12 20.35Z"
+      fill={filled ? `currentColor` : `none`}
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>;
+}
 function userLevelLabel(level = ``) {
   const number = String(level).match(/\d+/)?.[0];
   return number ? `LV.${number}` : level;
@@ -9496,7 +9514,7 @@ function Y({ course: e, go: t }) {
           aria-label={wishlisted ? `찜 해제` : `강의 찜하기`}
           title={wishlisted ? `찜 해제` : `강의 찜하기`}
         >
-          <span aria-hidden="true">{wishlisted ? `♥` : `♡`}</span>
+          <WishlistHeart filled={wishlisted} size={27} />
         </button>
       </div>
       <div className="course-card-body">
@@ -9603,7 +9621,7 @@ function X({ course: e, go: t, apply: n, preview = false }) {
                       onClick: toggleWishlist,
                       title: wishlisted ? `찜 해제` : `강의 찜하기`,
                       "aria-label": wishlisted ? `찜 해제` : `강의 찜하기`,
-                      children: (0, i.jsx)(`span`, { "aria-hidden": `true`, children: wishlisted ? `♥` : `♡` }),
+                      children: (0, i.jsx)(WishlistHeart, { filled: wishlisted, size: 28 }),
                     }),
                   ] }),
                 ],
