@@ -1,0 +1,409 @@
+/*
+ * Unified dark design system for both portals.
+ * This file is intentionally loaded last: light mode is untouched while legacy
+ * light-only declarations cannot leak into dark mode.
+ */
+html[data-theme='dark'] {
+  color-scheme: dark;
+  --dark-bg: #101722;
+  --dark-surface-1: #18212e;
+  --dark-surface-2: #202b3a;
+  --dark-surface-3: #283547;
+  --dark-border: #344256;
+  --dark-border-soft: #2a3748;
+  --dark-text-primary: #edf2f7;
+  --dark-text-secondary: #b8c3d0;
+  --dark-text-tertiary: #8f9cad;
+  --dark-blue: #6aa7ff;
+  --dark-blue-ring: rgba(75, 145, 255, .2);
+  --ui-bg: var(--dark-bg);
+  --ui-surface: var(--dark-surface-1);
+  --ui-surface-soft: var(--dark-surface-2);
+  --ui-text: var(--dark-text-primary);
+  --ui-sub: var(--dark-text-secondary);
+  --ui-line: var(--dark-border);
+  --ui-brand: var(--dark-blue);
+  --ui-brand-hover: #89b9ff;
+  --ui-shadow: 0 12px 32px rgba(0, 0, 0, .28);
+}
+
+html[data-theme='dark'],
+html[data-theme='dark'] body,
+html[data-theme='dark'] #root,
+html[data-theme='dark'] :is(.app-shell, .user-portal, .admin-portal),
+html[data-theme='dark'] :is(.user-portal, .admin-portal) > :is(main, .main, .page),
+html[data-theme='dark'] :is(.dashboard-page, .player-page) {
+  background-color: var(--dark-bg) !important;
+  color: var(--dark-text-primary) !important;
+}
+
+/* Shared dark surfaces */
+html[data-theme='dark'] :is(.user-portal, .admin-portal) :is(
+  .card,
+  .panel,
+  .data-card,
+  .chart-card,
+  .progress-card,
+  .survey-card,
+  .person-card,
+  .course-card,
+  .learning-card,
+  .completed-card,
+  .learning-summary,
+  .apply-card,
+  .curriculum-panel,
+  .detail-content,
+  .notice-table,
+  .notice-detail,
+  .notice-document,
+  .notice-reader,
+  .profile-side,
+  .profile-content,
+  .profile-panel,
+  .filter-card,
+  .form-panel,
+  .tab-panel,
+  .results-card,
+  .fixed-badge-card,
+  .department-card,
+  .learner-department-card,
+  .learner-profile-hero,
+  .learner-profile-summary,
+  .admin-course-management-card,
+  .point-history-card,
+  .point-guide-card,
+  .user-ranking-list,
+  .user-podium-card,
+  .modal:not(.certificate-modal),
+  .drawer
+) {
+  border-color: var(--dark-border-soft) !important;
+  background-color: var(--dark-surface-1) !important;
+  color: var(--dark-text-primary) !important;
+}
+
+html[data-theme='dark'] :is(.user-portal, .admin-portal) :is(
+  .course-filters,
+  .learner-filter-panel,
+  .analysis-filter-bar,
+  .performance-filter-panel,
+  .filters,
+  .period-bar,
+  .search-filter-panel,
+  .ranking-toolbar,
+  .performance-period,
+  .performance-tabs,
+  .sub-tabs,
+  .notice-admin-search,
+  .notice-search,
+  .table-head,
+  .notice-table-head,
+  .sidebar-head,
+  .auto-save
+) {
+  border-color: var(--dark-border-soft) !important;
+  background-color: var(--dark-surface-2) !important;
+  color: var(--dark-text-secondary) !important;
+  box-shadow: none !important;
+}
+
+/* Tables: never allow a light header or body island. */
+html[data-theme='dark'] :is(.user-portal, .admin-portal) :is(
+  .table-wrap,
+  .my-learning-table-wrap,
+  .results-table,
+  .course-table,
+  .learner-table,
+  .reward-ranking-table,
+  .department-ranking-table
+) {
+  overflow: hidden;
+  border-color: var(--dark-border-soft) !important;
+  background: var(--dark-surface-1) !important;
+  box-shadow: none !important;
+}
+
+html[data-theme='dark'] :is(.user-portal, .admin-portal) table {
+  border-color: var(--dark-border-soft) !important;
+  background: var(--dark-surface-1) !important;
+  color: var(--dark-text-primary) !important;
+}
+
+html[data-theme='dark'] :is(.user-portal, .admin-portal) table :is(thead, thead tr, th) {
+  border-color: var(--dark-border) !important;
+  background: var(--dark-surface-2) !important;
+  color: #d5dde7 !important;
+  font-weight: 600 !important;
+}
+
+html[data-theme='dark'] :is(.user-portal, .admin-portal) table :is(tbody, tbody tr, td) {
+  border-color: var(--dark-border-soft) !important;
+  background-color: var(--dark-surface-1) !important;
+  color: var(--dark-text-secondary) !important;
+}
+
+html[data-theme='dark'] :is(.user-portal, .admin-portal) table tbody tr:hover > td {
+  background-color: var(--dark-surface-2) !important;
+}
+
+html[data-theme='dark'] :is(.user-portal, .admin-portal) table td :is(b, strong, a, button:not(.primary)) {
+  color: var(--dark-text-primary) !important;
+}
+
+html[data-theme='dark'] :is(.user-portal, .admin-portal) table td :is(small, time, .secondary, .sub, .meta) {
+  color: var(--dark-text-tertiary) !important;
+}
+
+/* Inputs, search fields and native selects */
+html[data-theme='dark'] :is(.user-portal, .admin-portal) :is(
+  input:not([type='checkbox']):not([type='radio']),
+  textarea,
+  select
+) {
+  border: 1px solid var(--dark-border) !important;
+  outline: 0 !important;
+  background-color: var(--dark-surface-1) !important;
+  color: var(--dark-text-primary) !important;
+  box-shadow: none !important;
+  caret-color: var(--dark-blue) !important;
+}
+
+html[data-theme='dark'] :is(.user-portal, .admin-portal) :is(
+  input:not([type='checkbox']):not([type='radio']),
+  textarea,
+  select
+):hover {
+  border-color: #43546a !important;
+}
+
+html[data-theme='dark'] :is(.user-portal, .admin-portal) :is(
+  input:not([type='checkbox']):not([type='radio']),
+  textarea,
+  select
+):focus,
+html[data-theme='dark'] :is(.user-portal, .admin-portal) :is(
+  input:not([type='checkbox']):not([type='radio']),
+  textarea,
+  select
+):focus-visible {
+  border-color: var(--dark-blue) !important;
+  outline: 0 !important;
+  box-shadow: 0 0 0 3px var(--dark-blue-ring) !important;
+}
+
+html[data-theme='dark'] :is(.user-portal, .admin-portal) :is(input, textarea)::placeholder {
+  color: var(--dark-text-tertiary) !important;
+  opacity: .9 !important;
+}
+
+html[data-theme='dark'] :is(.user-portal, .admin-portal) select {
+  color-scheme: dark;
+}
+
+html[data-theme='dark'] :is(.user-portal, .admin-portal) select :is(option, optgroup) {
+  background: var(--dark-surface-1) !important;
+  color: var(--dark-text-primary) !important;
+}
+
+/* Composite search controls own the border; their nested input stays clean. */
+html[data-theme='dark'] :is(.user-portal, .admin-portal) :is(
+  .search,
+  .search-wrap,
+  .notice-admin-search > span,
+  .course-filter-fields .search,
+  .learner-filter-fields .search,
+  .analysis-filter-bar .search
+) {
+  border: 1px solid var(--dark-border) !important;
+  outline: 0 !important;
+  background: var(--dark-surface-1) !important;
+  color: var(--dark-text-secondary) !important;
+  box-shadow: none !important;
+}
+
+html[data-theme='dark'] :is(.user-portal, .admin-portal) :is(
+  .search,
+  .search-wrap,
+  .notice-admin-search > span
+):focus-within {
+  border-color: var(--dark-blue) !important;
+  box-shadow: 0 0 0 3px var(--dark-blue-ring) !important;
+}
+
+html[data-theme='dark'] :is(.user-portal, .admin-portal) :is(
+  .search,
+  .search-wrap,
+  .notice-admin-search > span
+) > input {
+  border: 0 !important;
+  outline: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+/* Dropdowns and floating surfaces */
+html[data-theme='dark'] :is(.user-portal, .admin-portal) :is(
+  .dropdown,
+  .profile-menu,
+  .select-menu,
+  [role='listbox']
+) {
+  border-color: var(--dark-border) !important;
+  background: var(--dark-surface-1) !important;
+  color: var(--dark-text-primary) !important;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, .35) !important;
+}
+
+html[data-theme='dark'] :is(.user-portal, .admin-portal) :is(.dropdown, .profile-menu) button:hover {
+  background: var(--dark-surface-2) !important;
+}
+
+/* Secondary and utility buttons must not become white islands. */
+html[data-theme='dark'] :is(.user-portal, .admin-portal) :is(
+  .secondary,
+  .search-filter-reset,
+  .filter-reset,
+  .analysis-button,
+  .detail,
+  .course-manage-link,
+  .notice-create-button,
+  .pagination button,
+  .modal-actions button:not(.primary):not(.danger),
+  .notice-detail-actions button:not(.primary):not(.danger),
+  .drawer-head > button,
+  .modal-close
+) {
+  border-color: var(--dark-border) !important;
+  background: var(--dark-surface-2) !important;
+  color: var(--dark-text-primary) !important;
+  box-shadow: none !important;
+}
+
+html[data-theme='dark'] :is(.user-portal, .admin-portal) :is(
+  .secondary,
+  .search-filter-reset,
+  .filter-reset,
+  .analysis-button,
+  .detail,
+  .course-manage-link,
+  .pagination button
+):hover {
+  border-color: #495c75 !important;
+  background: var(--dark-surface-3) !important;
+}
+
+html[data-theme='dark'] :is(.user-portal, .admin-portal) button:focus-visible {
+  outline: 0 !important;
+  box-shadow: 0 0 0 3px var(--dark-blue-ring) !important;
+}
+
+/* Tabs and segmented controls */
+html[data-theme='dark'] :is(.user-portal, .admin-portal) :is(
+  .tabs,
+  .player-tabs,
+  .sub-tabs,
+  .performance-tabs,
+  .ranking-toolbar
+) {
+  border-color: var(--dark-border-soft) !important;
+}
+
+html[data-theme='dark'] :is(.user-portal, .admin-portal) :is(
+  .tabs button,
+  .player-tabs button,
+  .sub-tabs button,
+  .performance-tabs button,
+  .ranking-toolbar button
+) {
+  color: var(--dark-text-secondary) !important;
+}
+
+html[data-theme='dark'] :is(.user-portal, .admin-portal) :is(
+  .tabs button.active,
+  .player-tabs button.active,
+  .sub-tabs button.active,
+  .performance-tabs button.active,
+  .ranking-toolbar button.active
+) {
+  color: var(--dark-text-primary) !important;
+}
+
+/* Readable badges and chips on dark surfaces. */
+html[data-theme='dark'] :is(.user-portal, .admin-portal) :is(
+  .badge,
+  .status-badge,
+  .gray-badge,
+  .chip,
+  .tag,
+  .learner-soft-tag,
+  .badge-type-chip,
+  .auto-badge
+) {
+  border-color: #3a4a60 !important;
+  background: var(--dark-surface-3) !important;
+  color: #d7e0ea !important;
+}
+
+html[data-theme='dark'] :is(.user-portal, .admin-portal) :is(.blue-badge, .status-badge.learning, .status-badge.operating) {
+  border-color: rgba(106, 167, 255, .32) !important;
+  background: rgba(64, 126, 210, .2) !important;
+  color: #9bc4ff !important;
+}
+
+html[data-theme='dark'] :is(.user-portal, .admin-portal) :is(.green-badge, .status-badge.completed, .status-badge.complete) {
+  border-color: rgba(90, 196, 150, .28) !important;
+  background: rgba(47, 139, 99, .2) !important;
+  color: #8bdbb8 !important;
+}
+
+/* Common text hierarchy; component-specific accent text remains untouched. */
+html[data-theme='dark'] :is(.user-portal, .admin-portal) :is(
+  h1, h2, h3, h4,
+  .card-title,
+  .course-title,
+  .notice-title-cell,
+  .learner-name,
+  .ranking-name
+) {
+  color: var(--dark-text-primary) !important;
+}
+
+html[data-theme='dark'] :is(.user-portal, .admin-portal) :is(
+  .page-description,
+  .description,
+  .meta,
+  .course-meta,
+  .notice-period,
+  .notice-reading-meta,
+  .learner-department,
+  .team,
+  time
+) {
+  color: var(--dark-text-secondary) !important;
+}
+
+html[data-theme='dark'] :is(.user-portal, .admin-portal) :is(
+  .muted,
+  .helper,
+  .hint,
+  .tertiary
+) {
+  color: var(--dark-text-tertiary) !important;
+}
+
+/* Notice importance stays warm but dark. */
+html[data-theme='dark'] :is(.user-portal, .admin-portal) tr.notice-important-row > td,
+html[data-theme='dark'] :is(.user-portal, .admin-portal) .notice-row.important {
+  border-color: #554531 !important;
+  background: #2d281f !important;
+}
+
+html[data-theme='dark'] :is(.user-portal, .admin-portal) tr.notice-important-row:hover > td,
+html[data-theme='dark'] :is(.user-portal, .admin-portal) .notice-row.important:hover {
+  background: #373025 !important;
+}
+
+/* Dark scrollbars complete the canvas without affecting layout. */
+html[data-theme='dark'] :is(.user-portal, .admin-portal) * {
+  scrollbar-color: #45556b var(--dark-surface-1);
+}
