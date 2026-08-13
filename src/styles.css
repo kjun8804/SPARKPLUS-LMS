@@ -18158,3 +18158,137 @@ html[data-theme="dark"] .user-portal {
   --user-progress-track:rgba(151,174,195,.16);
   --user-active-neutral:rgba(151,174,195,.12);
 }
+
+/* User LMS hierarchy, greeting composition and continuous page canvas */
+html:not([data-theme="dark"]) .user-portal,
+html:not([data-theme="dark"]) .user-portal > :is(main,.page,.player-page),
+html:not([data-theme="dark"]) .user-portal .page,
+html:not([data-theme="dark"]) .user-portal .main {
+  background-color:#fff!important;
+  background-image:none;
+}
+html:not([data-theme="dark"]) .user-portal {
+  border-right:0!important;
+  border-left:0!important;
+  box-shadow:none!important;
+}
+html:not([data-theme="dark"]) .user-portal::before,
+html:not([data-theme="dark"]) .user-portal::after { box-shadow:none!important; }
+
+.user-portal {
+  --user-weight-regular:400;
+  --user-weight-medium:550;
+  --user-weight-semibold:650;
+}
+.user-portal :is(p,small,time,.meta,.description,.breadcrumb) { font-weight:var(--user-weight-regular); }
+.user-portal :is(label,th,.label,.kicker,.home-section-label) { font-weight:var(--user-weight-medium); }
+.user-portal :is(
+  .page-head h1,
+  .home-welcome h1,
+  section > h2,
+  article > h2,
+  .panel-head h2,
+  .home-card-head h2,
+  .home-section-head h2,
+  .user-reward-section-head h2
+) { font-weight:var(--user-weight-semibold)!important; }
+.user-portal :is(
+  .course-card h3,
+  .course-card-title,
+  .detail-intro h1,
+  .lecture-hero h1,
+  .lesson-title,
+  .my-learning-course-cell > button,
+  .home-continue-content h2,
+  .home-popular-list b,
+  .home-notice-list button > span,
+  .notice-table button > span,
+  .notice-detail-head h1,
+  .user-badge-card h3,
+  .user-ranking-list p strong,
+  .user-podium-card h3,
+  .profile-copy b
+) {
+  color:var(--ui-text);
+  font-weight:var(--user-weight-semibold)!important;
+}
+.user-portal :is(
+  .home-quick-stats b,
+  .home-progress-line > span,
+  .my-learning-progress-cell > b,
+  .my-learning-lessons > b,
+  .my-rank-hero strong,
+  .my-rank-hero b,
+  .user-podium-card > strong,
+  .user-ranking-list > div > b:first-child,
+  .user-ranking-list > div > strong:last-child,
+  .user-point-hero strong,
+  .point-history-list > div > strong,
+  .point-guide-list strong
+) { font-weight:var(--user-weight-semibold)!important; }
+.user-portal :is(
+  .course-card small,
+  .course-card p,
+  .lecture-meta,
+  .my-learning-course-cell small,
+  .user-podium-card p,
+  .user-ranking-list p small,
+  .user-badge-card p,
+  .user-badge-card time,
+  .point-history-list small,
+  .point-history-list time
+) { font-weight:var(--user-weight-regular)!important; }
+
+.user-portal .home-welcome {
+  align-items:center;
+}
+.user-portal .home-greeting-group {
+  display:flex;
+  min-width:0;
+  align-items:center;
+  gap:16px;
+}
+.user-portal .home-greeting-group .home-welcome-sticker {
+  width:82px;
+  height:82px;
+  flex:0 0 82px;
+  align-self:center;
+  margin:0;
+}
+.user-portal .home-welcome-copy { min-width:0; }
+.user-portal .home-welcome-copy > span {
+  display:block;
+  margin-bottom:8px;
+  color:#8b95a1;
+  font-size:13px;
+  font-weight:var(--user-weight-regular);
+}
+.user-portal .home-welcome h1 {
+  display:grid;
+  gap:1px;
+}
+.user-portal .home-welcome h1 > span { display:block; }
+.user-portal .home-view-all {
+  white-space:nowrap;
+  color:#6885a1;
+  font-weight:var(--user-weight-medium);
+}
+.user-portal .home-view-all:hover { color:var(--user-primary-strong); }
+
+@media(max-width:900px) {
+  .user-portal .home-greeting-group { gap:13px; }
+  .user-portal .home-greeting-group .home-welcome-sticker { width:70px; height:70px; flex-basis:70px; }
+}
+@media(max-width:700px) {
+  .user-portal .home-welcome { position:static; display:flex; padding-right:0; }
+  .user-portal .home-greeting-group { align-items:center; gap:10px; }
+  .user-portal .home-greeting-group .home-welcome-sticker {
+    position:static;
+    width:56px;
+    height:56px;
+    flex-basis:56px;
+    margin:0;
+  }
+  .user-portal .home-welcome-copy > span { margin-bottom:5px; font-size:11px; }
+  .user-portal .home-welcome h1 { font-size:27px; }
+}

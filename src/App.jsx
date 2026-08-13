@@ -8216,6 +8216,11 @@ var O = [
       { title: `안전하고 책임감 있는 AI 활용`, duration: `40분` },
     ],
   },
+  CURRENT_USER = {
+    name: `김지수`,
+    department: `People팀`,
+    email: `user@company.com`,
+  },
   A = {
     user: [
       [`userDashboard`, `홈`],
@@ -8331,6 +8336,7 @@ function M() {
     [H, W] = (0, r.useState)(!1),
     [G, q] = (0, r.useState)(38),
     [J, Y] = (0, r.useState)(1),
+    [rewardInitialTab, setRewardInitialTab] = (0, r.useState)(`ranking`),
     [userNotices, setUserNotices] = (0, r.useState)(getUserNoticeData);
   ((0, r.useEffect)(() => {
     let e = localStorage.getItem(`sparkplus-lms-courses`);
@@ -8373,7 +8379,11 @@ function M() {
       [h, D],
     );
   function $(e, n) {
-    (n && e === `noticeDetail` ? Y(n) : n && v(n),
+    (e === `userRewards`
+      ? setRewardInitialTab(n || `ranking`)
+      : n && e === `noticeDetail`
+        ? Y(n)
+        : n && v(n),
       t(e),
       z(!1),
       window.scrollTo({ top: 0, behavior: `smooth` }));
@@ -8433,7 +8443,7 @@ function M() {
                 (t(`login`), z(!1));
               },
             }),
-            e === `userDashboard` && (0, i.jsx)(L, { courses: Q, go: $, notices: userNotices }),
+            e === `userDashboard` && (0, i.jsx)(L, { courses: Q, go: $, notices: userNotices, user: CURRENT_USER }),
             e === `adminDashboard` && (0, i.jsx)(U, { go: $ }),
             e === `catalog` &&
               (0, i.jsx)(K, {
@@ -8489,7 +8499,7 @@ function M() {
                   (I(e), setTimeout(() => I(``), 2600));
                 },
               }),
-            e === `userRewards` && (0, i.jsx)(UserLearningRewards, {}),
+            e === `userRewards` && (0, i.jsx)(UserLearningRewards, { initialTab: rewardInitialTab }),
             e === `lectureDetail` && (0, i.jsx)(ne, { course: Z, go: $ }),
             e === `courseSurvey` && (0, i.jsx)(GoogleFormSurveyPage, { course: Z, go: $ }),
             e === `player` &&
@@ -8737,16 +8747,16 @@ function F({
               children: [
                 (0, i.jsx)(`span`, {
                   className: `avatar`,
-                  children: e === `user` ? `김` : `관`,
+                  children: e === `user` ? CURRENT_USER.name[0] : `관`,
                 }),
                 (0, i.jsxs)(`span`, {
                   className: `profile-copy`,
                   children: [
                     (0, i.jsx)(`b`, {
-                      children: e === `user` ? `김지수` : `관리자`,
+                      children: e === `user` ? CURRENT_USER.name : `관리자`,
                     }),
                     (0, i.jsx)(`small`, {
-                      children: e === `user` ? `People팀` : `인재개발팀`,
+                      children: e === `user` ? CURRENT_USER.department : `인재개발팀`,
                     }),
                   ],
                 }),
@@ -8761,12 +8771,12 @@ function F({
                     className: `profile-menu-head`,
                     children: [
                       (0, i.jsx)(`b`, {
-                        children: e === `user` ? `김지수` : `LMS 관리자`,
+                        children: e === `user` ? CURRENT_USER.name : `LMS 관리자`,
                       }),
                       (0, i.jsx)(`small`, {
                         children:
                           e === `user`
-                            ? `user@company.com`
+                            ? CURRENT_USER.email
                             : `admin@company.com`,
                       }),
                     ],
@@ -8832,7 +8842,7 @@ function PageHeader({ kicker: e, title: t, description: n, action: r }) {
     ],
   });
 }
-function L({ courses: e, go: t, notices = j }) {
+function L({ courses: e, go: t, notices = j, user = CURRENT_USER }) {
   let n = e[0] ?? O[0];
   const ranking = [
     { rank: 1, name: `이지은`, dept: `마케팅팀`, score: 1280 },
@@ -8847,16 +8857,17 @@ function L({ courses: e, go: t, notices = j }) {
   return (
     <main className="page dashboard-page home-minimal">
       <section className="home-welcome">
-        <div className="home-welcome-copy">
-          <span>8월 10일 월요일</span>
-          <h1>
-            김지수님, 오늘도 가볍게
-            <br />
-            시작해볼까요?
-          </h1>
-        </div>
-        <div className="home-welcome-sticker" aria-hidden="true">
-          <HomeGreetingSticker />
+        <div className="home-greeting-group">
+          <div className="home-welcome-sticker" aria-hidden="true">
+            <HomeGreetingSticker />
+          </div>
+          <div className="home-welcome-copy">
+            <span>8월 10일 월요일</span>
+            <h1>
+              <span>{user.name}님,</span>
+              <span>오늘도 가볍게 시작해볼까요?</span>
+            </h1>
+          </div>
         </div>
         <div className="home-quick-stats">
           <div>
@@ -9011,6 +9022,9 @@ function L({ courses: e, go: t, notices = j }) {
                 <small>이번 달 획득</small>
               </div>
             </div>
+            <button className="home-view-all" onClick={() => t(`userRewards`, `badges`)}>
+              전체보기 <Icon icon={ArrowRight01Icon} size={15} />
+            </button>
           </div>
           <div className="home-badge-main">
             <span className="achievement-badge-object">
@@ -9820,8 +9834,8 @@ function LearningCourseTable({ courses, completed = false, completionDates = [],
     </table>
   </div>;
 }
-function UserLearningRewards() {
-  const [tab, setTab] = r.useState(`ranking`);
+function UserLearningRewards({ initialTab = `ranking` }) {
+  const [tab, setTab] = r.useState(initialTab);
   const [month, setMonth] = r.useState(`2026.08`);
   const ranking = [
     { rank: 1, name: `이지은`, dept: `마케팅팀`, points: 1320 },
