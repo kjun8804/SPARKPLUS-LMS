@@ -3019,9 +3019,6 @@ function LearnerDepartmentHub({ onSelect }) {
           <h2>부서별 학습 현황</h2>
           <p>부서별 학습 현황을 확인하고 소속 학습자를 관리할 수 있습니다.</p>
         </div>
-        <span>
-          전체 학습자 <b>248명</b>
-        </span>
       </div>
 
       <div className="department-card-grid learner-department-grid">
@@ -3047,10 +3044,12 @@ function LearnerDepartmentHub({ onSelect }) {
               <div>
                 <small>평균 진도율</small>
                 <b>{dept.progress}%</b>
+                <span className="department-metric-bar progress"><i style={{ width: `${dept.progress}%` }} /></span>
               </div>
-              <div className={dept.required > 0 ? `needs-attention` : ``}>
-                <small>관리 필요</small>
-                <b>{dept.required}명</b>
+              <div className="completion-rate">
+                <small>평균 수료율</small>
+                <b>{dept.completion}%</b>
+                <span className="department-metric-bar completion"><i style={{ width: `${dept.completion}%` }} /></span>
               </div>
             </div>
           </button>
@@ -3195,31 +3194,17 @@ function LearnerProfilePage({ learner, onBack }) {
         <article className="panel learner-progress-history">
           <div className="panel-head">
             <div>
-              <h2>학습 진도 추이</h2>
-              <p>최근 6개월 평균 진도율입니다.</p>
+              <h2>과정별 학습 진행 현황</h2>
+              <p>과정별 현재 진도율을 비교해보세요.</p>
             </div>
           </div>
-          <div className="profile-line-chart">
-            <svg viewBox="0 0 560 180" preserveAspectRatio="none">
-              <defs>
-                <linearGradient id="learnerArea" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#3182f6" stopOpacity=".2" />
-                  <stop offset="100%" stopColor="#3182f6" stopOpacity="0" />
-                </linearGradient>
-              </defs>
-              <path
-                className="profile-area"
-                d={`M20,150 L124,128 L228,112 L332,94 L436,70 L540,${170 - learner.progress * 1.35} L540,170 L20,170 Z`}
-              />
-              <polyline
-                points={`20,150 124,128 228,112 332,94 436,70 540,${170 - learner.progress * 1.35}`}
-              />
-            </svg>
-            <div>
-              {[`3월`, `4월`, `5월`, `6월`, `7월`, `8월`].map((month) => (
-                <span key={month}>{month}</span>
-              ))}
-            </div>
+          <div className="learner-course-bars">
+            {learningCourses.map((course, index) => <div className="learner-course-bar-row" key={`${course.id}-chart-${index}`} tabIndex="0">
+              <b title={course.title}>{course.title}</b>
+              <span className={`learner-course-bar ${course.learningProgress === 100 ? `complete` : course.learningProgress < 40 ? `low` : `active`}`}><i style={{ width: `${course.learningProgress}%` }} /></span>
+              <strong>{course.learningProgress}%</strong>
+              <span className="learner-course-tooltip"><b>{course.title}</b><small>진도율 <strong>{course.learningProgress}%</strong></small><small>강의 회차 <strong>{course.completedLessons}/{course.totalLessons}</strong></small></span>
+            </div>)}
           </div>
         </article>
         <article className="panel learner-badges-panel">

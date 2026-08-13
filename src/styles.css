@@ -17790,3 +17790,91 @@ html[data-theme="dark"] .user-portal :is(.my-rank-hero,.user-point-hero,.user-po
 @media(max-width:800px){.user-podium,.user-badge-grid,.user-point-grid{grid-template-columns:1fr}.user-podium-card.rank-1,.user-podium-card{min-height:170px}.user-reward-tabs{overflow-x:auto}.user-reward-tabs button{min-width:105px}.point-orbit{right:25px;opacity:.6}}
 @media(max-width:560px){.user-reward-toolbar,.user-reward-section-head{align-items:flex-start;flex-direction:column}.user-reward-toolbar select{width:100%}.my-rank-hero{padding:24px}.reward-trophy{width:72px;height:72px;border-radius:24px}.my-rank-hero strong{font-size:35px}.point-orbit{display:none}.user-ranking-list>div{grid-template-columns:25px 34px 1fr auto;padding:0 14px}.user-badge-card{min-height:0}}
 @media(prefers-reduced-motion:reduce){.reward-trophy{animation:none}.user-podium-card:hover,.user-badge-card:hover{transform:none}}
+
+/* Learner management: neutral department cards and course comparison */
+.learner-department-card.department-card,
+.learner-department-card.department-card:nth-child(n) {
+  background:var(--ui-surface)!important;
+  border-color:var(--ui-line)!important;
+  box-shadow:0 6px 24px rgba(0,27,55,.045)!important;
+}
+.learner-department-card.department-card:hover {
+  border-color:#c8dced!important;
+  box-shadow:0 10px 28px rgba(0,27,55,.075)!important;
+}
+.learner-department-card.department-card.selected {
+  border-color:#77a9dd!important;
+  box-shadow:0 0 0 3px rgba(49,130,246,.09),0 8px 24px rgba(0,27,55,.055)!important;
+}
+.learner-department-card .department-icon,
+.learner-department-card .department-icon:is(.blue,.violet,.coral,.green,.amber,.sky) {
+  background:#e8f3ff!important;
+  color:#3979b6!important;
+}
+.learner-department-metrics > div:first-child b { color:#3182f6; }
+.learner-department-metrics .completion-rate b { color:#68a9df; }
+.department-metric-bar {
+  display:block;
+  width:100%;
+  height:4px;
+  overflow:hidden;
+  margin-top:10px;
+  border-radius:999px;
+  background:#e9eef4;
+}
+.department-metric-bar i { display:block; height:100%; border-radius:inherit; }
+.department-metric-bar.progress i { background:#3182f6; }
+.department-metric-bar.completion i { background:#7db9e8; }
+.learner-department-grid + .learner-list-head { margin-top:68px!important; }
+html[data-theme="dark"] .learner-department-card.department-card,
+html[data-theme="dark"] .learner-department-card.department-card:nth-child(n) {
+  background:var(--ui-surface)!important;
+  box-shadow:0 8px 24px rgba(0,0,0,.2)!important;
+}
+.learner-course-bars { display:grid; gap:16px; margin-top:20px; }
+.learner-course-bar-row {
+  position:relative;
+  display:grid;
+  grid-template-columns:minmax(190px,1.05fr) minmax(210px,1.6fr) 48px;
+  align-items:center;
+  gap:16px;
+  min-height:34px;
+  outline:0;
+}
+.learner-course-bar-row > b {
+  overflow:hidden;
+  color:var(--ui-text);
+  font-size:12px;
+  font-weight:600;
+  line-height:1.4;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.learner-course-bar-row > strong { color:#3976ae; font-size:12px; text-align:right; }
+.learner-course-bar { display:block; height:10px; overflow:hidden; border-radius:999px; background:#e9eef4; }
+.learner-course-bar > i { display:block; height:100%; border-radius:inherit; background:linear-gradient(90deg,#6eaff0,#3182f6); transition:width .3s ease; }
+.learner-course-bar.complete > i { background:linear-gradient(90deg,#4f91d3,#276eb5); }
+.learner-course-bar.low > i { background:linear-gradient(90deg,#b7d8f2,#83b9e5); }
+.learner-course-tooltip {
+  position:absolute;
+  z-index:10;
+  top:39px;
+  left:min(210px,32%);
+  display:none;
+  width:210px;
+  box-sizing:border-box;
+  padding:13px 14px;
+  border:1px solid #30363d;
+  border-radius:13px;
+  background:#1d2228;
+  color:#fff;
+  box-shadow:0 12px 28px rgba(0,0,0,.2);
+}
+.learner-course-tooltip>b { display:block; overflow:hidden; margin-bottom:8px; font-size:11px; text-overflow:ellipsis; white-space:nowrap; }
+.learner-course-tooltip small { display:flex; justify-content:space-between; gap:14px; margin-top:5px; color:#c9d0d7; font-size:10px; }
+.learner-course-tooltip small strong { color:#fff; }
+.learner-course-bar-row:hover .learner-course-tooltip,
+.learner-course-bar-row:focus .learner-course-tooltip { display:block; }
+@media(max-width:850px) {
+  .learner-course-bar-row { grid-template-columns:minmax(150px,.9fr) minmax(180px,1.4fr) 44px; gap:11px; }
+}
