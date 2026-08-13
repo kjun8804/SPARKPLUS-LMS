@@ -135,8 +135,8 @@ html:has(.reward-game-page),body:has(.reward-game-page),#root:has(.reward-game-p
 html,body,#root{min-height:100%}
 .app-shell.user-portal.reward-canvas-active{overflow-x:clip!important;background:#141b35!important;color-scheme:dark}
 .app-shell.user-portal.reward-canvas-active>footer{border-top-color:rgba(145,155,202,.17)!important;color:#aeb6cc!important;background:#11182e!important}
-.reward-canvas-active .reward-game-page{background:none!important}
-.reward-fullbleed-canvas{position:absolute;z-index:-3;top:0;bottom:0;left:50%;width:100vw;min-height:100%;pointer-events:none;transform:translateX(-50%);background:linear-gradient(180deg,#151d3a 0%,#141b35 44%,#11182e 100%)}
+.app-shell.user-portal.reward-canvas-active>main.page.user-rewards-page.reward-game-page{background-color:transparent!important;background-image:none!important}
+.reward-fullbleed-canvas{position:absolute;z-index:-3;top:0;left:50%;width:100vw;height:100%;min-height:100vh;pointer-events:none;transform:translateX(-50%);background:linear-gradient(180deg,#151d3a 0%,#141b35 44%,#11182e 100%)}
 .reward-canvas-active .reward-game-page:before{opacity:.18!important}
 .reward-canvas-active .reward-game-page:after{display:none!important}
 .reward-confetti{left:50%!important;width:100vw!important;transform:translateX(-50%)}
