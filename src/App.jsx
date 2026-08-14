@@ -9338,11 +9338,11 @@ function L({ courses: e, go: t, notices = j, user = CURRENT_USER }) {
           <div className="home-continue-content">
             <J accent={n.accent} label={n.category} />
             <div>
-              {n.requiredTraining && <RequiredTrainingBadge deadline={n.assignmentDeadline} compact completed={isCourseCompleted(n)} />}
               <small>
                 {n.category} · {n.level}
               </small>
               <h2>{n.title}</h2>
+              {n.requiredTraining && <div className="course-title-status-line"><RequiredTrainingBadge deadline={n.assignmentDeadline} compact completed={isCourseCompleted(n)} /></div>}
               <div className="home-progress-line">
                 <Z value={n.progress ?? 65} />
                 <span>{n.progress ?? 65}%</span>
@@ -9924,9 +9924,9 @@ function Y({ course: e, go: t, wishlisted: controlledWishlisted, onWishlistChang
         <div className="course-labels">
           <span className="category-text">{e.category}</span>
           <span className={`level-badge ${userLevelTone(e.level)}`}>{userLevelLabel(e.level)}</span>
-          {e.requiredTraining && <RequiredTrainingBadge deadline={e.assignmentDeadline} compact completed={isCourseCompleted(e)} />}
         </div>
         <h2>{e.title}</h2>
+        {e.requiredTraining && <div className="course-title-status-line"><RequiredTrainingBadge deadline={e.assignmentDeadline} compact completed={isCourseCompleted(e)} /></div>}
         <div className="card-meta">
           <span>▣ {e.duration}</span>
           <span>수강 {48 + e.id * 11}명</span>
@@ -10013,7 +10013,6 @@ function X({ course: e, go: t, apply: n, preview = false, wishlisted: controlled
                       children: e.category,
                     }),
                     (0, i.jsx)(CourseStatusBadge, { status: e.status }),
-                    e.requiredTraining && (0, i.jsx)(RequiredTrainingBadge, { deadline: e.assignmentDeadline, completed: isCourseCompleted(e) }),
                   ] }),
                   (0, i.jsxs)(`div`, { className: `detail-course-actions`, children: [
                     (0, i.jsxs)(`button`, {
@@ -10035,6 +10034,7 @@ function X({ course: e, go: t, apply: n, preview = false, wishlisted: controlled
                 ],
               }),
               (0, i.jsx)(`h1`, { children: e.title }),
+              e.requiredTraining && (0, i.jsx)(`div`, { className: `course-title-status-line detail-required-line`, children: (0, i.jsx)(RequiredTrainingBadge, { deadline: e.assignmentDeadline, compact: true, completed: isCourseCompleted(e) }) }),
               (0, i.jsx)(`p`, { children: e.description }),
               (0, i.jsxs)(`div`, {
                 className: `detail-meta`,
@@ -10294,8 +10294,8 @@ function LearningCourseTable({ courses, completed = false, completionDates = [],
           return <tr key={course.id}>
             <td className="my-learning-course-cell">
               <button onClick={() => go(completed ? `courseDetail` : `lectureDetail`, course.id)}>{course.title}</button>
-              <small>{course.category}</small>
               {course.requiredTraining && <RequiredTrainingBadge deadline={course.assignmentDeadline} compact completed={completed || isCourseCompleted(course)} />}
+              <small>{course.category}</small>
               {completed && <button className="my-learning-certificate" onClick={() => issueCertificate(course)}><Icon icon={Award01Icon} size={14} />수료증 발급 <span>→</span></button>}
             </td>
             <td>{course.period}</td>
