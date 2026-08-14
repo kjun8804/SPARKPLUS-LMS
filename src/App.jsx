@@ -99,19 +99,43 @@ function CourseStatusBadge({ status, className = `` }) {
   const label = userCourseStatus(status);
   return <span className={`course-status-badge ${userRecruitTone(status)} ${className}`}>{label}</span>;
 }
+function courseCtaState(course) {
+  const status = userCourseStatus(course?.status);
+  const completed = isCourseCompleted(course);
+  if (completed) return { label: `수료증 확인`, action: `certificate`, disabled: false };
+  if (status === `오픈 전`) return { label: `오픈 전`, action: `none`, disabled: true };
+  if (status === `종료` && !course?.enrolled) return { label: `종료된 과정`, action: `none`, disabled: true };
+  if (course?.enrolled) return { label: `강의실 입장`, action: `enter`, disabled: false };
+  return { label: `수강 신청`, action: `enroll`, disabled: false };
+}
 function assignmentDeadlineLabel(deadline) {
   if (!deadline) return ``;
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const due = new Date(`${deadline}T00:00:00`);
   const days = Math.ceil((due - today) / 86400000);
-  if (days < 0) return `기한 종료`;
-  if (days === 0) return `D-DAY`;
+  if (days < 0) return `기한 초과`;
+  if (days === 0) return `오늘 마감`;
   return `D-${days}`;
 }
-function RequiredTrainingBadge({ deadline, compact = false }) {
-  const due = assignmentDeadlineLabel(deadline);
-  return <span className={`required-training-badge ${compact ? `compact` : ``}`}><Icon icon={CheckmarkCircle02Icon} size={compact ? 13 : 14} />필수 교육{due ? ` · ${due}` : ``}</span>;
+function deadlineTone(deadline) {
+  if (!deadline) return `neutral`;
+  const today = new Date(); today.setHours(0,0,0,0);
+  const days = Math.ceil((new Date(`${deadline}T00:00:00`) - today) / 86400000);
+  return days <= 0 ? `danger` : days <= 3 ? `urgent` : `neutral`;
+}
+function courseSurveyEnabled(course) { return course?.surveyEnabled !== false; }
+function isCourseCompleted(course) {
+  if (!course) return false;
+  if (localStorage.getItem(`sparkplus-course-complete-${course.id}`) === `true`) return true;
+  const lessonsComplete = localStorage.getItem(`sparkplus-lessons-complete-${course.id}`) === `true`;
+  const surveyComplete = localStorage.getItem(`sparkplus-survey-complete-${course.id}`) === `true`;
+  return lessonsComplete && (!courseSurveyEnabled(course) || surveyComplete);
+}
+function RequiredTrainingBadge({ deadline, compact = false, completed = false }) {
+  const due = completed ? `수료 완료` : assignmentDeadlineLabel(deadline);
+  const tone = completed ? `complete` : deadlineTone(deadline);
+  return <span className={`required-training-badge ${tone} ${compact ? `compact` : ``}`}><Icon icon={CheckmarkCircle02Icon} size={compact ? 13 : 14} />{completed ? due : `필수 교육${due ? ` · ${due}` : ``}`}</span>;
 }
 function showAdminToast(message, tone = `success`) {
   window.dispatchEvent(new CustomEvent(`sparkplus-admin-toast`, { detail: { message, tone } }));
@@ -1111,6 +1135,9 @@ function getCourseAssignments() {
     return [];
   }
 }
+function getCourseConfig(courseId) {
+  try { return JSON.parse(localStorage.getItem(`sparkplus-course-config-${courseId}`)) || {}; } catch { return {}; }
+}
 function assignmentAppliesToUser(assignment, user) {
   const modes = assignment?.modes || [];
   return modes.includes(`all`) ||
@@ -1121,9 +1148,10 @@ function assignmentAppliesToUser(assignment, user) {
 function applyManagedCourseAssignments(courses, user) {
   const assignments = getCourseAssignments().filter((assignment) => assignmentAppliesToUser(assignment, user));
   return courses.map((course) => {
+    const config = getCourseConfig(course.id);
     const assignment = assignments.find((item) => Number(item.userCourseId) === Number(course.id));
-    if (!assignment) return course;
-    return { ...course, enrolled: true, progress: course.progress ?? 0, managedAssignment: true, requiredTraining: Boolean(assignment.required), assignmentDeadline: assignment.deadline || `` };
+    if (!assignment) return { ...course, ...config };
+    return { ...course, ...config, enrolled: true, progress: course.progress ?? 0, managedAssignment: true, requiredTraining: Boolean(assignment.required), assignmentDeadline: assignment.deadline || `` };
   });
 }
 function isManagedUserInactive(user) {
@@ -1426,9 +1454,11 @@ function CourseEditorV2({ selected, onBack, isNew = false }) {
         deadline: form.assignmentDeadlineEnabled ? form.assignmentDeadline : ``,
         assignedCount: assignedLearners.length,
       };
+      localStorage.setItem(`sparkplus-course-config-${userCourseId}`, JSON.stringify({ status: form.status, surveyEnabled: form.surveyEnabled, startDate: form.startDate, endDate: form.endDate, googleFormUrl: form.googleFormUrl }));
       if (form.assignmentModes.length) localStorage.setItem(`sparkplus-course-assignment-${selected.id}`, JSON.stringify(assignment));
       else localStorage.removeItem(`sparkplus-course-assignment-${selected.id}`);
       window.dispatchEvent(new CustomEvent(`sparkplus-course-assignments-updated`));
+      window.dispatchEvent(new CustomEvent(`sparkplus-course-config-updated`));
       setDirty(false);
       showAdminToast(isNew ? `교육과정이 등록되었습니다.` : `교육과정이 저장되었습니다.`);
   };
@@ -3500,7 +3530,8 @@ function LearnerProfilePage({ learner, onBack, onUpdate }) {
           : index === learner.completed
             ? learner.progress
             : 0;
-      const surveyRequired = index % 2 === 0;
+      const userCourseId = ({ 1: 1, 2: 2, 3: 6, 4: 5 })[course.id] || course.id;
+      const surveyRequired = getCourseConfig(userCourseId).surveyEnabled !== false;
       const surveySubmitted = learningProgress === 100 && index < learner.completed;
       const completed = learningProgress === 100 && (!surveyRequired || surveySubmitted);
       const totalLessons = course.lessons || 5;
@@ -8740,9 +8771,13 @@ function M() {
     (0, r.useEffect)(() => {
       const refreshAssignments = () => g((courses) => applyManagedCourseAssignments(courses, CURRENT_USER));
       window.addEventListener(`sparkplus-course-assignments-updated`, refreshAssignments);
+      window.addEventListener(`sparkplus-course-config-updated`, refreshAssignments);
+      window.addEventListener(`sparkplus-course-progress`, refreshAssignments);
       window.addEventListener(`storage`, refreshAssignments);
       return () => {
         window.removeEventListener(`sparkplus-course-assignments-updated`, refreshAssignments);
+        window.removeEventListener(`sparkplus-course-config-updated`, refreshAssignments);
+        window.removeEventListener(`sparkplus-course-progress`, refreshAssignments);
         window.removeEventListener(`storage`, refreshAssignments);
       };
     }, []));
@@ -8788,6 +8823,11 @@ function M() {
   function de() {
     if (isManagedUserInactive(CURRENT_USER)) {
       alert(`비활성 계정은 신규 학습을 진행할 수 없습니다. 관리자에게 문의해주세요.`);
+      return;
+    }
+    if (userCourseStatus(Z.status) !== `운영 중`) {
+      I(userCourseStatus(Z.status) === `오픈 전` ? `아직 신청할 수 없는 과정입니다.` : `종료된 과정은 새로 신청할 수 없습니다.`);
+      setTimeout(() => I(``), 2600);
       return;
     }
     (g((e) =>
@@ -9245,7 +9285,7 @@ function PageHeader({ kicker: e, title: t, description: n, action: r, hero = fal
   });
 }
 function L({ courses: e, go: t, notices = j, user = CURRENT_USER }) {
-  let n = e[0] ?? O[0];
+  let n = e.find((course) => !isCourseCompleted(course)) ?? e[0] ?? O[0];
   const ranking = [
     { rank: 1, name: `이지은`, dept: `마케팅팀`, score: 1280 },
     { rank: 2, name: `정유진`, dept: `운영팀`, score: 1160 },
@@ -9298,7 +9338,7 @@ function L({ courses: e, go: t, notices = j, user = CURRENT_USER }) {
           <div className="home-continue-content">
             <J accent={n.accent} label={n.category} />
             <div>
-              {n.requiredTraining && <RequiredTrainingBadge deadline={n.assignmentDeadline} compact />}
+              {n.requiredTraining && <RequiredTrainingBadge deadline={n.assignmentDeadline} compact completed={isCourseCompleted(n)} />}
               <small>
                 {n.category} · {n.level}
               </small>
@@ -9851,6 +9891,7 @@ function Y({ course: e, go: t, wishlisted: controlledWishlisted, onWishlistChang
     () => localStorage.getItem(wishlistKey) === `true`,
   );
   const wishlisted = controlledWishlisted ?? localWishlisted;
+  const cta = courseCtaState(e);
   const toggleRecommend = () => {
     const next = !recommended;
     setRecommended(next);
@@ -9883,7 +9924,7 @@ function Y({ course: e, go: t, wishlisted: controlledWishlisted, onWishlistChang
         <div className="course-labels">
           <span className="category-text">{e.category}</span>
           <span className={`level-badge ${userLevelTone(e.level)}`}>{userLevelLabel(e.level)}</span>
-          {e.requiredTraining && <RequiredTrainingBadge deadline={e.assignmentDeadline} compact />}
+          {e.requiredTraining && <RequiredTrainingBadge deadline={e.assignmentDeadline} compact completed={isCourseCompleted(e)} />}
         </div>
         <h2>{e.title}</h2>
         <div className="card-meta">
@@ -9904,12 +9945,11 @@ function Y({ course: e, go: t, wishlisted: controlledWishlisted, onWishlistChang
             상세 보기
           </button>
           <button
-            className={`course-action ${e.enrolled ? `enter-course` : `enroll-course`}`}
-            onClick={() =>
-              t(e.enrolled ? `lectureDetail` : `courseDetail`, e.id)
-            }
+            className={`course-action ${cta.action === `enter` || cta.action === `certificate` ? `enter-course` : `enroll-course`}`}
+            disabled={cta.disabled}
+            onClick={() => !cta.disabled && t(cta.action === `enroll` ? `courseDetail` : `lectureDetail`, e.id)}
           >
-            {e.enrolled ? `강의실 입장` : `수강 신청`}
+            {cta.label}
           </button>
         </div>
       </div>
@@ -9925,6 +9965,7 @@ function X({ course: e, go: t, apply: n, preview = false, wishlisted: controlled
     [localWishlisted, setLocalWishlisted] = (0, r.useState)(() => localStorage.getItem(wishlistKey) === `true`),
     baseLikes = [74, 87, 98, 64, 53, 126][e.id - 1] || 42;
   const wishlisted = controlledWishlisted ?? localWishlisted;
+  const cta = courseCtaState(e);
   const toggleRecommend = () => {
     const next = !recommended;
     setRecommended(next);
@@ -9972,7 +10013,7 @@ function X({ course: e, go: t, apply: n, preview = false, wishlisted: controlled
                       children: e.category,
                     }),
                     (0, i.jsx)(CourseStatusBadge, { status: e.status }),
-                    e.requiredTraining && (0, i.jsx)(RequiredTrainingBadge, { deadline: e.assignmentDeadline }),
+                    e.requiredTraining && (0, i.jsx)(RequiredTrainingBadge, { deadline: e.assignmentDeadline, completed: isCourseCompleted(e) }),
                   ] }),
                   (0, i.jsxs)(`div`, { className: `detail-course-actions`, children: [
                     (0, i.jsxs)(`button`, {
@@ -10142,15 +10183,17 @@ function X({ course: e, go: t, apply: n, preview = false, wishlisted: controlled
                       (0, i.jsx)(`dd`, { children: e.period }),
                     ],
                   }),
+                  e.requiredTraining && (0, i.jsxs)(`div`, { children: [(0, i.jsx)(`dt`, { children: `학습 기한` }), (0, i.jsx)(`dd`, { children: e.assignmentDeadline ? `${e.assignmentDeadline.replaceAll(`-`, `.`)}까지` : `기한 없음` })] }),
                 ],
               }),
               (0, i.jsx)(`button`, {
-                className: `large course-action ${e.enrolled ? `enter-course` : `enroll-course`}`,
-                onClick: n,
-                children: e.enrolled ? `강의실 입장` : `수강 신청`,
+                className: `large course-action ${cta.action === `enter` || cta.action === `certificate` ? `enter-course` : `enroll-course`}`,
+                disabled: cta.disabled,
+                onClick: () => !cta.disabled && n(),
+                children: cta.label,
               }),
               (0, i.jsx)(`small`, {
-                children: `누구나 자유롭게 신청하고 바로 학습할 수 있습니다.`,
+                children: userCourseStatus(e.status) === `오픈 전` ? `${e.startDate ? e.startDate.slice(5).replace(`-`, `월 `) + `일부터` : `운영 시작일부터`} 신청할 수 있습니다.` : userCourseStatus(e.status) === `종료` ? `종료된 과정은 새로 신청할 수 없습니다.` : e.requiredTraining ? `관리자가 배정한 필수 교육입니다.` : `누구나 자유롭게 신청하고 바로 학습할 수 있습니다.`,
               }),
             ],
           }),
@@ -10244,19 +10287,21 @@ function LearningCourseTable({ courses, completed = false, completionDates = [],
       <tbody>
         {courses.map((course, index) => {
           const progress = completed ? 100 : course.progress ?? 0;
+          const surveyRequired = courseSurveyEnabled(course);
+          const surveySubmitted = localStorage.getItem(`sparkplus-survey-complete-${course.id}`) === `true` || (completed && surveyRequired);
           const totalLessons = lessonTotals[course.id] || k[course.id]?.length || 5;
           const completedLessons = completed ? totalLessons : Math.min(totalLessons, Math.floor((progress / 100) * totalLessons));
           return <tr key={course.id}>
             <td className="my-learning-course-cell">
               <button onClick={() => go(completed ? `courseDetail` : `lectureDetail`, course.id)}>{course.title}</button>
               <small>{course.category}</small>
-              {course.requiredTraining && <RequiredTrainingBadge deadline={course.assignmentDeadline} compact />}
+              {course.requiredTraining && <RequiredTrainingBadge deadline={course.assignmentDeadline} compact completed={completed || isCourseCompleted(course)} />}
               {completed && <button className="my-learning-certificate" onClick={() => issueCertificate(course)}><Icon icon={Award01Icon} size={14} />수료증 발급 <span>→</span></button>}
             </td>
             <td>{course.period}</td>
             <td className="my-learning-progress-cell"><b>{progress}%</b><span><i style={{ width: `${progress}%` }} /></span></td>
             <td className="my-learning-lessons"><b>{completedLessons}/{totalLessons}</b></td>
-            <td><span className={`my-learning-survey ${completed ? (index === 0 ? `submitted` : `none`) : `pending`}`}>{completed ? (index === 0 ? `제출 완료` : `설문 없음`) : `미제출`}</span></td>
+            <td><span className={`my-learning-survey ${!surveyRequired ? `none` : surveySubmitted ? `submitted` : `pending`}`}>{!surveyRequired ? `설문 없음` : surveySubmitted ? `제출 완료` : `미제출`}</span></td>
             <td><span className={`my-learning-status ${completed ? `complete` : `active`}`}>{completed ? `수료` : `학습 중`}</span></td>
             <td>{completed ? completionDates[index] : `-`}</td>
           </tr>;
@@ -10343,7 +10388,9 @@ function UserLearningRewards({ initialTab = `ranking` }) {
 function te({ courses: e, allCourses = [], wishlistIds = [], toggleWishlist, go: t, notify: n }) {
   let [a, o] = (0, r.useState)(`active`),
     [s, c] = (0, r.useState)(null),
-    l = [
+    autoCompleted = e.filter((course) => isCourseCompleted(course)),
+    activeCourses = e.filter((course) => !isCourseCompleted(course)),
+    l = [...autoCompleted,
       {
         ...O[1],
         period: `2026.04.01 ~ 2026.04.30`,
@@ -10363,9 +10410,9 @@ function te({ courses: e, allCourses = [], wishlistIds = [], toggleWishlist, go:
         progress: 100,
       },
     ],
-    u = [`2026.04.30`, `2026.03.31`, `2026.02.15`],
+    u = [...autoCompleted.map(() => new Date().toISOString().slice(0,10).replaceAll(`-`,`.`)), `2026.04.30`, `2026.03.31`, `2026.02.15`],
     d = Math.round(
-      e.reduce((e, t) => e + (t.progress ?? 0), 0) / Math.max(e.length, 1),
+      activeCourses.reduce((e, t) => e + (t.progress ?? 0), 0) / Math.max(activeCourses.length, 1),
     ),
     wishlistCourses = allCourses.filter((course) => wishlistIds.includes(course.id));
   return (0, i.jsxs)(`main`, {
@@ -10387,7 +10434,7 @@ function te({ courses: e, allCourses = [], wishlistIds = [], toggleWishlist, go:
             onClick: () => o(`active`),
             children: [
               `수강 중인 과정 `,
-              (0, i.jsx)(`span`, { children: e.length }),
+              (0, i.jsx)(`span`, { children: activeCourses.length }),
             ],
           }),
           (0, i.jsxs)(`button`, {
@@ -10414,12 +10461,12 @@ function te({ courses: e, allCourses = [], wishlistIds = [], toggleWishlist, go:
               (0, i.jsxs)(`div`, {
                 className: `learning-summary`,
                 children: [
-                  (0, i.jsxs)(`span`, { children: [`수강 중인 과정 `, e.length, `개`] }),
+                  (0, i.jsxs)(`span`, { children: [`수강 중인 과정 `, activeCourses.length, `개`] }),
                   (0, i.jsxs)(`b`, { children: [`평균 진도율 `, d, `%`] }),
                   (0, i.jsx)(Z, { value: d }),
                 ],
               }),
-              (0, i.jsx)(LearningCourseTable, { courses: e, go: t, issueCertificate: c }),
+              (0, i.jsx)(LearningCourseTable, { courses: activeCourses, go: t, issueCertificate: c }),
             ],
           })
         : a === `completed`
@@ -10529,6 +10576,7 @@ function GoogleFormSurveyPage({ course, go }) {
   const responseUrl = googleFormEmbedUrl(course.googleFormUrl || SAMPLE_GOOGLE_FORM_URL);
   const completeSurvey = () => {
     localStorage.setItem(`sparkplus-survey-complete-${course.id}`, `true`);
+    if (localStorage.getItem(`sparkplus-lessons-complete-${course.id}`) === `true`) localStorage.setItem(`sparkplus-course-complete-${course.id}`, `true`);
     window.dispatchEvent(new CustomEvent(`sparkplus-course-progress`, { detail: { courseId: course.id } }));
     go(`lectureDetail`, course.id);
   };
@@ -10547,12 +10595,13 @@ function LectureDetailQuest({ course, go }) {
   const [certificateOpen, setCertificateOpen] = r.useState(false);
   const allLessonsComplete = localStorage.getItem(`sparkplus-lessons-complete-${course.id}`) === `true`;
   const surveyComplete = localStorage.getItem(`sparkplus-survey-complete-${course.id}`) === `true`;
+  const surveyRequired = courseSurveyEnabled(course);
   const demoCompleted = allLessonsComplete ? lessons.length : Math.min(2, lessons.length);
   const currentIndex = allLessonsComplete ? -1 : Math.min(demoCompleted, Math.max(lessons.length - 1, 0));
-  const completedQuestCount = demoCompleted + (surveyComplete ? 1 : 0);
-  const totalQuestCount = lessons.length + 1;
+  const completedQuestCount = demoCompleted + (surveyRequired && surveyComplete ? 1 : 0);
+  const totalQuestCount = lessons.length + (surveyRequired ? 1 : 0);
   const remaining = Math.max(0, totalQuestCount - completedQuestCount);
-  const certificateReady = allLessonsComplete && surveyComplete;
+  const certificateReady = allLessonsComplete && (!surveyRequired || surveyComplete);
   const openLesson = (index) => {
     sessionStorage.setItem(`sparkplus-active-lesson-${course.id}`, String(index));
     go(`player`, course.id);
@@ -10560,10 +10609,10 @@ function LectureDetailQuest({ course, go }) {
   return <main className="page lecture-quest-page">
     <div className="breadcrumb"><button onClick={() => go(`learning`)}>나의 학습</button><span>›</span>강의 상세</div>
     <section className="lecture-hero"><J accent={course.accent} label={course.category} /><div className="lecture-hero-copy"><div><span className="badge blue-badge">{course.category}</span><span className={`level-badge ${userLevelTone(course.level)}`}>{userLevelLabel(course.level)}</span></div><h1>{course.title}</h1><p>{course.description}</p><div className="lecture-meta"><span><small>교육 기간</small><b>{course.period}</b></span><span><small>전체 학습 시간</small><b>{course.duration}</b></span></div><div className="lecture-primary-actions"><button className="primary" onClick={() => openLesson(currentIndex < 0 ? lessons.length - 1 : currentIndex)}>{allLessonsComplete ? `강의 다시 보기` : `학습 이어가기`}</button></div></div></section>
-    <section className="completion-quest-card"><header className="quest-head"><div><span>LEARNING QUEST</span><h2>{remaining === 0 ? `모든 수료 조건을 완료했어요!` : `수료까지 ${remaining}단계 남았어요`}</h2><p>차시 학습과 설문을 완료하면 수료증을 발급할 수 있습니다.</p></div><div className="quest-progress-copy"><strong>{completedQuestCount} / {totalQuestCount}</strong><span>완료</span></div></header><div className="quest-progress-track" aria-label={`수료 진행도 ${completedQuestCount}/${totalQuestCount}`}><i style={{width:`${completedQuestCount / Math.max(totalQuestCount,1) * 100}%`}} /></div>
+    <section className="completion-quest-card"><header className="quest-head"><div><span>LEARNING QUEST</span><h2>{remaining === 0 ? `모든 수료 조건을 완료했어요!` : `수료까지 ${remaining}단계 남았어요`}</h2><p>{surveyRequired ? `차시 학습과 설문을 완료하면 수료증을 발급할 수 있습니다.` : `모든 차시를 완료하면 자동으로 수료 처리됩니다.`}</p></div><div className="quest-progress-copy"><strong>{completedQuestCount} / {totalQuestCount}</strong><span>완료</span></div></header><div className="quest-progress-track" aria-label={`수료 진행도 ${completedQuestCount}/${totalQuestCount}`}><i style={{width:`${completedQuestCount / Math.max(totalQuestCount,1) * 100}%`}} /></div>
       <div className="quest-list">{lessons.map((lesson,index) => { const complete = index < demoCompleted; const current = index === currentIndex; const state = complete ? `complete` : current ? `current` : `pending`; return <button className={`quest-item ${state}`} key={lesson.title} onClick={() => openLesson(index)}><span className="quest-state">{complete ? <Icon icon={CheckmarkCircle02Icon} size={19} /> : current ? <Icon icon={PlayIcon} size={17} /> : <i />}</span><span className="quest-number">{String(index + 1).padStart(2,`0`)}</span><span className="quest-copy"><b>{lesson.title}</b><small>영상 · {lesson.duration}</small></span><em>{complete ? `완료` : current ? `학습 중` : `미수강`}</em><span className="quest-arrow">›</span></button>; })}</div>
-      <div className={`survey-quest-step ${surveyComplete ? `complete` : allLessonsComplete ? `available` : `locked`}`}><span className="quest-state">{surveyComplete ? <Icon icon={CheckmarkCircle02Icon} size={20} /> : <i />}</span><div><small>마지막 단계</small><h3>수료 후 설문</h3><p>{surveyComplete ? `설문 제출이 완료되었습니다.` : allLessonsComplete ? `학습 경험에 대한 간단한 설문을 작성해주세요.` : `모든 차시를 완료하면 설문에 참여할 수 있습니다.`}</p></div>{surveyComplete ? <span className="survey-done">설문 완료</span> : <button disabled={!allLessonsComplete} onClick={() => go(`courseSurvey`,course.id)}>설문하기 <span>→</span></button>}</div>
-      <div className={`certificate-quest ${certificateReady ? `ready` : `locked`}`}><span className="certificate-quest-icon"><Icon icon={Award01Icon} size={27} /></span><div><h3>{certificateReady ? `모든 수료 조건을 완료했어요!` : `수료증 발급`}</h3><p>{certificateReady ? `지금 바로 수료증을 확인하고 발급할 수 있습니다.` : `모든 차시와 설문을 완료하면 발급할 수 있습니다.`}</p></div><button className={certificateReady ? `primary` : ``} disabled={!certificateReady} onClick={() => setCertificateOpen(true)}>수료증 발급</button></div>
+      {surveyRequired && <div className={`survey-quest-step ${surveyComplete ? `complete` : allLessonsComplete ? `available` : `locked`}`}><span className="quest-state">{surveyComplete ? <Icon icon={CheckmarkCircle02Icon} size={20} /> : <i />}</span><div><small>마지막 단계</small><h3>수료 후 설문</h3><p>{surveyComplete ? `설문 제출이 완료되었습니다.` : allLessonsComplete ? `학습 경험에 대한 간단한 설문을 작성해주세요.` : `모든 차시를 완료하면 설문에 참여할 수 있습니다.`}</p></div>{surveyComplete ? <span className="survey-done">설문 완료</span> : <button disabled={!allLessonsComplete} onClick={() => go(`courseSurvey`,course.id)}>설문하기 <span>→</span></button>}</div>}
+      <div className={`certificate-quest ${certificateReady ? `ready` : `locked`}`}><span className="certificate-quest-icon"><Icon icon={Award01Icon} size={27} /></span><div><h3>{certificateReady ? `모든 수료 조건을 완료했어요!` : `수료증 발급`}</h3><p>{certificateReady ? `지금 바로 수료증을 확인하고 발급할 수 있습니다.` : surveyRequired ? `모든 차시와 설문을 완료하면 발급할 수 있습니다.` : `모든 차시를 완료하면 발급할 수 있습니다.`}</p></div><button className={certificateReady ? `primary` : ``} disabled={!certificateReady} onClick={() => setCertificateOpen(true)}>수료증 발급</button></div>
     </section>
     {certificateOpen && <div className="modal-backdrop" onMouseDown={(event) => event.target === event.currentTarget && setCertificateOpen(false)}><section className="modal certificate-modal quest-certificate-modal"><button className="modal-close" onClick={() => setCertificateOpen(false)}><Icon icon={Cancel01Icon} /></button><P /><p className="certificate-kicker">CERTIFICATE OF COMPLETION</p><h2>수료증</h2><p className="certificate-number">제 2026-{String(course.id).padStart(4,`0`)}호</p><strong>김지수</strong><p>위 사람은 아래 교육과정을 성실히 이수하였으므로<br />이 수료증을 수여합니다.</p><h3>{course.title}</h3><dl><div><dt>교육 기간</dt><dd>{course.period}</dd></div><div><dt>총 학습 시간</dt><dd>{course.duration}</dd></div></dl><p className="certificate-date">2026년 8월 13일<br /><b>SPARKPLUS 대표이사</b></p><div className="stamp">직인</div><div className="modal-actions"><button className="secondary" onClick={() => window.print()}>인쇄</button><button className="primary" onClick={() => window.print()}>PDF 다운로드</button></div></section></div>}
   </main>;

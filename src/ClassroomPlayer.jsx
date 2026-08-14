@@ -74,6 +74,7 @@ export default function ClassroomPlayer({
     [course, lessons, activeLesson],
   );
   const youtubeCourse = course.id === 6;
+  const surveyRequired = course.surveyEnabled !== false;
   const lastLesson = Math.max(lessons.length - 1, 0);
   const demoProgress = courseCompleted ? 100 : 72;
 
@@ -93,8 +94,10 @@ export default function ClassroomPlayer({
 
   const finishCourse = () => {
     localStorage.setItem(`sparkplus-lessons-complete-${course.id}`, "true");
+    if (!surveyRequired) localStorage.setItem(`sparkplus-course-complete-${course.id}`, "true");
     setCourseCompleted(true);
     saveProgress?.(true);
+    window.dispatchEvent(new CustomEvent("sparkplus-course-progress", { detail: { courseId: course.id } }));
     setCompletionOpen(true);
   };
 
@@ -206,7 +209,7 @@ export default function ClassroomPlayer({
             : <button className="lesson-nav next" onClick={() => selectLesson(activeLesson + 1)}>다음 차시<Icon icon={ArrowRight01Icon} size={17} /></button>}
         </div>
       </section>
-      {completionOpen && <div className="classroom-completion-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && setCompletionOpen(false)}><section className="classroom-completion-modal" role="dialog" aria-modal="true" aria-labelledby="classroom-completion-title"><button className="completion-modal-close" onClick={() => setCompletionOpen(false)} aria-label="완료 안내 닫기"><Icon icon={Cancel01Icon} /></button><span className="completion-check-object"><Icon icon={CheckmarkCircle02Icon} size={30} /></span><h2 id="classroom-completion-title">학습을 모두 완료했어요!</h2><p>모든 강의 차시를 수강했습니다.<br />설문을 완료하면 수료 처리가 완료됩니다.</p><div><button className="completion-exit" onClick={() => go("lectureDetail", course.id)}>강의실 나가기</button><button className="completion-survey" onClick={() => go("courseSurvey", course.id)}>설문하기<Icon icon={ArrowRight01Icon} size={16} /></button></div></section></div>}
+      {completionOpen && <div className="classroom-completion-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && setCompletionOpen(false)}><section className="classroom-completion-modal" role="dialog" aria-modal="true" aria-labelledby="classroom-completion-title"><button className="completion-modal-close" onClick={() => setCompletionOpen(false)} aria-label="완료 안내 닫기"><Icon icon={Cancel01Icon} /></button><span className="completion-check-object"><Icon icon={CheckmarkCircle02Icon} size={30} /></span><h2 id="classroom-completion-title">{surveyRequired ? "모든 강의 차시를 완료했어요!" : "과정을 모두 수료했어요!"}</h2><p>{surveyRequired ? <>모든 강의 차시를 수강했습니다.<br />설문을 완료하면 수료 처리가 완료됩니다.</> : <>모든 필수 차시를 완료해 자동으로 수료 처리되었습니다.<br />수료증을 바로 확인할 수 있습니다.</>}</p><div><button className="completion-exit" onClick={() => go("lectureDetail", course.id)}>강의실 나가기</button>{surveyRequired ? <button className="completion-survey" onClick={() => go("courseSurvey", course.id)}>설문하기<Icon icon={ArrowRight01Icon} size={16} /></button> : <button className="completion-survey" onClick={() => go("lectureDetail", course.id)}>수료증 확인<Icon icon={ArrowRight01Icon} size={16} /></button>}</div></section></div>}
     </main>
   );
 }
