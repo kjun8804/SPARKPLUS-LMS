@@ -1,0 +1,31 @@
+.learner-list-actions { display:flex; align-items:center; gap:9px; }
+.learner-list-actions > button { display:inline-flex; align-items:center; justify-content:center; height:38px; min-height:38px; gap:6px; padding:0 14px; border-radius:10px; font-size:12px; font-weight:700; }
+.learner-list-actions .learner-view-all { border:1px solid var(--ui-line); color:var(--ui-sub); background:var(--ui-surface); }
+.learner-register-trigger { min-width:118px; color:#fff; }
+.learner-registration-overlay { z-index:160; padding:24px; }
+.learner-registration-modal { width:min(560px,calc(100vw - 32px)); box-sizing:border-box; overflow:hidden; border:1px solid var(--ui-line); border-radius:22px; color:var(--ui-text); background:var(--ui-surface); box-shadow:0 24px 70px rgba(20,35,55,.24); }
+.learner-registration-modal > header { display:flex; align-items:flex-start; justify-content:space-between; gap:20px; padding:27px 28px 21px; border-bottom:1px solid var(--ui-line); }
+.learner-registration-modal > header h2 { margin:0; color:var(--ui-text); font-size:21px; font-weight:760; letter-spacing:-.03em; }
+.learner-registration-modal > header p { margin:7px 0 0; color:var(--ui-sub); font-size:12px; line-height:1.55; }
+.learner-registration-close { display:grid; width:36px; height:36px; min-height:36px; flex:0 0 36px; place-items:center; padding:0; border:0; border-radius:10px; color:var(--ui-sub); background:var(--ui-surface-soft); }
+.learner-registration-form { display:grid; grid-template-columns:1fr 1fr; gap:18px 14px; padding:24px 28px 27px; }
+.learner-registration-form label { display:flex; min-width:0; flex-direction:column; gap:7px; }
+.learner-registration-form label > span { color:var(--ui-text); font-size:12px; font-weight:680; }
+.learner-registration-form label > span b { color:#e05252; font-weight:750; }
+.learner-registration-form input,.learner-registration-form select { width:100%; height:44px; min-height:44px; box-sizing:border-box; padding:0 13px; border:1px solid var(--ui-line); border-radius:11px; color:var(--ui-text); background:var(--ui-surface); font-size:13px; font-weight:450; }
+.learner-registration-form input::placeholder { color:#a1a9b3; }
+.learner-registration-form label > small { min-height:15px; margin-top:-2px; color:#d64f4f; font-size:10.5px; font-weight:550; line-height:1.4; }
+.learner-registration-wide { grid-column:1/-1; }
+.learner-registration-modal > footer { display:grid; grid-template-columns:1fr 1fr; gap:10px; padding:18px 28px 24px; border-top:1px solid var(--ui-line); background:var(--ui-surface-soft); }
+.learner-registration-modal > footer button { height:44px; min-height:44px; border-radius:11px; font-size:13px; font-weight:720; }
+.learner-registration-modal > footer .primary:disabled { cursor:not-allowed; border-color:#b8c0c9!important; color:#f3f5f7!important; background:#b8c0c9!important; box-shadow:none!important; transform:none!important; opacity:.65; }
+.learner-registration-toast { z-index:180; }
+html[data-theme='dark'] .admin-portal .learner-list-actions .learner-view-all { border-color:var(--dark-border); color:var(--dark-text-secondary); background:var(--dark-surface-2); }
+html[data-theme='dark'] .admin-portal .learner-registration-modal { border-color:var(--dark-border); color:var(--dark-text-primary); background:var(--dark-surface-1); box-shadow:0 26px 74px rgba(0,0,0,.48); }
+html[data-theme='dark'] .admin-portal .learner-registration-modal > :is(header,footer) { border-color:var(--dark-border-soft); }
+html[data-theme='dark'] .admin-portal .learner-registration-modal > footer { background:var(--dark-surface-2); }
+html[data-theme='dark'] .admin-portal .learner-registration-close { color:var(--dark-text-secondary); background:var(--dark-surface-2); }
+html[data-theme='dark'] .admin-portal .learner-registration-form label > span { color:var(--dark-text-primary); }
+html[data-theme='dark'] .admin-portal .learner-registration-form label > small { color:#ff9292; }
+html[data-theme='dark'] .admin-portal .learner-registration-modal > footer .primary:disabled { border-color:#3b4655!important; color:#778395!important; background:#303a48!important; opacity:1; }
+@media(max-width:640px){.learner-list-head{align-items:flex-start;flex-direction:column}.learner-list-actions{width:100%;justify-content:space-between}.learner-list-actions .learner-register-trigger{margin-left:auto}.learner-registration-form{grid-template-columns:1fr}.learner-registration-wide{grid-column:auto}.learner-registration-modal>header,.learner-registration-form,.learner-registration-modal>footer{padding-right:20px;padding-left:20px}}

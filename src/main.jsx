@@ -11,6 +11,7 @@ import './reward-gamification.css';
 import './completion-quest.css';
 import './notice-simplified.css';
 import './header-unified.css';
+import './learner-registration.css';
 import './dark-design-system.css';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
