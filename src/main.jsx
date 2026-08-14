@@ -13,6 +13,7 @@ import './notice-simplified.css';
 import './header-unified.css';
 import './learner-registration.css';
 import './course-assignment.css';
+import './admin-feedback.css';
 import './dark-design-system.css';
 
 ReactDOM.createRoot(document.getElementById('root')).render(

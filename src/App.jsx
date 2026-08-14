@@ -113,6 +113,26 @@ function RequiredTrainingBadge({ deadline, compact = false }) {
   const due = assignmentDeadlineLabel(deadline);
   return <span className={`required-training-badge ${compact ? `compact` : ``}`}><Icon icon={CheckmarkCircle02Icon} size={compact ? 13 : 14} />필수 교육{due ? ` · ${due}` : ``}</span>;
 }
+function showAdminToast(message, tone = `success`) {
+  window.dispatchEvent(new CustomEvent(`sparkplus-admin-toast`, { detail: { message, tone } }));
+}
+function AdminToastHost() {
+  const [toast, setToast] = r.useState(null);
+  r.useEffect(() => {
+    const show = (event) => setToast({ ...event.detail, id: Date.now() });
+    window.addEventListener(`sparkplus-admin-toast`, show);
+    return () => window.removeEventListener(`sparkplus-admin-toast`, show);
+  }, []);
+  r.useEffect(() => {
+    if (!toast) return undefined;
+    const timer = window.setTimeout(() => setToast(null), 2600);
+    return () => window.clearTimeout(timer);
+  }, [toast]);
+  return toast ? <div className={`admin-global-toast ${toast.tone || `success`}`} role="status"><span>{toast.tone === `error` ? `!` : <Icon icon={CheckmarkCircle02Icon} size={18} />}</span>{toast.message}</div> : null;
+}
+function ConfirmModal({ title, description, confirmLabel = `확인`, tone = `danger`, onCancel, onConfirm }) {
+  return <div className="overlay center admin-confirm-overlay" onMouseDown={(event) => event.target === event.currentTarget && onCancel()}><section className="admin-confirm-modal" role="alertdialog" aria-modal="true"><div className={`admin-confirm-icon ${tone}`}>{tone === `danger` ? `!` : <Icon icon={CheckmarkCircle02Icon} size={23} />}</div><h2>{title}</h2><p>{description}</p><div><button className="secondary" onClick={onCancel}>취소</button><button className={tone === `danger` ? `danger` : `primary`} onClick={onConfirm}>{confirmLabel}</button></div></section></div>;
+}
 function lottiePath(shape) {
   if (!shape?.v?.length) return ``;
   const point = (value) => `${Number(value[0].toFixed(3))} ${Number(value[1].toFixed(3))}`;
@@ -587,6 +607,7 @@ function f({ logout: e }) {
             (0, i.jsx)(LearnerProfilePage, {
               learner: k,
               onBack: () => B(`learners`),
+              onUpdate: (learner) => A(learner),
             }),
           t === `assignments` &&
             (0, i.jsx)(x, { onCreate: () => M(`교육과정 배정`) }),
@@ -602,6 +623,7 @@ function f({ logout: e }) {
         ],
       }),
       j && (0, i.jsx)(D, { title: j, onClose: () => M(null) }),
+      (0, i.jsx)(AdminToastHost, {}),
     ],
   });
 }
@@ -856,6 +878,7 @@ function CourseAdminGrid({ onEdit, onCreate }) {
   const [sort, setSort] = r.useState(`최신 등록순`);
   const [courses, setCourses] = r.useState(() => [...a]);
   const [openMenu, setOpenMenu] = r.useState(null);
+  const [deleteTarget, setDeleteTarget] = r.useState(null);
   const filtered = courses
     .filter(
       (course) =>
@@ -868,10 +891,13 @@ function CourseAdminGrid({ onEdit, onCreate }) {
       sort === `최신 등록순` ? second.id - first.id : first.id - second.id,
     );
   const deleteCourse = (course) => {
-    if (confirm(`'${course.title}' 교육과정을 삭제하시겠습니까?`)) {
-      setCourses((current) => current.filter((item) => item.id !== course.id));
-      setOpenMenu(null);
-    }
+    setDeleteTarget(course);
+  };
+  const confirmDeleteCourse = () => {
+    setCourses((current) => current.filter((item) => item.id !== deleteTarget.id));
+    setOpenMenu(null);
+    setDeleteTarget(null);
+    showAdminToast(`교육과정이 삭제되었습니다.`);
   };
   return (
     <section className="course-admin-grid-page">
@@ -987,6 +1013,7 @@ function CourseAdminGrid({ onEdit, onCreate }) {
           조건에 맞는 교육과정이 없습니다.
         </div>
       )}
+      {deleteTarget && <ConfirmModal title="교육과정을 삭제할까요?" description="삭제한 교육과정은 복구할 수 없습니다." confirmLabel="삭제" onCancel={() => setDeleteTarget(null)} onConfirm={confirmDeleteCourse} />}
     </section>
   );
 }
@@ -1098,6 +1125,9 @@ function applyManagedCourseAssignments(courses, user) {
     if (!assignment) return course;
     return { ...course, enrolled: true, progress: course.progress ?? 0, managedAssignment: true, requiredTraining: Boolean(assignment.required), assignmentDeadline: assignment.deadline || `` };
   });
+}
+function isManagedUserInactive(user) {
+  return getAssignmentLearners().some((learner) => learner.id === user.id && learner.status === `비활성`);
 }
 
 function CourseEditorV2({ selected, onBack, isNew = false }) {
@@ -1228,6 +1258,8 @@ function CourseEditorV2({ selected, onBack, isNew = false }) {
   const [draggingLesson, setDraggingLesson] = r.useState(null);
   const [assignmentSearch, setAssignmentSearch] = r.useState(``);
   const [assignmentListOpen, setAssignmentListOpen] = r.useState(false);
+  const [lessonDeleteIndex, setLessonDeleteIndex] = r.useState(null);
+  const [courseDeleteOpen, setCourseDeleteOpen] = r.useState(false);
   const assignmentLearners = r.useMemo(() => getAssignmentLearners(), []);
   const formMounted = r.useRef(false);
   const sectionRefs = { basic: r.useRef(null), lessons: r.useRef(null), survey: r.useRef(null) };
@@ -1300,10 +1332,11 @@ function CourseEditorV2({ selected, onBack, isNew = false }) {
       ),
     );
   const removeLesson = (index) => {
-    if (!confirm(`이 차시를 삭제하시겠습니까?`)) return;
     setForm((current) => ({ ...current, lessons: current.lessons.filter((_, lessonIndex) => lessonIndex !== index) }));
     if (editingIndex === index) setEditingIndex(null);
     setDirty(true);
+    setLessonDeleteIndex(null);
+    showAdminToast(`차시가 삭제되었습니다.`);
   };
   const updateQuizOption = (questionIndex, optionIndex, value) => {
     const question = lesson.quiz[questionIndex];
@@ -1374,8 +1407,7 @@ function CourseEditorV2({ selected, onBack, isNew = false }) {
   };
   const save = () => {
     if (!form.title.trim()) return alert(`강의 제목을 입력해 주세요.`);
-    if (confirm(isNew ? `새 교육과정을 등록하시겠습니까?` : `변경한 교육과정 정보를 저장하시겠습니까?`)) {
-      Object.assign(selected, {
+    Object.assign(selected, {
         ...form,
         period: `${form.startDate.replaceAll(`-`, `.`)} ~ ${form.endDate.replaceAll(`-`, `.`)}`,
         lessons: form.lessons.length,
@@ -1398,18 +1430,10 @@ function CourseEditorV2({ selected, onBack, isNew = false }) {
       else localStorage.removeItem(`sparkplus-course-assignment-${selected.id}`);
       window.dispatchEvent(new CustomEvent(`sparkplus-course-assignments-updated`));
       setDirty(false);
-      alert(isNew ? `교육과정이 등록되었습니다.` : `교육과정이 저장되었습니다.`);
-    }
+      showAdminToast(isNew ? `교육과정이 등록되었습니다.` : `교육과정이 저장되었습니다.`);
   };
   const remove = () => {
-    if (
-      confirm(
-        `이 교육과정을 삭제하시겠습니까? 삭제한 과정은 복구할 수 없습니다.`,
-      )
-    ) {
-      alert(`교육과정이 삭제되었습니다.`);
-      onBack();
-    }
+    setCourseDeleteOpen(true);
   };
   return (
     <div className="course-editor-v2">
@@ -1643,7 +1667,7 @@ function CourseEditorV2({ selected, onBack, isNew = false }) {
                 <Icon icon={Edit02Icon} />
                 차시 수정
               </button>
-              <button type="button" className="lesson-delete-icon" aria-label={`${index + 1}차시 삭제`} title="차시 삭제" onClick={(event) => { event.stopPropagation(); removeLesson(index); }}><Icon icon={Delete02Icon} size={17} /></button>
+              <button type="button" className="lesson-delete-icon" aria-label={`${index + 1}차시 삭제`} title="차시 삭제" onClick={(event) => { event.stopPropagation(); setLessonDeleteIndex(index); }}><Icon icon={Delete02Icon} size={17} /></button>
             </article>
           ))}
         </div>
@@ -2684,6 +2708,8 @@ function v({ selected: e, onBack: t }) {
         </button>
       </div>
       {assignmentListOpen && <div className="overlay center assignment-list-overlay" onMouseDown={() => setAssignmentListOpen(false)}><section className="assignment-list-modal" onMouseDown={(event) => event.stopPropagation()}><header><div><h2>배정 대상</h2><p>{form.title || selected.title} · 총 {assignedLearners.length}명</p></div><button onClick={() => setAssignmentListOpen(false)} aria-label="닫기"><Icon icon={Cancel01Icon} /></button></header><div>{assignedLearners.map((learner) => <article key={learner.id}><span>{learner.name[0]}</span><div><b>{learner.name}</b><small>{learner.id} · {learner.dept} · {learner.position}</small></div></article>)}</div><footer><button className="primary" onClick={() => setAssignmentListOpen(false)}>확인</button></footer></section></div>}
+      {lessonDeleteIndex !== null && <ConfirmModal title="차시를 삭제할까요?" description="삭제한 차시와 입력한 학습 콘텐츠는 복구할 수 없습니다." confirmLabel="삭제" onCancel={() => setLessonDeleteIndex(null)} onConfirm={() => removeLesson(lessonDeleteIndex)} />}
+      {courseDeleteOpen && <ConfirmModal title="교육과정을 삭제할까요?" description="삭제한 교육과정은 복구할 수 없습니다." confirmLabel="삭제" onCancel={() => setCourseDeleteOpen(false)} onConfirm={() => { setCourseDeleteOpen(false); showAdminToast(`교육과정이 삭제되었습니다.`); onBack(); }} />}
     </div>
   );
 }
@@ -3160,7 +3186,6 @@ function LearnerDepartmentHub({ onSelect }) {
   const [learningStatus, setLearningStatus] = r.useState(`전체 학습 상태`);
   const [registrationOpen, setRegistrationOpen] = r.useState(false);
   const [registrationTouched, setRegistrationTouched] = r.useState({});
-  const [learnerToast, setLearnerToast] = r.useState(``);
   const [learnerForm, setLearnerForm] = r.useState({
     name: ``,
     id: ``,
@@ -3220,14 +3245,13 @@ function LearnerDepartmentHub({ onSelect }) {
     setLearningStatus(`전체 학습 상태`);
     setSelectedDept(null);
     closeLearnerRegistration();
-    setLearnerToast(`학습자가 등록되었습니다.`);
+    showAdminToast(`학습자가 등록되었습니다.`);
   };
-  r.useEffect(() => {
-    if (!learnerToast) return undefined;
-    const timer = window.setTimeout(() => setLearnerToast(``), 2400);
-    return () => window.clearTimeout(timer);
-  }, [learnerToast]);
   const activeDepartment = selectedDept || department;
+  const departmentDisplayMeta = departmentMeta.map((item) => ({
+    ...item,
+    members: employees.filter((employee) => employee.dept === item.name).length,
+  }));
   const filteredEmployees = employees.filter(
     (employee) =>
       (!query ||
@@ -3271,7 +3295,7 @@ function LearnerDepartmentHub({ onSelect }) {
       </div>
 
       <div className="department-card-grid learner-department-grid">
-        {departmentMeta.map((dept) => (
+        {departmentDisplayMeta.map((dept) => (
           <button
             className={`department-card learner-department-card ${selectedDept === dept.name ? `selected` : ``}`}
             key={dept.name}
@@ -3328,6 +3352,7 @@ function LearnerDepartmentHub({ onSelect }) {
               <th>이름</th>
               <th>부서</th>
               <th>직급</th>
+              <th>계정 상태</th>
               <th>수강 중 과정</th>
               <th>평균 진도율</th>
               <th>관리</th>
@@ -3347,6 +3372,7 @@ function LearnerDepartmentHub({ onSelect }) {
                 </td>
                 <td><span className="learner-soft-tag department">{employee.dept}</span></td>
                 <td><span className="learner-soft-tag position">{employee.position}</span></td>
+                <td><span className={`learner-account-status ${employee.status === `비활성` ? `inactive` : `active`}`}>{employee.status === `비활성` ? `비활성` : `활성`}</span></td>
                 <td>{Math.max(0, employee.courses - employee.completed)}개</td>
                 <td>
                   <div className="table-progress">
@@ -3424,12 +3450,46 @@ function LearnerDepartmentHub({ onSelect }) {
           </section>
         </div>
       )}
-      {learnerToast && <div className="toast learner-registration-toast"><span>✓</span>{learnerToast}</div>}
     </section>
   );
 }
 
-function LearnerProfilePage({ learner, onBack }) {
+function LearnerProfilePage({ learner, onBack, onUpdate }) {
+  const departments = [`People팀`, `개발팀`, `마케팅팀`, `운영팀`, `세일즈팀`, `공간디자인팀`];
+  const positions = [`인턴`, `사원`, `매니저`, `파트장`, `팀장`];
+  const [editOpen, setEditOpen] = r.useState(false);
+  const [statusConfirmOpen, setStatusConfirmOpen] = r.useState(false);
+  const [editTouched, setEditTouched] = r.useState({});
+  const [editForm, setEditForm] = r.useState({ name: learner.name, email: learner.email || `${learner.id.toLowerCase()}@sparkplus.co`, dept: learner.dept, position: learner.position });
+  const managedLearners = getAssignmentLearners();
+  const normalizedEditEmail = editForm.email.trim().toLowerCase();
+  const editErrors = {
+    name: editForm.name.trim() ? `` : `이름을 입력해주세요.`,
+    email: !normalizedEditEmail ? `이메일을 입력해주세요.` : !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEditEmail) ? `올바른 이메일 형식으로 입력해주세요.` : managedLearners.some((item) => item.id !== learner.id && item.email?.toLowerCase() === normalizedEditEmail) ? `이미 등록된 이메일입니다.` : ``,
+    dept: editForm.dept ? `` : `부서를 선택해주세요.`,
+    position: editForm.position ? `` : `직급을 선택해주세요.`,
+  };
+  const canSaveLearner = Object.values(editErrors).every((error) => !error);
+  const persistLearner = (updates) => {
+    const updated = { ...learner, ...updates };
+    const current = getAssignmentLearners();
+    localStorage.setItem(`sparkplus-managed-learners`, JSON.stringify(current.map((item) => item.id === learner.id ? { ...item, ...updates } : item)));
+    onUpdate?.(updated);
+    return updated;
+  };
+  const saveLearnerInfo = () => {
+    setEditTouched({ name: true, email: true, dept: true, position: true });
+    if (!canSaveLearner) return;
+    persistLearner({ name: editForm.name.trim(), email: normalizedEditEmail, dept: editForm.dept, position: editForm.position });
+    setEditOpen(false);
+    showAdminToast(`학습자 정보가 수정되었습니다.`);
+  };
+  const toggleLearnerStatus = () => {
+    const activating = learner.status === `비활성`;
+    persistLearner({ status: activating ? `재직` : `비활성` });
+    setStatusConfirmOpen(false);
+    showAdminToast(activating ? `계정이 활성화되었습니다.` : `계정이 비활성화되었습니다.`);
+  };
   const learningCourses = a
     .concat(a)
     .slice(0, learner.courses)
@@ -3486,6 +3546,7 @@ function LearnerProfilePage({ learner, onBack }) {
           <span>입사일</span>
           <b>2025.03.04</b>
         </div>
+        <button className="secondary learner-profile-edit" onClick={() => { setEditForm({ name: learner.name, email: learner.email || `${learner.id.toLowerCase()}@sparkplus.co`, dept: learner.dept, position: learner.position }); setEditTouched({}); setEditOpen(true); }}><Icon icon={Edit02Icon} size={16} />정보 수정</button>
       </div>
       <div className="learner-profile-summary">
         <div>
@@ -3618,6 +3679,9 @@ function LearnerProfilePage({ learner, onBack }) {
           </table>
         </div>
       </div>
+      <div className={`learner-account-control ${learner.status === `비활성` ? `inactive` : ``}`}><div><h3>{learner.status === `비활성` ? `비활성 계정` : `계정 관리`}</h3><p>{learner.status === `비활성` ? `학습 이력과 수료 기록은 유지되며, 다시 활성화할 수 있습니다.` : `비활성화해도 기존 학습 이력과 수료 기록은 유지됩니다.`}</p></div><button className={learner.status === `비활성` ? `primary` : `learner-deactivate-button`} onClick={() => setStatusConfirmOpen(true)}>{learner.status === `비활성` ? `계정 활성화` : `계정 비활성화`}</button></div>
+      {editOpen && <div className="overlay center learner-registration-overlay" onMouseDown={() => setEditOpen(false)}><section className="learner-registration-modal learner-edit-modal" onMouseDown={(event) => event.stopPropagation()}><header><div><h2>학습자 정보 수정</h2><p>계정 식별값인 사번을 제외한 기본 정보를 수정합니다.</p></div><button className="learner-registration-close" onClick={() => setEditOpen(false)} aria-label="닫기"><Icon icon={Cancel01Icon} size={19} /></button></header><div className="learner-registration-form"><label><span>이름 <b>*</b></span><input value={editForm.name} onChange={(event) => setEditForm((current) => ({ ...current, name: event.target.value }))} onBlur={() => setEditTouched((current) => ({ ...current, name: true }))} />{editTouched.name && editErrors.name && <small>{editErrors.name}</small>}</label><label><span>사번</span><input value={learner.id} disabled /><small className="learner-field-help">사번은 변경할 수 없습니다.</small></label><label className="learner-registration-wide"><span>이메일 <b>*</b></span><input type="email" value={editForm.email} onChange={(event) => setEditForm((current) => ({ ...current, email: event.target.value }))} onBlur={() => setEditTouched((current) => ({ ...current, email: true }))} />{(editTouched.email || editForm.email) && editErrors.email && <small>{editErrors.email}</small>}</label><label><span>부서 <b>*</b></span><select value={editForm.dept} onChange={(event) => setEditForm((current) => ({ ...current, dept: event.target.value }))}>{departments.map((value) => <option key={value}>{value}</option>)}</select></label><label><span>직급 <b>*</b></span><select value={editForm.position} onChange={(event) => setEditForm((current) => ({ ...current, position: event.target.value }))}>{positions.map((value) => <option key={value}>{value}</option>)}</select></label></div><footer><button className="secondary" onClick={() => setEditOpen(false)}>취소</button><button className="primary" disabled={!canSaveLearner} onClick={saveLearnerInfo}>저장</button></footer></section></div>}
+      {statusConfirmOpen && <ConfirmModal title={learner.status === `비활성` ? `계정을 다시 활성화할까요?` : `계정을 비활성화할까요?`} description={learner.status === `비활성` ? `활성화하면 신규 학습을 다시 진행할 수 있습니다.` : `해당 학습자의 기존 학습 이력과 수료 기록은 유지됩니다.`} confirmLabel={learner.status === `비활성` ? `활성화` : `비활성화`} tone={learner.status === `비활성` ? `primary` : `danger`} onCancel={() => setStatusConfirmOpen(false)} onConfirm={toggleLearnerStatus} />}
     </section>
   );
 }
@@ -5970,6 +6034,7 @@ function LearningRewardsPage() {
     const rule = { ...pointRuleForm, points: Math.max(0, Number(pointRuleForm.points) || 0) };
     setPointRules((current) => rule.id ? current.map((item) => item.id === rule.id ? rule : item) : [...current, { ...rule, id: Date.now() }]);
     setPointRuleForm(null);
+    showAdminToast(`포인트 기준이 저장되었습니다.`);
   };
   const saveBadgeRule = () => {
     if (!badgeRuleForm.name.trim()) return alert(`뱃지명을 입력해주세요.`);
@@ -5977,6 +6042,7 @@ function LearningRewardsPage() {
     const badge = { ...badgeRuleForm, threshold: Math.max(1, Number(badgeRuleForm.threshold) || 1) };
     setBadges((current) => badge.id ? current.map((item) => item.id === badge.id ? badge : item) : [...current, { ...badge, id: Date.now(), people: 0, icon: Award01Icon, tone: `blue` }]);
     setBadgeRuleForm(null);
+    showAdminToast(`뱃지 기준이 저장되었습니다.`);
   };
   return (
     <section className="results-section rewards-page">
@@ -8123,10 +8189,12 @@ function T({ createSignal }) {
   const saveNotice = () => {
     if (!form.title.trim()) return alert(`공지사항 제목을 입력해 주세요.`);
     if (!form.content.trim()) return alert(`공지 내용을 입력해 주세요.`);
+    const editing = Boolean(form.id);
     const next = { ...form, id: form.id || Date.now(), target: `전체 임직원`, status: `게시 중`, views: form.views || 0 };
     setNotices((current) => form.id ? current.map((item) => item.id === form.id ? next : item) : [next, ...current]);
     setForm(null);
     setScreen(`list`);
+    showAdminToast(editing ? `공지사항이 수정되었습니다.` : `공지사항이 등록되었습니다.`);
   };
   const editNotice = (notice) => { setForm({ ...emptyNoticeForm(), ...notice, start: notice.start?.replaceAll(`.`, `-`) || ``, end: notice.end?.replaceAll(`.`, `-`) || `` }); setScreen(`edit`); };
   const removeNotice = (notice) => {
@@ -8134,6 +8202,7 @@ function T({ createSignal }) {
     setDeleteTarget(null);
     setViewing(null);
     setScreen(`list`);
+    showAdminToast(`공지사항이 삭제되었습니다.`);
   };
   if (screen === `create` || screen === `edit`) return <NoticeEditorPage form={form} setForm={setForm} onCancel={() => { setForm(null); setScreen(screen === `edit` ? `detail` : `list`); }} onSave={saveNotice} />;
   if (screen === `detail` && viewing) return <><NoticeDetailPage notice={viewing} onBack={() => setScreen(`list`)} onEdit={() => editNotice(viewing)} onDelete={() => setDeleteTarget(viewing)} />{deleteTarget && <NoticeDeleteDialog onCancel={() => setDeleteTarget(null)} onConfirm={() => removeNotice(deleteTarget)} />}</>;
@@ -8186,7 +8255,7 @@ function NoticeDetailPage({ notice, onBack, onEdit, onDelete }) {
 }
 
 function NoticeDeleteDialog({ onCancel, onConfirm }) {
-  return <div className="overlay center" onMouseDown={(event) => event.target === event.currentTarget && onCancel()}><section className="notice-delete-dialog"><h2>공지사항을 삭제하시겠습니까?</h2><p>삭제한 공지사항은 복구할 수 없습니다.</p><div><button className="secondary" onClick={onCancel}>취소</button><button className="danger" onClick={onConfirm}>삭제</button></div></section></div>;
+  return <ConfirmModal title="공지사항을 삭제할까요?" description="삭제한 공지사항은 복구할 수 없습니다." confirmLabel="삭제" onCancel={onCancel} onConfirm={onConfirm} />;
 }
 
 function NoticeEditorModal({ form, setForm, onClose, onPreview, onDraft, onPublish }) {
@@ -8693,6 +8762,10 @@ function M() {
       [h, D],
     );
   function $(e, n) {
+    if ([`player`, `lectureDetail`].includes(e) && isManagedUserInactive(CURRENT_USER)) {
+      alert(`비활성 계정은 신규 학습을 진행할 수 없습니다. 관리자에게 문의해주세요.`);
+      return;
+    }
     (e === `userRewards`
       ? setRewardInitialTab(n || `ranking`)
       : n && e === `noticeDetail`
@@ -8713,6 +8786,10 @@ function M() {
     } else m(`${o ? `관리자` : `사용자`} 데모 계정 정보를 확인해 주세요.`);
   }
   function de() {
+    if (isManagedUserInactive(CURRENT_USER)) {
+      alert(`비활성 계정은 신규 학습을 진행할 수 없습니다. 관리자에게 문의해주세요.`);
+      return;
+    }
     (g((e) =>
       e.map((e) => (e.id === Z.id ? { ...e, enrolled: !0, progress: 0 } : e)),
     ),
