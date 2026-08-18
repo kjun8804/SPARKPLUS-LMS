@@ -651,15 +651,77 @@ function f({ logout: e }) {
     ],
   });
 }
+const padDatePart = (value) => String(value).padStart(2, `0`);
+const toDateValue = (date) => `${date.getFullYear()}-${padDatePart(date.getMonth() + 1)}-${padDatePart(date.getDate())}`;
+const endOfMonthValue = (year, month) => toDateValue(new Date(year, month, 0));
+const ADMIN_TODAY = new Date(2026, 7, 18);
+const adminQuickRange = (key) => {
+  const year = ADMIN_TODAY.getFullYear();
+  const month = ADMIN_TODAY.getMonth();
+  if (key === `lastMonth`) return { start: toDateValue(new Date(year, month - 1, 1)), end: endOfMonthValue(year, month), label: `지난달` };
+  if (key === `threeMonths`) return { start: toDateValue(new Date(year, month - 2, 1)), end: endOfMonthValue(year, month + 1), label: `최근 3개월` };
+  if (key === `sixMonths`) return { start: toDateValue(new Date(year, month - 5, 1)), end: endOfMonthValue(year, month + 1), label: `최근 6개월` };
+  if (key === `year`) return { start: `${year}-01-01`, end: `${year}-12-31`, label: `올해` };
+  if (key === `quarter`) {
+    const quarterStart = Math.floor(month / 3) * 3;
+    return { start: toDateValue(new Date(year, quarterStart, 1)), end: endOfMonthValue(year, quarterStart + 3), label: `${year}년 ${Math.floor(month / 3) + 1}분기` };
+  }
+  return { start: toDateValue(new Date(year, month, 1)), end: endOfMonthValue(year, month + 1), label: `이번 달` };
+};
+const formatAdminPeriod = ({ start, end }) => start.slice(0, 7) === end.slice(0, 7)
+  ? `${Number(start.slice(0, 4))}년 ${Number(start.slice(5, 7))}월`
+  : `${start.replaceAll(`-`, `.`)} ~ ${end.replaceAll(`-`, `.`)}`;
+
+function DateRangeFilter({ value, onChange, mode = `dashboard` }) {
+  const options = mode === `ranking`
+    ? [[`month`, `월간`], [`quarter`, `분기`], [`year`, `올해`], [`custom`, `직접 설정`]]
+    : [[`month`, `이번 달`], [`lastMonth`, `지난달`], [`threeMonths`, `최근 3개월`], [`sixMonths`, `최근 6개월`], [`year`, `올해`], [`custom`, `직접 설정`]];
+  const invalid = !value.start || !value.end || value.start > value.end;
+  const selectPreset = (key) => {
+    if (key === `custom`) return onChange({ ...value, preset: key });
+    const normalizedKey = key === `month` ? `month` : key;
+    onChange({ preset: key, ...adminQuickRange(normalizedKey) });
+  };
+  return <div className={`admin-date-range-filter ${invalid ? `has-error` : ``}`} aria-label="기간 조회">
+    <div className="date-range-control">
+      <label><span>기간 선택</span><select value={value.preset} onChange={(event) => selectPreset(event.target.value)}>{options.map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></label>
+      <div className="date-range-inputs">
+        <label><span>시작일</span><input type="date" required value={value.start} max={value.end || undefined} onChange={(event) => onChange({ ...value, preset: `custom`, start: event.target.value })} /></label>
+        <i aria-hidden="true">~</i>
+        <label><span>종료일</span><input type="date" required value={value.end} min={value.start || undefined} onChange={(event) => onChange({ ...value, preset: `custom`, end: event.target.value })} /></label>
+      </div>
+    </div>
+    {invalid && <p className="date-range-error">시작일과 종료일을 올바른 순서로 입력해주세요.</p>}
+  </div>;
+}
+
+const ADMIN_MONTHLY_STATS = [
+  { key:`2026-01`, month:`1월`, completed:31, active:55, courses:4, newLearners:49, progress:68, completionRate:62 },
+  { key:`2026-02`, month:`2월`, completed:37, active:61, courses:5, newLearners:57, progress:71, completionRate:65 },
+  { key:`2026-03`, month:`3월`, completed:42, active:68, courses:5, newLearners:64, progress:72, completionRate:67 },
+  { key:`2026-04`, month:`4월`, completed:51, active:73, courses:6, newLearners:69, progress:74, completionRate:70 },
+  { key:`2026-05`, month:`5월`, completed:58, active:81, courses:7, newLearners:76, progress:76, completionRate:73 },
+  { key:`2026-06`, month:`6월`, completed:63, active:88, courses:8, newLearners:83, progress:77, completionRate:74 },
+  { key:`2026-07`, month:`7월`, completed:72, active:94, courses:9, newLearners:89, progress:78, completionRate:76 },
+  { key:`2026-08`, month:`8월`, completed:78, active:102, courses:8, newLearners:96, progress:79, completionRate:78 },
+];
+const monthsInRange = (range) => ADMIN_MONTHLY_STATS.filter((item) => item.key >= range.start.slice(0, 7) && item.key <= range.end.slice(0, 7));
+
 function p({ onGo: e }) {
-  const data = [
-    { month: `3월`, completed: 42, active: 68, courses: 5 },
-    { month: `4월`, completed: 51, active: 73, courses: 6 },
-    { month: `5월`, completed: 58, active: 81, courses: 7 },
-    { month: `6월`, completed: 63, active: 88, courses: 8 },
-    { month: `7월`, completed: 72, active: 94, courses: 9 },
-    { month: `8월`, completed: 78, active: 102, courses: 8 },
-  ];
+  const [range, setRange] = r.useState({ preset:`sixMonths`, ...adminQuickRange(`sixMonths`) });
+  const validRange = Boolean(range.start && range.end && range.start <= range.end);
+  const lastValidRange = r.useRef(range);
+  if (validRange) lastValidRange.current = range;
+  const effectiveRange = validRange ? range : lastValidRange.current;
+  const data = monthsInRange(effectiveRange);
+  const average = (key) => data.length ? Math.round(data.reduce((sum, item) => sum + item[key], 0) / data.length) : 0;
+  const totals = {
+    courses: data.reduce((sum, item) => sum + item.courses, 0),
+    learners: data.reduce((sum, item) => sum + item.newLearners, 0),
+    completed: data.reduce((sum, item) => sum + item.completed, 0),
+    progress: average(`progress`),
+    completionRate: average(`completionRate`),
+  };
   const [hovered, setHovered] = (0, r.useState)(null);
 
   const tasks = [
@@ -688,15 +750,20 @@ function p({ onGo: e }) {
 
   return (
     <>
+      <section className="admin-period-section">
+        <div><b>기간 조회</b><span>KPI와 학습 현황 그래프에 동일하게 적용됩니다.</span></div>
+        <DateRangeFilter value={range} onChange={setRange} />
+      </section>
       <section
         className="admin-summary admin-home-kpis"
         aria-label="교육 운영 요약"
       >
         {[
-          [`교육과정 수`, `12개`, `총 강의 회차 86차시`],
-          [`전체 학습자`, `248명`, `지난달 대비 +8명`],
-          [`평균 진도율`, `79%`, `지난달 대비 +4.0%p`],
-          [`평균 수료율`, `78%`, `지난달 대비 +4.2%p`],
+          [`운영 교육과정`, `${totals.courses}개`, `${formatAdminPeriod(effectiveRange)} 운영 기준`],
+          [`신규 수강 인원`, `${totals.learners}명`, `선택 기간 신규 신청·배정`],
+          [`수료 인원`, `${totals.completed}명`, `선택 기간 수료 완료`],
+          [`평균 진도율`, `${totals.progress}%`, `선택 기간 월평균`],
+          [`평균 수료율`, `${totals.completionRate}%`, `선택 기간 월평균`],
         ].map(([label, value, note]) => (
           <div key={label}>
             <span>{label}</span>
@@ -710,7 +777,7 @@ function p({ onGo: e }) {
         <article className="panel trend-panel admin-home-trend">
           <div className="panel-head admin-chart-head">
             <div>
-              <h2>월별 교육 현황</h2>
+              <h2>{formatAdminPeriod(effectiveRange)} 교육 현황</h2>
             </div>
           </div>
 
@@ -733,7 +800,7 @@ function p({ onGo: e }) {
             <div className="admin-bar-canvas">
               <div className="admin-bar-grid" aria-hidden="true">{[0, 1, 2, 3, 4].map((line) => <i key={line} />)}</div>
               <div className="admin-bar-groups">
-                {data.map((item, index) => <button key={item.month} type="button" className="admin-bar-group"
+                {data.map((item, index) => <button key={item.key} type="button" className="admin-bar-group"
                   aria-label={`${item.month} 수료 인원 ${item.completed}명, 신청 및 수강 중 ${item.active}명, 수료 과정 ${item.courses}개`}
                   onMouseEnter={() => setHovered(index)} onMouseLeave={() => setHovered(null)} onFocus={() => setHovered(index)} onBlur={() => setHovered(null)}>
                   <span className="admin-bar-pair" aria-hidden="true">
@@ -749,6 +816,7 @@ function p({ onGo: e }) {
                     <em><i className="course-color" />수료 과정 <strong>{item.courses}개</strong></em>
                   </span>}
                 </button>)}
+                {!data.length && <div className="admin-chart-empty">선택한 기간에 조회할 통계가 없습니다.</div>}
               </div>
             </div>
           </div>
@@ -6001,10 +6069,7 @@ function LegacyStatisticsReportPage() {
 function LearningRewardsPage() {
   const [tab, setTab] = r.useState(`ranking`);
   const [rankingScope, setRankingScope] = r.useState(`individual`);
-  const [selectedYear, setSelectedYear] = r.useState(2026);
-  const [selectedMonth, setSelectedMonth] = r.useState(8);
-  const [pickerYear, setPickerYear] = r.useState(2026);
-  const [monthPickerOpen, setMonthPickerOpen] = r.useState(false);
+  const [rankingRange, setRankingRange] = r.useState({ preset:`month`, ...adminQuickRange(`month`) });
   const [dept, setDept] = r.useState(`전체 부서`);
   const [detail, setDetail] = r.useState(null);
   const [pointRules, setPointRules] = r.useState([
@@ -6016,35 +6081,30 @@ function LearningRewardsPage() {
   const [pointRuleForm, setPointRuleForm] = r.useState(null);
   const [badgeFilter, setBadgeFilter] = r.useState(`전체`);
   const [badgeRuleForm, setBadgeRuleForm] = r.useState(null);
-  const ranking = [
-    [`이지은`, `마케팅팀`, 1280, 8, 6, 5],
-    [`정유진`, `운영팀`, 1160, 7, 6, 4],
-    [`김지수`, `People팀`, 1040, 6, 7, 3],
-    [`정유진`, `운영팀`, 960, 6, 5, 3],
-    [`최하늘`, `세일즈팀`, 890, 5, 4, 3],
-  ].map((x, i) => ({
-    rank: i + 1,
-    name: x[0],
-    dept: x[1],
-    point: x[2],
-    courses: x[3],
-    tests: x[4],
-    badges: x[5],
-  }));
-  const departmentRanking = [
-    [`People팀`, 840, 24, 82, 18],
-    [`마케팅팀`, 790, 31, 78, 15],
-    [`개발팀`, 720, 46, 74, 21],
-    [`운영팀`, 680, 38, 71, 13],
-    [`세일즈팀`, 640, 29, 68, 11],
-  ].map((item, index) => ({
-    rank: index + 1,
-    dept: item[0],
-    averagePoint: item[1],
-    members: item[2],
-    completionRate: item[3],
-    completedCourses: item[4],
-  }));
+  const rewardPeople = [
+    { name:`이지은`, dept:`마케팅팀`, points:[210,260,310,420,510,690,760,1280] },
+    { name:`정유진`, dept:`운영팀`, points:[280,240,390,350,620,740,910,1160] },
+    { name:`김지수`, dept:`People팀`, points:[320,300,460,520,580,810,400,1040] },
+    { name:`박서연`, dept:`개발팀`, points:[190,370,330,610,720,680,980,960] },
+    { name:`최하늘`, dept:`세일즈팀`, points:[260,290,510,430,660,570,830,890] },
+    { name:`한도윤`, dept:`People팀`, points:[170,410,280,640,490,720,700,760] },
+    { name:`윤서아`, dept:`개발팀`, points:[350,180,570,470,540,630,620,710] },
+    { name:`송민호`, dept:`마케팅팀`, points:[230,330,420,560,450,590,680,650] },
+  ];
+  const rangeIsValid = Boolean(rankingRange.start && rankingRange.end && rankingRange.start <= rankingRange.end);
+  const lastValidRankingRange = r.useRef(rankingRange);
+  if (rangeIsValid) lastValidRankingRange.current = rankingRange;
+  const effectiveRankingRange = rangeIsValid ? rankingRange : lastValidRankingRange.current;
+  const selectedMonthIndexes = ADMIN_MONTHLY_STATS.map((item, index) => ({ item, index })).filter(({ item }) => item.key >= effectiveRankingRange.start.slice(0, 7) && item.key <= effectiveRankingRange.end.slice(0, 7)).map(({ index }) => index);
+  const ranking = rewardPeople.map((person) => {
+    const point = selectedMonthIndexes.reduce((sum, index) => sum + person.points[index], 0);
+    return { ...person, point, courses: Math.max(0, Math.round(point / 340)), tests: Math.max(0, Math.round(point / 280)), badges: Math.max(0, Math.round(point / 620)) };
+  }).sort((a, b) => b.point - a.point).map((item, index) => ({ ...item, rank:index + 1 }));
+  const departmentRanking = [...new Set(rewardPeople.map((item) => item.dept))].map((department) => {
+    const members = ranking.filter((item) => item.dept === department);
+    const averagePoint = members.length ? Math.round(members.reduce((sum, item) => sum + item.point, 0) / members.length) : 0;
+    return { dept:department, averagePoint, members:members.length, completionRate:Math.min(96, 58 + Math.round(averagePoint / 45)), completedCourses:members.reduce((sum, item) => sum + item.courses, 0) };
+  }).sort((a, b) => b.averagePoint - a.averagePoint).map((item, index) => ({ ...item, rank:index + 1 }));
   const [badges, setBadges] = r.useState([
     { id: 1, name: `이달의 학습왕`, activityType: `월간 포인트 순위`, targetType: `전체 교육과정`, course: ``, threshold: 1, people: 8, type: `랭킹형`, icon: Medal01Icon, tone: `gold`, enabled: true },
     { id: 2, name: `이달의 TOP3`, activityType: `월간 포인트 TOP`, targetType: `전체 교육과정`, course: ``, threshold: 3, people: 24, type: `랭킹형`, icon: RankingIcon, tone: `silver`, enabled: true },
@@ -6055,7 +6115,7 @@ function LearningRewardsPage() {
   const filteredRanking = ranking.filter(
     (item) => dept === `전체 부서` || item.dept === dept,
   );
-  const period = `${selectedYear}년 ${selectedMonth}월`;
+  const period = formatAdminPeriod(effectiveRankingRange);
   const courseOptions = [`개인정보보호 필수교육`, `생성형 AI 업무 활용`, `데이터 분석 기초 입문`, `리더십 기본 과정`];
   const conditionUnit = (activity) => activity === `퀴즈 완료` ? `점 이상` : activity === `연속 학습` ? `주 이상` : activity.includes(`순위`) ? `위` : activity.includes(`TOP`) ? `위 이내` : `회 이상`;
   const ruleSummary = (rule) => `${rule.targetType === `특정 교육과정` ? rule.course : `전체 과정`} · ${rule.activityType} ${rule.threshold}${conditionUnit(rule.activityType)} · ${rule.frequency}`;
@@ -6099,6 +6159,7 @@ function LearningRewardsPage() {
       </div>
       {tab === `ranking` ? (
         <>
+          <div className="reward-period-heading"><div><h2>{period} 학습 랭킹</h2><p>선택한 기간에 획득한 포인트만 합산합니다.</p></div><DateRangeFilter value={rankingRange} onChange={setRankingRange} mode="ranking" /></div>
           <div className="reward-toolbar">
             <div className="reward-ranking-scope">
               <button className={rankingScope === `individual` ? `active` : ``} onClick={() => setRankingScope(`individual`)}>개인 랭킹</button>
@@ -6118,18 +6179,11 @@ function LearningRewardsPage() {
                 ))}
               </select>
             )}
-            <div className="reward-month-picker">
-              <button type="button" className="reward-month-trigger" onClick={() => { setPickerYear(selectedYear); setMonthPickerOpen(!monthPickerOpen); }}>{period}<span aria-hidden="true">▣</span></button>
-              {monthPickerOpen && <div className="reward-month-popover">
-                <div><button type="button" aria-label="이전 연도" onClick={() => setPickerYear((year) => year - 1)}>‹</button><b>{pickerYear}년</b><button type="button" aria-label="다음 연도" onClick={() => setPickerYear((year) => year + 1)}>›</button></div>
-                <div>{Array.from({ length: 12 }, (_, index) => index + 1).map((month) => <button type="button" key={month} className={pickerYear === selectedYear && month === selectedMonth ? `active` : ``} onClick={() => { setSelectedYear(pickerYear); setSelectedMonth(month); setMonthPickerOpen(false); }}>{month}월</button>)}</div>
-              </div>}
-            </div>
           </div>
           {rankingScope === `individual` ? (
             <>
             <RewardTopThree items={filteredRanking.slice(0, 3)} type="individual" />
-            <div className="reward-list-heading"><div><h2>전체 개인 랭킹</h2><p>학습 활동으로 적립한 포인트 순위입니다.</p></div><span>{filteredRanking.length}명</span></div>
+            <div className="reward-list-heading"><div><h2>전체 개인 랭킹</h2><p>{period} 동안 적립한 포인트 순위입니다.</p></div><span>{filteredRanking.length}명</span></div>
             <div className="table-wrap results-table reward-table reward-ranking-table">
               <table>
                 <thead>
@@ -6238,7 +6292,7 @@ function LearningRewardsPage() {
           onClose={() => setDetail(null)}
         >
           {detail.type === `points` ? (
-            <><div className="point-detail-summary"><div><span>이번 달 포인트</span><b>{detail.point.toLocaleString()}P</b></div><div><span>이번 달 순위</span><b>{detail.rank}위</b></div><div><span>획득 뱃지</span><b>{detail.badges}개</b></div></div>
+            <><div className="point-detail-summary"><div><span>선택 기간 포인트</span><b>{detail.point.toLocaleString()}P</b></div><div><span>선택 기간 순위</span><b>{detail.rank}위</b></div><div><span>획득 뱃지</span><b>{detail.badges}개</b></div></div>
             <div className="point-history actual-history">{[[`08.10`, `데이터 분석 기초 입문`, `과정 수료`, `+100P`],[`08.10`, `데이터 분석 기초 입문 · 5차시`, `차시 학습 완료`, `+20P`],[`08.08`, `개인정보보호 필수교육`, `퀴즈 완료`, `+50P`],[`08.08`, `개인정보보호 필수교육`, `설문 제출`, `+10P`]].map((x, index) => <div key={`${x[0]}-${index}`}><time>{x[0]}</time><span><b>{x[1]}</b><small>{x[2]}</small></span><strong>{x[3]}</strong></div>)}</div></>
           ) : (
             <div className="badge-recipient-list">{[[`김지수`, `People팀`, `2026.07`],[`이지은`, `마케팅팀`, `2026.06`],[`정유진`, `운영팀`, `2026.05`]].map((x) => <div key={x[0]}><span className="recipient-avatar">{x[0][0]}</span><b>{x[0]}</b><span>{x[1]}</span><time>{x[2]}</time></div>)}</div>
@@ -6292,7 +6346,7 @@ function DepartmentRankingTable({ departments, period }) {
               <th>평균 학습 포인트</th>
               <th>소속 인원</th>
               <th>수료율</th>
-              <th>이번 달 수료</th>
+              <th>기간 내 수료</th>
             </tr>
           </thead>
           <tbody>
