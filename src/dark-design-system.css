@@ -490,3 +490,227 @@ html[data-theme='dark'] .user-portal .reward-badge-view .reward-badge-grid p {
 html[data-theme='dark'] .user-portal .reward-badge-view .reward-badge-grid time {
   color: #7e8797 !important;
 }
+
+/* Course detail / completion quest: token-aligned dark surfaces */
+html[data-theme='dark'] .user-portal .lecture-quest-page {
+  background: var(--dark-bg) !important;
+  color: var(--dark-text-primary) !important;
+}
+
+html[data-theme='dark'] .user-portal .lecture-quest-page :is(
+  .lecture-hero,
+  .completion-quest-card
+) {
+  border-color: var(--dark-border-soft) !important;
+  background: var(--dark-surface-1) !important;
+  color: var(--dark-text-primary) !important;
+  box-shadow: var(--ui-shadow) !important;
+}
+
+html[data-theme='dark'] .user-portal .lecture-quest-page :is(
+  .lecture-hero-copy,
+  .quest-head,
+  .quest-copy,
+  .survey-quest-step > div,
+  .certificate-quest > div
+) {
+  background: transparent !important;
+}
+
+html[data-theme='dark'] .user-portal .lecture-quest-page :is(
+  h1,
+  h2,
+  h3,
+  .quest-copy b,
+  .lecture-meta b
+) {
+  background: transparent !important;
+  color: var(--dark-text-primary) !important;
+}
+
+html[data-theme='dark'] .user-portal .lecture-quest-page :is(
+  .lecture-hero-copy > p,
+  .quest-head p,
+  .survey-quest-step p,
+  .certificate-quest p
+) {
+  background: transparent !important;
+  color: var(--dark-text-secondary) !important;
+}
+
+html[data-theme='dark'] .user-portal .lecture-quest-page :is(
+  .lecture-meta small,
+  .quest-copy small,
+  .quest-number,
+  .quest-arrow
+) {
+  color: var(--dark-text-tertiary) !important;
+}
+
+html[data-theme='dark'] .user-portal .lecture-quest-page .lecture-meta {
+  border-color: var(--dark-border-soft) !important;
+}
+
+html[data-theme='dark'] .user-portal .lecture-quest-page .lecture-meta span {
+  border-color: var(--dark-border-soft) !important;
+  background: transparent !important;
+}
+
+html[data-theme='dark'] .user-portal .quest-progress-copy {
+  border: 1px solid var(--dark-border-soft) !important;
+  background: var(--dark-surface-2) !important;
+}
+
+html[data-theme='dark'] .user-portal .quest-progress-copy strong {
+  color: #9fa4ff !important;
+}
+
+html[data-theme='dark'] .user-portal .quest-progress-copy span {
+  color: var(--dark-text-secondary) !important;
+}
+
+html[data-theme='dark'] .user-portal .quest-progress-track {
+  background: var(--dark-surface-3) !important;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, .28) !important;
+}
+
+html[data-theme='dark'] .user-portal .quest-progress-track i {
+  background: linear-gradient(90deg, #5d9cff, #8176ee) !important;
+  box-shadow: 0 2px 7px rgba(91, 112, 232, .32) !important;
+}
+
+html[data-theme='dark'] .user-portal .quest-item {
+  border-color: var(--dark-border-soft) !important;
+  background: var(--dark-surface-2) !important;
+  color: var(--dark-text-primary) !important;
+  box-shadow: none !important;
+}
+
+html[data-theme='dark'] .user-portal .quest-item:hover {
+  border-color: #46566c !important;
+  background: var(--dark-surface-3) !important;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, .18) !important;
+}
+
+html[data-theme='dark'] .user-portal .quest-item.complete {
+  border-color: #315a53 !important;
+  background: #19332f !important;
+}
+
+html[data-theme='dark'] .user-portal .quest-item.current {
+  border-color: #4a5080 !important;
+  background: #222944 !important;
+}
+
+html[data-theme='dark'] .user-portal .quest-state {
+  color: var(--dark-text-secondary) !important;
+  background: var(--dark-surface-3) !important;
+}
+
+html[data-theme='dark'] .user-portal .quest-state > i {
+  border-color: var(--dark-text-tertiary) !important;
+}
+
+html[data-theme='dark'] .user-portal :is(.quest-item.complete, .survey-quest-step.complete) .quest-state {
+  color: #f7fffc !important;
+  background: linear-gradient(145deg, #55b59e, #367f72) !important;
+}
+
+html[data-theme='dark'] .user-portal .quest-item.current .quest-state {
+  color: #fff !important;
+  background: linear-gradient(145deg, #728df2, #655fd1) !important;
+}
+
+html[data-theme='dark'] .user-portal .quest-item em {
+  color: var(--dark-text-secondary) !important;
+  background: var(--dark-surface-3) !important;
+}
+
+html[data-theme='dark'] .user-portal .quest-item.complete em {
+  border: 1px solid rgba(102, 208, 181, .2) !important;
+  color: #8edbc7 !important;
+  background: #22443d !important;
+}
+
+html[data-theme='dark'] .user-portal .quest-item.current em {
+  border: 1px solid rgba(145, 143, 245, .2) !important;
+  color: #b6b4ff !important;
+  background: #32345f !important;
+}
+
+html[data-theme='dark'] .user-portal .survey-quest-step {
+  border-color: var(--dark-border) !important;
+  background: var(--dark-surface-2) !important;
+  color: var(--dark-text-primary) !important;
+}
+
+html[data-theme='dark'] .user-portal .survey-quest-step.available {
+  border-color: #4a5080 !important;
+  background: #222944 !important;
+}
+
+html[data-theme='dark'] .user-portal .survey-quest-step.complete {
+  border-color: #315a53 !important;
+  background: #19332f !important;
+}
+
+html[data-theme='dark'] .user-portal .survey-quest-step > div > small {
+  color: #aaa8ff !important;
+}
+
+html[data-theme='dark'] .user-portal .survey-done {
+  border: 1px solid rgba(102, 208, 181, .2) !important;
+  color: #8edbc7 !important;
+  background: #22443d !important;
+}
+
+html[data-theme='dark'] .user-portal .survey-quest-step button:disabled {
+  border: 1px solid var(--dark-border-soft) !important;
+  color: var(--dark-text-tertiary) !important;
+  background: var(--dark-surface-3) !important;
+}
+
+html[data-theme='dark'] .user-portal .certificate-quest {
+  border: 1px solid var(--dark-border-soft) !important;
+  background: var(--dark-surface-2) !important;
+  color: var(--dark-text-primary) !important;
+}
+
+html[data-theme='dark'] .user-portal .certificate-quest.ready {
+  border-color: #4a5080 !important;
+  background: #222944 !important;
+}
+
+html[data-theme='dark'] .user-portal .certificate-quest-icon {
+  color: var(--dark-text-tertiary) !important;
+  background: var(--dark-surface-3) !important;
+}
+
+html[data-theme='dark'] .user-portal .certificate-quest > button:not(.primary) {
+  border: 1px solid var(--dark-border-soft) !important;
+  color: var(--dark-text-tertiary) !important;
+  background: var(--dark-surface-3) !important;
+}
+
+html[data-theme='dark'] .user-portal .lecture-quest-page :is(.tooltip, [role='tooltip']) {
+  border-color: var(--dark-border) !important;
+  background: var(--dark-surface-3) !important;
+  color: var(--dark-text-primary) !important;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, .32) !important;
+}
+
+html[data-theme='dark'] .user-portal .quest-certificate-modal {
+  border-color: var(--dark-border) !important;
+  background: var(--dark-surface-1) !important;
+  color: var(--dark-text-primary) !important;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, .48) !important;
+}
+
+html[data-theme='dark'] .user-portal .quest-certificate-modal :is(h2, h3, strong, dd, .certificate-date b) {
+  color: var(--dark-text-primary) !important;
+}
+
+html[data-theme='dark'] .user-portal .quest-certificate-modal :is(p, dt, .certificate-number, .certificate-date) {
+  background: transparent !important;
+  color: var(--dark-text-secondary) !important;
+}
