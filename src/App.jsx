@@ -6158,7 +6158,7 @@ function LearningRewardsPage() {
       </div>
       {tab === `ranking` ? (
         <>
-          <div className="reward-period-heading"><div><h2>{period} 학습 랭킹</h2><p>선택한 기간에 획득한 포인트만 합산합니다.</p></div><DateRangeFilter value={rankingRange} onChange={setRankingRange} mode="ranking" /></div>
+          <div className="reward-period-heading reward-period-toolbar" aria-label="학습 랭킹 기간 필터"><DateRangeFilter value={rankingRange} onChange={setRankingRange} mode="ranking" /></div>
           <div className="reward-toolbar">
             <div className="reward-ranking-scope">
               <button className={rankingScope === `individual` ? `active` : ``} onClick={() => setRankingScope(`individual`)}>개인 랭킹</button>
