@@ -675,7 +675,7 @@ const formatAdminPeriod = ({ start, end }) => start.slice(0, 7) === end.slice(0,
 function DateRangeFilter({ value, onChange, mode = `dashboard` }) {
   const options = mode === `ranking`
     ? [[`month`, `월간`], [`quarter`, `분기`], [`year`, `올해`], [`custom`, `직접 설정`]]
-    : [[`month`, `이번 달`], [`lastMonth`, `지난달`], [`threeMonths`, `최근 3개월`], [`sixMonths`, `최근 6개월`], [`year`, `올해`], [`custom`, `직접 설정`]];
+    : [[`month`, `이번 달`], [`lastMonth`, `지난달`], [`threeMonths`, `최근 3개월`], [`sixMonths`, `최근 6개월`], [`year`, `올해`], [`custom`, `직접 선택`]];
   const invalid = !value.start || !value.end || value.start > value.end;
   const selectPreset = (key) => {
     if (key === `custom`) return onChange({ ...value, preset: key });
@@ -750,8 +750,7 @@ function p({ onGo: e }) {
 
   return (
     <>
-      <section className="admin-period-section">
-        <div><b>기간 조회</b><span>KPI와 학습 현황 그래프에 동일하게 적용됩니다.</span></div>
+      <section className="admin-period-section admin-period-toolbar" aria-label="대시보드 기간 필터">
         <DateRangeFilter value={range} onChange={setRange} />
       </section>
       <section
@@ -759,7 +758,7 @@ function p({ onGo: e }) {
         aria-label="교육 운영 요약"
       >
         {[
-          [`운영 교육과정`, `${totals.courses}개`, `${formatAdminPeriod(effectiveRange)} 운영 기준`],
+          [`운영 교육과정`, `${totals.courses}개`, `${effectiveRange.start.replaceAll(`-`, `.`)} ~ ${effectiveRange.end.replaceAll(`-`, `.`)} 기준`],
           [`신규 수강 인원`, `${totals.learners}명`, `선택 기간 신규 신청·배정`],
           [`수료 인원`, `${totals.completed}명`, `선택 기간 수료 완료`],
           [`평균 진도율`, `${totals.progress}%`, `선택 기간 월평균`],

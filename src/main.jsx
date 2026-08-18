@@ -15,6 +15,7 @@ import './learner-registration.css';
 import './course-assignment.css';
 import './admin-feedback.css';
 import './dark-design-system.css';
+import './admin-period-polish.css';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
