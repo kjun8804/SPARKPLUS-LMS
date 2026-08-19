@@ -3,3 +3,10 @@ dist/
 .DS_Store
 *.local
 .env
+server/.env
+server/coverage/
+server/dist/
+.pnpm-store/
+
+.vercel/
+.env.local
