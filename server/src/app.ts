@@ -34,7 +34,7 @@ export function createApp(config: AppConfig, pool: DatabasePool, options: AppOpt
     },
   }));
 
-  app.get("/health", async (_request, response, next) => {
+  app.get(["/health", "/api/health"], async (_request, response, next) => {
     try {
       await pool.query("SELECT 1");
       response.json({ data: { status: "ok" }, error: null });
