@@ -441,7 +441,7 @@ function d({ value: e }) {
     children: (0, i.jsx)(`span`, { style: { width: `${e}%` } }),
   });
 }
-function f({ logout: e, user }) {
+function f({ logout: e, user, switchToLearner }) {
   let [theme, setTheme] = (0, r.useState)(
     () => localStorage.getItem(`sparkplus-theme`) || `light`,
   );
@@ -545,6 +545,16 @@ function f({ logout: e, user }) {
               icon: theme === `light` ? Moon02Icon : Sun03Icon,
               size: 20,
             }),
+          }),
+          (0, i.jsxs)(`button`, {
+            className: `portal-switch-button`,
+            type: `button`,
+            onClick: switchToLearner,
+            title: `학습자 화면으로 전환`,
+            children: [
+              (0, i.jsx)(Icon, { icon: BookOpen01Icon, size: 18 }),
+              (0, i.jsx)(`span`, { children: `학습자 화면` }),
+            ],
           }),
           (0, i.jsxs)(`div`, {
             className: `profile-wrap`,
@@ -8955,6 +8965,11 @@ function M() {
       ? (0, i.jsx)(f, {
           logout,
           user: authenticatedUser,
+          switchToLearner: () => {
+            a(`user`);
+            t(`userDashboard`);
+            z(!1);
+          },
         })
       : (0, i.jsxs)(`div`, {
           className: `app-shell user-portal ${e === `userRewards` ? `reward-canvas-active` : ``}`,
@@ -8969,6 +8984,12 @@ function M() {
               setTheme: setTheme,
               logout,
               user: activeUser,
+              canAccessAdmin: authenticatedUser?.role === `ADMIN`,
+              onSwitchAdmin: () => {
+                a(`admin`);
+                t(`adminDashboard`);
+                z(!1);
+              },
             }),
             e === `userDashboard` && (0, i.jsx)(L, { courses: Q, go: $, notices: userNotices, user: activeUser }),
             e === `adminDashboard` && (0, i.jsx)(U, { go: $ }),
@@ -9165,6 +9186,8 @@ function F({
   theme: s,
   setTheme: c,
   user,
+  canAccessAdmin,
+  onSwitchAdmin,
 }) {
   return (0, i.jsx)(`header`, {
     className: `topbar`,
@@ -9209,6 +9232,16 @@ function F({
                 icon: s === `light` ? Moon02Icon : Sun03Icon,
                 size: 20,
               }),
+            }),
+            canAccessAdmin && (0, i.jsxs)(`button`, {
+              className: `portal-switch-button`,
+              type: `button`,
+              onClick: onSwitchAdmin,
+              title: `관리자 화면으로 전환`,
+              children: [
+                (0, i.jsx)(Icon, { icon: Settings02Icon, size: 18 }),
+                (0, i.jsx)(`span`, { children: `관리자 화면` }),
+              ],
             }),
             (0, i.jsxs)(`button`, {
               className: `profile`,

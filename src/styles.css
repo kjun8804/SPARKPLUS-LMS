@@ -12073,6 +12073,34 @@ textarea {
 @keyframes auth-spin {
   to { transform: rotate(360deg); }
 }
+.portal-switch-button {
+  min-height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 0 13px;
+  border: 1px solid var(--ui-line);
+  border-radius: 12px;
+  background: var(--ui-surface);
+  color: var(--ui-ink);
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.portal-switch-button:hover {
+  border-color: var(--blue);
+  color: var(--blue);
+  background: var(--brand-soft);
+}
+.admin-portal > .topbar .portal-switch-button {
+  margin-right: 10px;
+}
+@media (max-width: 1080px) {
+  .portal-switch-button span { display: none; }
+  .portal-switch-button { width: 40px; padding: 0; }
+}
 
 /* Global header */
 .topbar {
