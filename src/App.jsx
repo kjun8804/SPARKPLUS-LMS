@@ -6252,7 +6252,16 @@ function LearningRewardsPage() {
   const lastValidRankingRange = r.useRef(rankingRange);
   if (rangeIsValid) lastValidRankingRange.current = rankingRange;
   const effectiveRankingRange = rangeIsValid ? rankingRange : lastValidRankingRange.current;
-  const selectedMonthIndexes = ADMIN_MONTHLY_STATS.map((item, index) => ({ item, index })).filter(({ item }) => item.key >= effectiveRankingRange.start.slice(0, 7) && item.key <= effectiveRankingRange.end.slice(0, 7)).map(({ index }) => index);
+  const rewardMonthKeys = (rewardPeople[0]?.points || []).map((_, index) =>
+    `${ADMIN_TODAY.getFullYear()}-${padDatePart(index + 1)}`,
+  );
+  const selectedMonthIndexes = rewardMonthKeys
+    .map((key, index) => ({ key, index }))
+    .filter(({ key }) =>
+      key >= effectiveRankingRange.start.slice(0, 7) &&
+      key <= effectiveRankingRange.end.slice(0, 7),
+    )
+    .map(({ index }) => index);
   const ranking = rewardPeople.map((person) => {
     const point = selectedMonthIndexes.reduce((sum, index) => sum + person.points[index], 0);
     return { ...person, point, courses: Math.max(0, Math.round(point / 340)), tests: Math.max(0, Math.round(point / 280)), badges: Math.max(0, Math.round(point / 620)) };
