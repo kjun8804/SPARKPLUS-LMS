@@ -30,13 +30,13 @@ function lessonDetails(course, lesson, index) {
   return {
     number,
     title,
-    duration: lesson?.duration || "32분",
-    goals: [
+    duration: lesson?.duration || (lesson?.durationMinutes ? `${lesson.durationMinutes}분` : "32분"),
+    goals: lesson?.goals ? lesson.goals.split("\n").filter(Boolean) : [
       `${title}의 핵심 개념과 업무상 의미를 설명할 수 있습니다.`,
       `차시에서 소개한 판단 기준을 실제 업무 상황에 적용할 수 있습니다.`,
       `학습 내용을 바탕으로 실행 가능한 개선 방법을 선택할 수 있습니다.`,
     ],
-    contents: [
+    contents: lesson?.contents ? lesson.contents.split("\n").filter(Boolean) : [
       `${title}의 핵심 개념과 실무에서 자주 마주치는 상황`,
       `업무 적용을 위한 단계별 방법과 확인 기준`,
       `사례를 통한 실전 적용 방법과 주의사항`,
@@ -45,7 +45,7 @@ function lessonDetails(course, lesson, index) {
       { type: "PDF", name: `${number}차시_${course.category}_학습자료.pdf`, size: "2.4MB" },
       { type: "XLS", name: `${number}차시_실습자료.xlsx`, size: "820KB" },
     ],
-    question: `${title}의 내용을 업무에 적용할 때 가장 먼저 해야 할 일은 무엇인가요?`,
+    question: lesson?.quiz?.[0]?.question || `${title}의 내용을 업무에 적용할 때 가장 먼저 해야 할 일은 무엇인가요?`,
   };
 }
 
@@ -66,6 +66,7 @@ export default function ClassroomPlayer({
   const [activeTab, setActiveTab] = useState("goals");
   const [quizAnswer, setQuizAnswer] = useState(null);
   const [quizDone, setQuizDone] = useState(false);
+  const [quizResult, setQuizResult] = useState(null);
   const [completionOpen, setCompletionOpen] = useState(false);
   const [courseCompleted, setCourseCompleted] = useState(() => localStorage.getItem(`sparkplus-lessons-complete-${course.id}`) === "true");
   const mainRef = useRef(null);
@@ -73,10 +74,11 @@ export default function ClassroomPlayer({
     () => lessonDetails(course, lessons[activeLesson], activeLesson),
     [course, lessons, activeLesson],
   );
-  const youtubeCourse = course.id === 6;
+  const currentLesson = lessons[activeLesson];
+  const youtubeCourse = currentLesson?.videoType === "YOUTUBE" || course.id === 6;
   const surveyRequired = course.surveyEnabled !== false;
   const lastLesson = Math.max(lessons.length - 1, 0);
-  const demoProgress = courseCompleted ? 100 : 72;
+  const demoProgress = courseCompleted ? 100 : (course.progress || 0);
 
   useEffect(() => {
     setQuizAnswer(null);
@@ -84,18 +86,26 @@ export default function ClassroomPlayer({
     setPlaying(false);
   }, [activeLesson, setPlaying]);
 
-  const selectLesson = (index) => {
+  const saveLessonProgress = async (lesson = currentLesson) => {
+    if (!course.enrollmentId || !lesson?.id) return null;
+    const response = await fetch(`/api/v1/learning/enrollments/${course.enrollmentId}/lessons/${lesson.id}/progress`, { method:"PUT", credentials:"include", headers:{"Content-Type":"application/json"}, body:JSON.stringify({ watchedPercent:lesson.videoType === "DRIVE" ? Math.max(90,videoProgress || 0) : 100, manualComplete:lesson.videoType !== "DRIVE" }) });
+    return response.ok ? (await response.json()).data : null;
+  };
+  const selectLesson = async (index) => {
     if (index < 0 || index > lastLesson || index === activeLesson) return;
+    await saveLessonProgress().catch(() => null);
     setActiveLesson(index);
     sessionStorage.setItem(`sparkplus-active-lesson-${course.id}`, String(index));
     setActiveTab("goals");
     mainRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
-  const finishCourse = () => {
+  const finishCourse = async () => {
+    const result = await saveLessonProgress().catch(() => null);
+    if (currentLesson?.quiz?.length && !quizResult?.correct) { setActiveTab("quiz"); return; }
     localStorage.setItem(`sparkplus-lessons-complete-${course.id}`, "true");
     if (!surveyRequired) localStorage.setItem(`sparkplus-course-complete-${course.id}`, "true");
-    setCourseCompleted(true);
+    setCourseCompleted(Boolean(result?.completed) || !course.enrollmentId);
     saveProgress?.(true);
     window.dispatchEvent(new CustomEvent("sparkplus-course-progress", { detail: { courseId: course.id } }));
     setCompletionOpen(true);
@@ -143,7 +153,7 @@ export default function ClassroomPlayer({
         {youtubeCourse ? (
           <div className="video youtube-embed" key={`youtube-${activeLesson}`}>
             <iframe
-              src={`https://www.youtube-nocookie.com/embed/P8pEFQBXbKI?rel=0&start=${activeLesson * 30}`}
+              src={currentLesson?.videoUrl ? currentLesson.videoUrl.replace(`youtu.be/`,`www.youtube-nocookie.com/embed/`).replace(`watch?v=`,`embed/`) : `https://www.youtube-nocookie.com/embed/P8pEFQBXbKI?rel=0&start=${activeLesson * 30}`}
               title={`${detail.number}차시 ${detail.title}`}
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
               referrerPolicy="strict-origin-when-cross-origin"
@@ -190,14 +200,14 @@ export default function ClassroomPlayer({
               <div className="ai-quiz-head"><span><Icon icon={SparklesIcon} size={20} /></span><div><div className="ai-title-line"><h3>AI 퀴즈</h3></div><p>이번 차시의 핵심 내용을 확인해보세요.</p></div></div>
               <div className="quiz-question"><span>Q1.</span><b>{detail.question}</b></div>
               <div className="quiz-options">
-                {["목표와 현재 상황을 확인한다", "도구부터 새로 구매한다", "모든 업무를 한 번에 변경한다", "검토 없이 바로 실행한다"].map((option, index) => (
+                {(currentLesson?.quiz?.[0]?.options || ["목표와 현재 상황을 확인한다", "도구부터 새로 구매한다", "모든 업무를 한 번에 변경한다", "검토 없이 바로 실행한다"]).map((option, index) => (
                   <button key={option} className={quizAnswer === index ? "selected" : ""} onClick={() => { setQuizAnswer(index); setQuizDone(false); }}>
                     <i aria-hidden="true" /> <span>{option}</span>
                   </button>
                 ))}
               </div>
-              <button className="primary quiz-submit" disabled={quizAnswer === null} onClick={() => setQuizDone(true)}>정답 확인</button>
-              {quizDone && <div className={`quiz-result ${quizAnswer === 0 ? "correct" : "wrong"}`}><b>{quizAnswer === 0 ? "정답입니다!" : "다시 한번 생각해 보세요."}</b><span>{quizAnswer === 0 ? "목표와 현재 상황을 먼저 파악해야 적절한 적용 방법을 선택할 수 있습니다." : "강의의 핵심 원칙은 목표와 현재 상황을 먼저 확인하는 것입니다."}</span></div>}
+              <button className="primary quiz-submit" disabled={quizAnswer === null} onClick={async () => { const question=currentLesson?.quiz?.[0]; if(course.enrollmentId&&question?.id){const response=await fetch(`/api/v1/learning/enrollments/${course.enrollmentId}/quiz/${question.id}`,{method:"POST",credentials:"include",headers:{"Content-Type":"application/json"},body:JSON.stringify({selectedOption:quizAnswer})});if(response.ok)setQuizResult((await response.json()).data);}else setQuizResult({correct:quizAnswer===0});setQuizDone(true); }}>정답 확인</button>
+              {quizDone && <div className={`quiz-result ${quizResult?.correct ? "correct" : "wrong"}`}><b>{quizResult?.correct ? "정답입니다!" : "다시 한번 생각해 보세요."}</b><span>{quizResult?.explanation || (quizResult?.correct ? "정답이 학습 기록에 저장되었습니다." : "강의 내용을 확인한 후 다시 응시해주세요.")}</span></div>}
             </div>
           )}
         </div>

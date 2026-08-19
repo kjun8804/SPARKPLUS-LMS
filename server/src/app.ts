@@ -7,6 +7,9 @@ import type { DatabasePool } from "./database/pool.js";
 import { createAuthRouter } from "./auth/routes.js";
 import { createAdminRouter } from "./routes/admin.js";
 import { createLeaderRouter } from "./routes/leader.js";
+import { createCoursesRouter } from "./routes/courses.js";
+import { createLearningRouter } from "./routes/learning.js";
+import { ensureLearningSchema } from "./database/learning-schema.js";
 
 interface AppOptions {
   sessionStore?: session.Store;
@@ -14,6 +17,7 @@ interface AppOptions {
 
 export function createApp(config: AppConfig, pool: DatabasePool, options: AppOptions = {}) {
   const app = express();
+  const learningSchemaReady = ensureLearningSchema(pool);
   const PgStore = connectPgSimple(session);
   const store = options.sessionStore ?? new PgStore({ pool, tableName: "user_sessions", createTableIfMissing: true });
 
@@ -33,6 +37,7 @@ export function createApp(config: AppConfig, pool: DatabasePool, options: AppOpt
       maxAge: 8 * 60 * 60 * 1000,
     },
   }));
+  app.use(async (_request, _response, next) => { try { await learningSchemaReady; next(); } catch (error) { next(error); } });
 
   app.get(["/health", "/api/health"], async (_request, response, next) => {
     try {
@@ -46,6 +51,8 @@ export function createApp(config: AppConfig, pool: DatabasePool, options: AppOpt
   app.use("/api/v1/auth", createAuthRouter(config, pool));
   app.use("/api/v1/admin", createAdminRouter(pool, config));
   app.use("/api/v1/leader", createLeaderRouter(pool));
+  app.use("/api/v1/courses", createCoursesRouter(pool));
+  app.use("/api/v1/learning", createLearningRouter(pool, config));
 
   app.use((_request, response) => response.status(404).json({ data: null, error: { code: "NOT_FOUND" } }));
 

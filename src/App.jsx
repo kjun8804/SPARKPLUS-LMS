@@ -717,6 +717,8 @@ const ADMIN_MONTHLY_STATS = [
 const monthsInRange = (range) => ADMIN_MONTHLY_STATS.filter((item) => item.key >= range.start.slice(0, 7) && item.key <= range.end.slice(0, 7));
 
 function p({ onGo: e }) {
+  const [liveTotals,setLiveTotals]=r.useState(null);
+  r.useEffect(()=>{apiRequest(`/api/v1/admin/dashboard`).then(setLiveTotals).catch(()=>{});},[]);
   const [range, setRange] = r.useState({ preset:`sixMonths`, ...adminQuickRange(`sixMonths`) });
   const validRange = Boolean(range.start && range.end && range.start <= range.end);
   const lastValidRange = r.useRef(range);
@@ -724,7 +726,7 @@ function p({ onGo: e }) {
   const effectiveRange = validRange ? range : lastValidRange.current;
   const data = monthsInRange(effectiveRange);
   const average = (key) => data.length ? Math.round(data.reduce((sum, item) => sum + item[key], 0) / data.length) : 0;
-  const totals = {
+  const totals = liveTotals || {
     courses: data.reduce((sum, item) => sum + item.courses, 0),
     learners: data.reduce((sum, item) => sum + item.newLearners, 0),
     completed: data.reduce((sum, item) => sum + item.completed, 0),
@@ -743,7 +745,7 @@ function p({ onGo: e }) {
     },
     {
       title: `필수교육 미완료`,
-      count: 11,
+      count: liveTotals?.requiredIncomplete ?? 11,
       detail: `필수교육 수료 조건을 아직 충족하지 못한 학습자`,
       tone: `waiting`,
       page: `learners`,
@@ -977,6 +979,7 @@ function CourseAdminGrid({ onEdit, onCreate }) {
   const [status, setStatus] = r.useState(`전체 상태`);
   const [sort, setSort] = r.useState(`최신 등록순`);
   const [courses, setCourses] = r.useState(() => [...a]);
+  const [courseLoading, setCourseLoading] = r.useState(true);
   const [openMenu, setOpenMenu] = r.useState(null);
   const [deleteTarget, setDeleteTarget] = r.useState(null);
   const filtered = courses
@@ -990,10 +993,13 @@ function CourseAdminGrid({ onEdit, onCreate }) {
     .sort((first, second) =>
       sort === `최신 등록순` ? second.id - first.id : first.id - second.id,
     );
+  r.useEffect(() => { apiRequest(`/api/v1/courses`).then((items) => setCourses(items.map((course) => ({ ...course, status: ({ DRAFT:`오픈 전`, OPEN:`운영 중`, CLOSED:`종료` })[course.status] || course.status, period: course.startDate && course.endDate ? `${String(course.startDate).slice(0,10).replaceAll(`-`,`.`)} ~ ${String(course.endDate).slice(0,10).replaceAll(`-`,`.`)}` : `기간 미설정` })))).catch(() => {}).finally(() => setCourseLoading(false)); }, []);
+  const openCourse = async (course) => { try { const detail = await apiRequest(`/api/v1/courses/${course.id}`); onEdit({ ...course, ...detail, status: ({ DRAFT:`오픈 전`, OPEN:`운영 중`, CLOSED:`종료` })[detail.status] || detail.status, curriculum: detail.lessons }); } catch { showAdminToast(`교육과정을 불러오지 못했습니다.`, `error`); } };
   const deleteCourse = (course) => {
     setDeleteTarget(course);
   };
-  const confirmDeleteCourse = () => {
+  const confirmDeleteCourse = async () => {
+    try { await apiRequest(`/api/v1/courses/${deleteTarget.id}`, { method: `DELETE` }); } catch { return showAdminToast(`교육과정을 삭제하지 못했습니다.`, `error`); }
     setCourses((current) => current.filter((item) => item.id !== deleteTarget.id));
     setOpenMenu(null);
     setDeleteTarget(null);
@@ -1037,9 +1043,9 @@ function CourseAdminGrid({ onEdit, onCreate }) {
             key={course.id}
             role="button"
             tabIndex={0}
-            onClick={() => onEdit(course)}
+            onClick={() => openCourse(course)}
             onKeyDown={(event) => {
-              if (event.key === `Enter` || event.key === ` `) onEdit(course);
+              if (event.key === `Enter` || event.key === ` `) openCourse(course);
             }}
           >
             <div className="visual-wrap admin-course-visual">
@@ -1072,7 +1078,7 @@ function CourseAdminGrid({ onEdit, onCreate }) {
                       onClick={(event) => {
                         event.stopPropagation();
                         setOpenMenu(null);
-                        onEdit(course);
+                        openCourse(course);
                       }}
                     >
                       <Icon icon={Edit02Icon} size={15} /> 수정
@@ -1113,6 +1119,7 @@ function CourseAdminGrid({ onEdit, onCreate }) {
           조건에 맞는 교육과정이 없습니다.
         </div>
       )}
+      {courseLoading && <div className="admin-course-empty">실제 교육과정 데이터를 불러오는 중입니다.</div>}
       {deleteTarget && <ConfirmModal title="교육과정을 삭제할까요?" description="삭제한 교육과정은 복구할 수 없습니다." confirmLabel="삭제" onCancel={() => setDeleteTarget(null)} onConfirm={confirmDeleteCourse} />}
     </section>
   );
@@ -1330,16 +1337,16 @@ function CourseEditorV2({ selected, onBack, isNew = false }) {
     title: isNew ? `` : selected.title,
     category: isNew ? `` : selected.category,
     status: isNew ? `` : selected.status,
-    level: isNew ? `` : `레벨 2`,
+    level: isNew ? `` : selected.level || `레벨 2`,
     department: isNew ? `` : `전체 부서`,
     position: isNew ? `` : `전체 직급`,
-    startDate: isNew ? `` : defaultDates[selected.id]?.[0] || `2026-08-01`,
-    endDate: isNew ? `` : defaultDates[selected.id]?.[1] || `2026-09-30`,
+    startDate: isNew ? `` : String(selected.startDate || defaultDates[selected.id]?.[0] || `2026-08-01`).slice(0,10),
+    endDate: isNew ? `` : String(selected.endDate || defaultDates[selected.id]?.[1] || `2026-09-30`).slice(0,10),
     thumbnail: selected.thumbnail || ``,
-    introduction: isNew ? `` : `${selected.title} 과정의 핵심 개념을 이해하고 실제 업무에 활용할 수 있도록 구성된 교육과정입니다.`,
-    curriculumSummary: isNew ? `` : `기초 개념부터 실무 적용까지 단계적으로 학습합니다.`,
+    introduction: isNew ? `` : selected.description || `${selected.title} 과정의 핵심 개념을 이해하고 실제 업무에 활용할 수 있도록 구성된 교육과정입니다.`,
+    curriculumSummary: isNew ? `` : selected.curriculumSummary || `기초 개념부터 실무 적용까지 단계적으로 학습합니다.`,
     lessons: isNew ? [] : selected.curriculum || baseLessons,
-    surveyEnabled: isNew ? false : true,
+    surveyEnabled: isNew ? false : selected.surveyEnabled ?? true,
     googleFormUrl: isNew ? `` : selected.googleFormUrl || SAMPLE_GOOGLE_FORM_URL,
     surveyTitle: isNew ? `` : `${selected.title} 만족도 조사`,
     surveyStartDate: isNew ? `` : `2026-08-01`,
@@ -1509,34 +1516,27 @@ function CourseEditorV2({ selected, onBack, isNew = false }) {
       return { ...current, surveyQuestions };
     });
   };
-  const save = () => {
-    if (!form.title.trim()) return alert(`강의 제목을 입력해 주세요.`);
-    Object.assign(selected, {
-        ...form,
-        period: `${form.startDate.replaceAll(`-`, `.`)} ~ ${form.endDate.replaceAll(`-`, `.`)}`,
-        lessons: form.lessons.length,
-        curriculum: form.lessons,
-      });
-      const userCourseId = ({ 1: 1, 2: 2, 3: 6, 4: 5 })[selected.id] || selected.id;
-      const assignment = {
-        courseId: selected.id,
-        userCourseId,
-        title: form.title,
-        modes: form.assignmentModes,
-        departments: form.assignedDepartments,
-        positions: form.assignedPositions,
-        learnerIds: form.assignedLearnerIds,
-        required: form.requiredTraining,
-        deadline: form.assignmentDeadlineEnabled ? form.assignmentDeadline : ``,
-        assignedCount: assignedLearners.length,
-      };
-      localStorage.setItem(`sparkplus-course-config-${userCourseId}`, JSON.stringify({ status: form.status, surveyEnabled: form.surveyEnabled, startDate: form.startDate, endDate: form.endDate, googleFormUrl: form.googleFormUrl }));
-      if (form.assignmentModes.length) localStorage.setItem(`sparkplus-course-assignment-${selected.id}`, JSON.stringify(assignment));
-      else localStorage.removeItem(`sparkplus-course-assignment-${selected.id}`);
-      window.dispatchEvent(new CustomEvent(`sparkplus-course-assignments-updated`));
-      window.dispatchEvent(new CustomEvent(`sparkplus-course-config-updated`));
-      setDirty(false);
-      showAdminToast(isNew ? `교육과정이 등록되었습니다.` : `교육과정이 저장되었습니다.`);
+  const save = async () => {
+    if (!form.title.trim() || !form.category) return alert(`강의 제목과 분야를 입력해 주세요.`);
+    const assignments = [
+      ...(form.assignmentModes.includes(`all`) ? [{ type:`ALL`, targetId:null }] : []),
+      ...(form.assignmentModes.includes(`department`) ? form.assignedDepartments.map((targetId) => ({ type:`ORGANIZATION`, targetId })) : []),
+      ...(form.assignmentModes.includes(`position`) ? form.assignedPositions.map((targetId) => ({ type:`POSITION`, targetId })) : []),
+      ...(form.assignmentModes.includes(`individual`) ? form.assignedLearnerIds.map((targetId) => ({ type:`USER`, targetId })) : []),
+    ].map((item) => ({ ...item, required:form.requiredTraining, dueDate:form.assignmentDeadlineEnabled ? form.assignmentDeadline : null }));
+    const payload = {
+      title:form.title, category:form.category, level:form.level || `레벨 1`, status:({ '오픈 전':`DRAFT`, '운영 중':`OPEN`, '종료':`CLOSED` })[form.status] || `DRAFT`,
+      description:form.introduction, curriculumSummary:form.curriculumSummary, thumbnail:form.thumbnail || null, startDate:form.startDate || null, endDate:form.endDate || null,
+      surveyEnabled:form.surveyEnabled, googleFormUrl:form.googleFormUrl || null, completionThreshold:60,
+      lessons:form.lessons.map((item) => ({ title:item.title, description:item.description || ``, durationMinutes:parseInt(item.duration,10)||item.durationMinutes||0,
+        videoType:item.videoType || `YOUTUBE`, videoUrl:item.videoUrl || null, driveFileId:item.driveFileId || null, attachmentName:item.attachments || item.attachmentName || null,
+        attachmentDriveFileId:item.attachmentDriveFileId || null, goals:item.goals || ``, contents:item.contents || ``, completionThreshold:item.videoType === `DRIVE` ? 90 : 60,
+        quiz:(item.quizEnabled ? item.quiz : []).map((question) => ({ question:question.question, options:question.options?.length >= 2 ? question.options : [question.answer || `정답`, `오답`], correctOption:Number.isInteger(question.correctOption) ? question.correctOption : 0, explanation:question.explanation || `` })) })), assignments,
+    };
+    try {
+      const saved=await apiRequest(isNew ? `/api/v1/courses` : `/api/v1/courses/${selected.id}`, { method:isNew ? `POST` : `PUT`, body:JSON.stringify(payload) });
+      Object.assign(selected,saved); setDirty(false); showAdminToast(isNew ? `교육과정과 배정 대상이 등록되었습니다.` : `교육과정과 배정 정보가 저장되었습니다.`); if(isNew) onBack();
+    } catch(requestError) { showAdminToast(requestError.message === `VALIDATION_ERROR` ? `필수 정보와 퀴즈 선택지를 확인해주세요.` : `교육과정을 저장하지 못했습니다.`, `error`); }
   };
   const remove = () => {
     setCourseDeleteOpen(true);
@@ -3197,7 +3197,7 @@ const apiRequest = async (url, options = {}) => {
 };
 
 function DatabaseLearnerManagement() {
-  const emptyUser = { employeeNumber: ``, name: ``, email: ``, organizationId: ``, position: ``, role: `LEARNER`, status: `ACTIVE` };
+  const emptyUser = { employeeNumber: ``, name: ``, email: ``, organizationId: ``, position: ``, role: `LEARNER`, status: `ACTIVE`, leaderOrganizationIds:[] };
   const [users, setUsers] = r.useState([]), [organizationTree, setOrganizationTree] = r.useState([]);
   const [loading, setLoading] = r.useState(true), [error, setError] = r.useState(``), [query, setQuery] = r.useState(``);
   const [organizationFilter, setOrganizationFilter] = r.useState(``), [statusFilter, setStatusFilter] = r.useState(``);
@@ -3223,7 +3223,7 @@ function DatabaseLearnerManagement() {
       && (!organizationFilter || user.organizationId === organizationFilter) && (!statusFilter || user.status === statusFilter);
   });
   const openCreate = () => { setUserForm(emptyUser); setUserModal({ mode: `create` }); };
-  const openEdit = (user) => { setUserForm({ ...user, organizationId: user.organizationId || ``, position: user.position || `` }); setUserModal({ mode: `edit`, id: user.id }); };
+  const openEdit = async (user) => { let scopes=[];try{scopes=await apiRequest(`/api/v1/admin/users/${user.id}/leader-scopes`);}catch{} setUserForm({ ...user, organizationId: user.organizationId || ``, position: user.position || ``, leaderOrganizationIds:scopes.map((scope)=>scope.organizationId) }); setUserModal({ mode: `edit`, id: user.id }); };
   const saveUser = async () => {
     if (!userForm.employeeNumber.trim() || !userForm.name.trim() || !userForm.email.trim().endsWith(`@sparkplus.co`)) return setError(`사번, 이름, 회사 이메일을 확인해주세요.`);
     setSaving(true); setError(``);
@@ -3232,6 +3232,7 @@ function DatabaseLearnerManagement() {
       await apiRequest(userModal.mode === `create` ? `/api/v1/admin/users` : `/api/v1/admin/users/${userModal.id}`, {
         method: userModal.mode === `create` ? `POST` : `PATCH`, body: JSON.stringify(payload),
       });
+      if(userModal.mode === `edit`) await apiRequest(`/api/v1/admin/users/${userModal.id}/leader-scopes`,{method:`PUT`,body:JSON.stringify({organizationIds:userForm.leaderOrganizationIds || []})});
       setUserModal(null); await load(); showAdminToast(userModal.mode === `create` ? `사용자가 등록되었습니다.` : `사용자 정보가 수정되었습니다.`);
     } catch (requestError) { setError(requestError.message === `USER_ALREADY_EXISTS` ? `이미 등록된 사번 또는 이메일입니다.` : `사용자 정보를 저장하지 못했습니다.`); }
     finally { setSaving(false); }
@@ -3330,6 +3331,7 @@ function DatabaseLearnerManagement() {
       <label><span>직책</span><input value={userForm.position} onChange={(event) => setUserForm({ ...userForm, position: event.target.value })} placeholder="매니저" /></label>
       <label><span>권한</span><select value={userForm.role} onChange={(event) => setUserForm({ ...userForm, role: event.target.value })}><option value="LEARNER">학습자</option><option value="ADMIN">관리자</option></select></label>
       <label><span>상태</span><select value={userForm.status} onChange={(event) => setUserForm({ ...userForm, status: event.target.value })}><option value="ACTIVE">활성</option><option value="INACTIVE">비활성</option></select></label>
+      {userModal.mode === `edit` && <fieldset className="learner-registration-wide leader-scope-field"><legend>조직 리더 권한 (선택)</legend><p>선택한 조직과 하위 조직 구성원의 학습 현황을 볼 수 있습니다.</p>{organizations.filter((item)=>item.status===`ACTIVE`).map((item)=><label key={item.id}><input type="checkbox" checked={(userForm.leaderOrganizationIds||[]).includes(item.id)} onChange={()=>setUserForm({...userForm,leaderOrganizationIds:(userForm.leaderOrganizationIds||[]).includes(item.id)?userForm.leaderOrganizationIds.filter((id)=>id!==item.id):[...(userForm.leaderOrganizationIds||[]),item.id]})}/><span>{item.pathLabel}</span></label>)}</fieldset>}
     </div><footer><button className="secondary" onClick={() => setUserModal(null)}>취소</button><button className="primary" disabled={saving} onClick={saveUser}>{saving ? `저장 중` : `저장`}</button></footer></section></div>}
     {organizationModal && <div className="overlay center" onMouseDown={() => setOrganizationModal(false)}><section className="learner-registration-modal database-modal compact" onMouseDown={(event) => event.stopPropagation()}><header><div><h2>조직 등록</h2><p>상위 조직을 선택하여 최대 3단계로 구성합니다.</p></div><button onClick={() => setOrganizationModal(false)}><Icon icon={Cancel01Icon} /></button></header><div className="learner-registration-form">
       <label className="learner-registration-wide"><span>조직명 *</span><input value={organizationForm.name} onChange={(event) => setOrganizationForm({ ...organizationForm, name: event.target.value })} placeholder="개발본부" /></label>
@@ -8981,6 +8983,9 @@ function M() {
         });
     }
     g(applyManagedCourseAssignments(courses, CURRENT_USER));
+    apiRequest(`/api/v1/learning/courses`).then((items) => {
+      g(items.map((course) => ({ ...course, enrolled:Boolean(course.enrollmentId), progress:course.progress || 0, requiredTraining:Boolean(course.required), assignmentDeadline:course.dueDate || ``, description:course.description || ``, status:`운영 중`, lessons:0 })));
+    }).catch(() => {});
   }, []),
     (0, r.useEffect)(() => {
       let active = !0;
@@ -9056,10 +9061,14 @@ function M() {
         }),
       [h, D],
     );
-  function $(e, n) {
+  async function $(e, n) {
     if ([`player`, `lectureDetail`].includes(e) && isManagedUserInactive(CURRENT_USER)) {
       alert(`비활성 계정은 신규 학습을 진행할 수 없습니다. 관리자에게 문의해주세요.`);
       return;
+    }
+    if ([`player`,`lectureDetail`].includes(e) && n) {
+      try { const detail=await apiRequest(`/api/v1/learning/courses/${n}`); g((items)=>items.map((item)=>item.id===n?{...item,...detail,curriculum:detail.lessons}:item)); }
+      catch { /* 기존 화면 데이터로 계속 진행 */ }
     }
     (e === `userRewards`
       ? setRewardInitialTab(n || `ranking`)
@@ -9081,7 +9090,7 @@ function M() {
       window.location.assign(`/`);
     }
   }
-  function de() {
+  async function de() {
     if (isManagedUserInactive(CURRENT_USER)) {
       alert(`비활성 계정은 신규 학습을 진행할 수 없습니다. 관리자에게 문의해주세요.`);
       return;
@@ -9091,10 +9100,8 @@ function M() {
       setTimeout(() => I(``), 2600);
       return;
     }
-    (g((e) =>
-      e.map((e) => (e.id === Z.id ? { ...e, enrolled: !0, progress: 0 } : e)),
-    ),
-      M(`done`));
+    try { const enrollment=await apiRequest(`/api/v1/learning/courses/${Z.id}/enroll`,{method:`POST`}); g((items)=>items.map((item)=>item.id===Z.id?{...item,enrolled:true,enrollmentId:enrollment.id,progress:0}:item)); M(`done`); }
+    catch { I(`수강 신청을 처리하지 못했습니다.`); setTimeout(()=>I(``),2600); }
   }
   function toggleWishlist(courseId, next) {
     localStorage.setItem(`sparkplus-wishlist-${courseId}`, String(next));
@@ -11066,7 +11073,7 @@ function re({
   videoProgress: c,
   saveProgress: l,
 }) {
-  return <ClassroomPlayer course={e} lessons={k[e.id] ?? []} go={t} lessonOpen={n} setLessonOpen={a} playing={o} setPlaying={s} videoProgress={c} saveProgress={l} />;
+  return <ClassroomPlayer course={e} lessons={e.curriculum || k[e.id] || []} go={t} lessonOpen={n} setLessonOpen={a} playing={o} setPlaying={s} videoProgress={c} saveProgress={l} />;
   let [quizAnswer, setQuizAnswer] = (0, r.useState)(null),
     [quizDone, setQuizDone] = (0, r.useState)(!1),
     [u, d] = (0, r.useState)(`goals`),

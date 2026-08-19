@@ -35,6 +35,8 @@ export function createAdminRouter(pool: DatabasePool, config?: AppConfig) {
   const router = Router();
   router.use(requireUser(pool), requireRole("ADMIN"));
 
+  router.get("/dashboard", async (_request, response, next) => { try { const result=await pool.query(`SELECT (SELECT COUNT(*) FROM courses WHERE deleted_at IS NULL AND status='OPEN')::int courses,(SELECT COUNT(*) FROM enrollments WHERE status<>'CANCELLED')::int learners,(SELECT COUNT(*) FROM enrollments WHERE status='COMPLETED')::int completed,COALESCE((SELECT ROUND(AVG(progress)) FROM enrollments WHERE status<>'CANCELLED'),0)::int progress,COALESCE((SELECT ROUND(100.0*COUNT(*) FILTER(WHERE status='COMPLETED')/NULLIF(COUNT(*),0)) FROM enrollments WHERE status<>'CANCELLED'),0)::int AS "completionRate",(SELECT COUNT(*) FROM enrollments WHERE required AND status<>'COMPLETED' AND status<>'CANCELLED')::int AS "requiredIncomplete"`); response.json({data:result.rows[0],error:null}); } catch(error){next(error);} });
+
   router.get("/users", async (_request, response, next) => {
     try {
       const result = await pool.query(`SELECT u.id, u.employee_number AS "employeeNumber", u.name, u.email,
@@ -172,6 +174,16 @@ export function createAdminRouter(pool: DatabasePool, config?: AppConfig) {
       if (error?.code === "23505") return response.status(409).json({ data: null, error: { code: "ORGANIZATION_ALREADY_EXISTS" } });
       next(error);
     }
+  });
+
+  router.get("/users/:id/leader-scopes", async (request, response, next) => {
+    try { const result=await pool.query(`SELECT organization_id AS "organizationId",include_descendants AS "includeDescendants" FROM organization_leaders WHERE user_id=$1`,[request.params.id]); response.json({data:result.rows,error:null}); }
+    catch(error){next(error);}
+  });
+  router.put("/users/:id/leader-scopes", async (request, response, next) => {
+    const parsed=z.object({organizationIds:z.array(z.string().uuid()).max(50)}).safeParse(request.body);
+    if(!parsed.success)return invalid(response,parsed.error);
+    const client=await pool.connect();try{await client.query("BEGIN");await client.query(`DELETE FROM organization_leaders WHERE user_id=$1`,[request.params.id]);for(const organizationId of parsed.data.organizationIds)await client.query(`INSERT INTO organization_leaders(user_id,organization_id,created_by) VALUES($1,$2,$3)`,[request.params.id,organizationId,request.currentUser!.id]);await client.query("COMMIT");response.json({data:{organizationIds:parsed.data.organizationIds},error:null});}catch(error){await client.query("ROLLBACK");next(error);}finally{client.release();}
   });
 
   router.get("/archive/status", async (_request, response, next) => {
