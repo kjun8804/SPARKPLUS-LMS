@@ -3204,14 +3204,15 @@ function DatabaseLearnerManagement() {
   const [userModal, setUserModal] = r.useState(null), [userForm, setUserForm] = r.useState(emptyUser);
   const [organizationModal, setOrganizationModal] = r.useState(false), [organizationForm, setOrganizationForm] = r.useState({ name: ``, parentId: `` });
   const [saving, setSaving] = r.useState(false), importInputRef = r.useRef(null);
+  const [archiveStatus, setArchiveStatus] = r.useState(null), [syncingArchive, setSyncingArchive] = r.useState(false);
   const organizations = r.useMemo(() => flattenOrganizationTree(organizationTree), [organizationTree]);
   const load = r.useCallback(async () => {
     setLoading(true); setError(``);
     try {
-      const [userData, organizationData] = await Promise.all([
-        apiRequest(`/api/v1/admin/users`), apiRequest(`/api/v1/admin/organizations/tree`),
+      const [userData, organizationData, archiveData] = await Promise.all([
+        apiRequest(`/api/v1/admin/users`), apiRequest(`/api/v1/admin/organizations/tree`), apiRequest(`/api/v1/admin/archive/status`),
       ]);
-      setUsers(userData); setOrganizationTree(organizationData);
+      setUsers(userData); setOrganizationTree(organizationData); setArchiveStatus(archiveData);
     } catch { setError(`사용자와 조직 정보를 불러오지 못했습니다.`); }
     finally { setLoading(false); }
   }, []);
@@ -3277,10 +3278,21 @@ function DatabaseLearnerManagement() {
       await load(); showAdminToast(`${result.imported}명의 사용자가 일괄 등록되었습니다.`);
     } catch (requestError) { setError(requestError.message === `IMPORT_VALIDATION_FAILED` ? `파일의 중복값 또는 조직경로를 확인해주세요.` : `CSV 양식과 입력값을 확인해주세요.`); }
   };
+  const syncGoogleArchive = async () => {
+    setSyncingArchive(true); setError(``);
+    try {
+      const result = await apiRequest(`/api/v1/admin/archive/sync`, { method: `POST` });
+      setArchiveStatus({ configured: true, latest: { action: `GOOGLE_ARCHIVE_SYNCED`, afterData: result, createdAt: result.syncedAt } });
+      showAdminToast(`Google 운영대장에 사용자 ${result.counts.users}명과 조직 ${result.counts.organizations}개를 동기화했습니다.`);
+    } catch (requestError) {
+      setError(requestError.message === `GOOGLE_ARCHIVE_NOT_CONFIGURED` ? `Google 아카이브 환경변수가 아직 적용되지 않았습니다.` : `Google Sheets/Drive 동기화에 실패했습니다. 공유 권한과 문서 ID를 확인해주세요.`);
+    } finally { setSyncingArchive(false); }
+  };
   return <section className="database-learner-management">
     <div className="database-management-toolbar">
       <div><h2>사용자 및 조직 관리</h2><p>Google 로그인 전에 사용자를 등록하고 3단계 조직을 관리합니다.</p></div>
       <div className="database-management-actions">
+        <button className="secondary archive-sync-button" disabled={syncingArchive || archiveStatus?.configured === false} onClick={syncGoogleArchive}><Icon icon={RefreshIcon} size={16} />{syncingArchive ? `동기화 중` : `Google 운영대장 동기화`}</button>
         <button className="secondary" onClick={downloadTemplate}><Icon icon={Download01Icon} size={16} />양식 다운로드</button>
         <input ref={importInputRef} type="file" accept=".csv,text/csv" hidden onChange={importCsv} />
         <button className="secondary" onClick={() => importInputRef.current?.click()}><Icon icon={File01Icon} size={16} />Excel/CSV 일괄 등록</button>
@@ -3289,6 +3301,11 @@ function DatabaseLearnerManagement() {
       </div>
     </div>
     {error && <div className="database-management-error">{error}<button onClick={() => setError(``)}>닫기</button></div>}
+    <div className={`archive-sync-panel ${archiveStatus?.configured ? `configured` : `not-configured`}`}>
+      <Icon icon={archiveStatus?.latest?.action === `GOOGLE_ARCHIVE_SYNCED` ? CheckmarkCircle02Icon : RefreshIcon} size={19} />
+      <div><b>{archiveStatus?.configured ? `Google Drive · Sheets 연결 준비 완료` : `Google 아카이브 연결 설정 필요`}</b>
+        <span>{archiveStatus?.latest?.action === `GOOGLE_ARCHIVE_SYNCED` ? `최근 동기화: ${new Date(archiveStatus.latest.createdAt).toLocaleString(`ko-KR`)}` : `동기화 버튼을 눌러 서비스 계정 접근 권한과 운영대장을 확인하세요.`}</span></div>
+    </div>
     <div className="organization-strip">
       {organizations.length ? organizations.map((organization) => <div key={organization.id} className={`organization-chip ${organization.status.toLowerCase()}`}>
         <span><small>{organization.depth}단계</small>{organization.pathLabel}</span>

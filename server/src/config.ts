@@ -11,6 +11,9 @@ const environmentSchema = z.object({
   GOOGLE_CLIENT_SECRET: z.string().optional().default(""),
   GOOGLE_REDIRECT_URI: z.url().default("http://localhost:4000/api/v1/auth/google/callback"),
   GOOGLE_ALLOWED_DOMAIN: z.string().min(1).default("sparkplus.co"),
+  GOOGLE_SERVICE_ACCOUNT_JSON: z.string().optional().default(""),
+  GOOGLE_SHEET_ID: z.string().optional().default(""),
+  GOOGLE_DRIVE_ROOT_FOLDER_ID: z.string().optional().default(""),
   INITIAL_ADMIN_EMAIL: z.email().default("jun.kang@sparkplus.co"),
 });
 
