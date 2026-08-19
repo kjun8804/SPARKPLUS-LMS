@@ -558,8 +558,6 @@ function f({ logout: e, user, switchToLearner }) {
           }),
           (0, i.jsxs)(`div`, {
             className: `profile-wrap`,
-            onMouseEnter: () => I(!0),
-            onMouseLeave: () => I(!1),
             children: [
               (0, i.jsxs)(`button`, {
                 className: `profile-button`,
