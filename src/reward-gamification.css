@@ -209,3 +209,51 @@ html,body,#root{min-height:100%}
 .reward-confetti i:nth-child(12){width:64px!important;height:64px!important}
 .reward-confetti i:nth-child(13){top:18%;left:14%;width:88px;height:24px;border-radius:999px;background:#f077a7;transform:rotate(68deg)}
 .reward-confetti i:nth-child(14){right:13%;bottom:15%;width:70px;height:70px;border-radius:10px;background:#62d2c1;clip-path:polygon(50% 0,62% 36%,100% 50%,63% 63%,50% 100%,37% 63%,0 50%,36% 37%)}
+
+/* Slowly raining reward decorations. Negative delays keep the canvas populated on first paint. */
+@keyframes reward-confetti-rain{
+  0%{opacity:0;transform:translate3d(0,-180px,0) rotate(var(--fall-start,0deg))}
+  8%{opacity:.72}
+  50%{opacity:.86;transform:translate3d(var(--fall-mid,0px),48vh,0) rotate(var(--fall-half,180deg))}
+  92%{opacity:.68}
+  100%{opacity:0;transform:translate3d(var(--fall-end,0px),calc(100vh + 180px),0) rotate(var(--fall-finish,360deg))}
+}
+.app-shell.user-portal.reward-canvas-active>main.reward-game-page>.reward-confetti{
+  position:fixed!important;
+  top:100px!important;
+  right:0!important;
+  bottom:auto!important;
+  left:0!important;
+  width:100vw!important;
+  height:calc(100vh - 100px)!important;
+  min-height:0!important;
+  transform:none!important;
+}
+.reward-canvas-active .reward-confetti i{
+  top:-180px!important;
+  right:auto!important;
+  bottom:auto!important;
+  left:var(--fall-x,50%)!important;
+  opacity:0;
+  transform-origin:center;
+  animation:reward-confetti-rain var(--fall-duration,20s) linear infinite!important;
+  animation-delay:var(--fall-delay,0s)!important;
+  will-change:transform,opacity;
+}
+.reward-canvas-active .reward-confetti i:nth-child(1){--fall-x:2%;--fall-duration:22s;--fall-delay:-16s;--fall-mid:70px;--fall-end:130px;--fall-start:-32deg;--fall-half:160deg;--fall-finish:390deg}
+.reward-canvas-active .reward-confetti i:nth-child(2){--fall-x:94%;--fall-duration:25s;--fall-delay:-8s;--fall-mid:-45px;--fall-end:-95px;--fall-start:0deg;--fall-half:190deg;--fall-finish:390deg}
+.reward-canvas-active .reward-confetti i:nth-child(3){--fall-x:14%;--fall-duration:19s;--fall-delay:-11s;--fall-mid:-32px;--fall-end:48px;--fall-start:18deg;--fall-half:210deg;--fall-finish:430deg}
+.reward-canvas-active .reward-confetti i:nth-child(4){--fall-x:84%;--fall-duration:23s;--fall-delay:-19s;--fall-mid:45px;--fall-end:-38px;--fall-start:54deg;--fall-half:230deg;--fall-finish:420deg}
+.reward-canvas-active .reward-confetti i:nth-child(5){--fall-x:27%;--fall-duration:18s;--fall-delay:-5s;--fall-mid:55px;--fall-end:105px;--fall-start:45deg;--fall-half:225deg;--fall-finish:405deg}
+.reward-canvas-active .reward-confetti i:nth-child(6){--fall-x:73%;--fall-duration:26s;--fall-delay:-14s;--fall-mid:-60px;--fall-end:-20px;--fall-start:-24deg;--fall-half:165deg;--fall-finish:370deg}
+.reward-canvas-active .reward-confetti i:nth-child(7){--fall-x:5%;--fall-duration:24s;--fall-delay:-3s;--fall-mid:90px;--fall-end:36px;--fall-start:42deg;--fall-half:218deg;--fall-finish:410deg}
+.reward-canvas-active .reward-confetti i:nth-child(8){--fall-x:89%;--fall-duration:20s;--fall-delay:-17s;--fall-mid:-72px;--fall-end:-115px;--fall-start:0deg;--fall-half:170deg;--fall-finish:360deg}
+.reward-canvas-active .reward-confetti i:nth-child(9){--fall-x:38%;--fall-duration:27s;--fall-delay:-21s;--fall-mid:-45px;--fall-end:25px;--fall-start:-52deg;--fall-half:140deg;--fall-finish:345deg}
+.reward-canvas-active .reward-confetti i:nth-child(10){--fall-x:63%;--fall-duration:21s;--fall-delay:-9s;--fall-mid:52px;--fall-end:96px;--fall-start:12deg;--fall-half:205deg;--fall-finish:400deg}
+.reward-canvas-active .reward-confetti i:nth-child(11){--fall-x:19%;--fall-duration:28s;--fall-delay:-24s;--fall-mid:68px;--fall-end:-15px;--fall-start:22deg;--fall-half:200deg;--fall-finish:385deg}
+.reward-canvas-active .reward-confetti i:nth-child(12){--fall-x:79%;--fall-duration:24s;--fall-delay:-12s;--fall-mid:-38px;--fall-end:30px;--fall-start:0deg;--fall-half:185deg;--fall-finish:380deg}
+.reward-canvas-active .reward-confetti i:nth-child(13){--fall-x:47%;--fall-duration:20s;--fall-delay:-2s;--fall-mid:-74px;--fall-end:-125px;--fall-start:68deg;--fall-half:245deg;--fall-finish:440deg}
+.reward-canvas-active .reward-confetti i:nth-child(14){--fall-x:57%;--fall-duration:29s;--fall-delay:-18s;--fall-mid:76px;--fall-end:118px;--fall-start:0deg;--fall-half:180deg;--fall-finish:375deg}
+@media(prefers-reduced-motion:reduce){
+  .reward-canvas-active .reward-confetti i{animation-play-state:paused!important}
+}
