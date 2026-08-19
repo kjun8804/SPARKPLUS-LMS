@@ -12101,6 +12101,26 @@ textarea {
   .portal-switch-button span { display: none; }
   .portal-switch-button { width: 40px; padding: 0; }
 }
+.database-learner-management { display:grid; gap:22px; }
+.database-management-toolbar { display:flex; align-items:flex-start; justify-content:space-between; gap:20px; }
+.database-management-toolbar h2 { margin:0 0 7px; font-size:22px; }
+.database-management-toolbar p { margin:0; color:var(--ui-sub); font-size:13px; }
+.database-management-actions,.database-row-actions { display:flex; flex-wrap:wrap; gap:8px; }
+.database-management-actions button { display:inline-flex; align-items:center; gap:6px; white-space:nowrap; }
+.database-management-error { display:flex; justify-content:space-between; padding:13px 16px; border-radius:12px; background:#fff1f1; color:#b42318; font-size:13px; }
+.database-management-error button { border:0; background:transparent; color:inherit; font-weight:700; }
+.organization-strip { display:flex; flex-wrap:wrap; gap:9px; padding:17px; border:1px solid var(--ui-line); border-radius:16px; background:var(--ui-surface); }
+.organization-strip>p { margin:0; color:var(--ui-sub); font-size:13px; }
+.organization-chip { display:flex; align-items:center; gap:9px; padding:8px 10px 8px 12px; border-radius:10px; background:var(--ui-surface-soft); font-size:12px; }
+.organization-chip span { display:flex; align-items:center; gap:7px; }
+.organization-chip small { color:var(--blue); font-weight:800; }
+.organization-chip button { border:0; border-radius:7px; padding:5px 7px; background:#e9f8ef; color:#067647; font-size:10px; font-weight:800; }
+.organization-chip.inactive { opacity:.62; }.organization-chip.inactive button { background:#f2f4f7; color:#667085; }
+.database-user-table small { display:block; max-width:290px; overflow:hidden; text-overflow:ellipsis; }
+.database-row-actions button { border:1px solid var(--ui-line); border-radius:8px; padding:6px 8px; background:var(--ui-surface); font-size:11px; }
+.database-row-actions .danger { color:#b42318; }
+.database-modal { max-height:min(780px,90vh); overflow:auto; }.database-modal.compact { width:min(520px,calc(100vw - 32px)); }
+@media(max-width:1100px){.database-management-toolbar{flex-direction:column}.database-management-actions{width:100%}}
 
 /* Global header */
 .topbar {

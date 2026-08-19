@@ -228,9 +228,10 @@ function SearchFilterPanel({
               value={filter.value}
               onChange={(event) => filter.onChange(event.target.value)}
             >
-              {filter.options.map((option) => (
-                <option key={option}>{option}</option>
-              ))}
+              {filter.options.map((option) => {
+                const normalized = typeof option === `string` ? { value: option, label: option } : option;
+                return <option key={normalized.value} value={normalized.value}>{normalized.label}</option>;
+              })}
             </select>
           ))}
         </div>
@@ -628,7 +629,7 @@ function f({ logout: e, user, switchToLearner }) {
               onBack: () => B(`courses`),
             }),
           t === `learners` &&
-            (0, i.jsx)(LearnerDepartmentHub, {
+            (0, i.jsx)(DatabaseLearnerManagement, {
               onSelect: (learner) => {
                 B(`learnerDetail`);
                 A(learner);
@@ -3170,6 +3171,154 @@ function LegacyLearnerDepartmentHub({ onSelect }) {
       </div>
     </section>
   );
+}
+
+const flattenOrganizationTree = (nodes, ancestors = []) => nodes.flatMap((node) => {
+  const names = [...ancestors, node.name];
+  return [{ ...node, pathLabel: names.join(` > `) }, ...flattenOrganizationTree(node.children || [], names)];
+});
+const parseCsvLine = (line) => {
+  const cells = []; let value = ``, quoted = false;
+  for (let index = 0; index < line.length; index += 1) {
+    const character = line[index];
+    if (character === `"` && quoted && line[index + 1] === `"`) { value += `"`; index += 1; }
+    else if (character === `"`) quoted = !quoted;
+    else if (character === `,` && !quoted) { cells.push(value.trim()); value = ``; }
+    else value += character;
+  }
+  cells.push(value.trim()); return cells;
+};
+const apiRequest = async (url, options = {}) => {
+  const response = await fetch(url, { credentials: `include`, headers: { "Content-Type": `application/json`, ...(options.headers || {}) }, ...options });
+  if (response.status === 204) return null;
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(result?.error?.code || `REQUEST_FAILED`);
+  return result.data;
+};
+
+function DatabaseLearnerManagement() {
+  const emptyUser = { employeeNumber: ``, name: ``, email: ``, organizationId: ``, position: ``, role: `LEARNER`, status: `ACTIVE` };
+  const [users, setUsers] = r.useState([]), [organizationTree, setOrganizationTree] = r.useState([]);
+  const [loading, setLoading] = r.useState(true), [error, setError] = r.useState(``), [query, setQuery] = r.useState(``);
+  const [organizationFilter, setOrganizationFilter] = r.useState(``), [statusFilter, setStatusFilter] = r.useState(``);
+  const [userModal, setUserModal] = r.useState(null), [userForm, setUserForm] = r.useState(emptyUser);
+  const [organizationModal, setOrganizationModal] = r.useState(false), [organizationForm, setOrganizationForm] = r.useState({ name: ``, parentId: `` });
+  const [saving, setSaving] = r.useState(false), importInputRef = r.useRef(null);
+  const organizations = r.useMemo(() => flattenOrganizationTree(organizationTree), [organizationTree]);
+  const load = r.useCallback(async () => {
+    setLoading(true); setError(``);
+    try {
+      const [userData, organizationData] = await Promise.all([
+        apiRequest(`/api/v1/admin/users`), apiRequest(`/api/v1/admin/organizations/tree`),
+      ]);
+      setUsers(userData); setOrganizationTree(organizationData);
+    } catch { setError(`사용자와 조직 정보를 불러오지 못했습니다.`); }
+    finally { setLoading(false); }
+  }, []);
+  r.useEffect(() => { load(); }, [load]);
+  const filteredUsers = users.filter((user) => {
+    const keyword = query.trim().toLowerCase();
+    return (!keyword || `${user.name} ${user.employeeNumber} ${user.email} ${user.organizationName || ``}`.toLowerCase().includes(keyword))
+      && (!organizationFilter || user.organizationId === organizationFilter) && (!statusFilter || user.status === statusFilter);
+  });
+  const openCreate = () => { setUserForm(emptyUser); setUserModal({ mode: `create` }); };
+  const openEdit = (user) => { setUserForm({ ...user, organizationId: user.organizationId || ``, position: user.position || `` }); setUserModal({ mode: `edit`, id: user.id }); };
+  const saveUser = async () => {
+    if (!userForm.employeeNumber.trim() || !userForm.name.trim() || !userForm.email.trim().endsWith(`@sparkplus.co`)) return setError(`사번, 이름, 회사 이메일을 확인해주세요.`);
+    setSaving(true); setError(``);
+    try {
+      const payload = { ...userForm, organizationId: userForm.organizationId || null, position: userForm.position || null };
+      await apiRequest(userModal.mode === `create` ? `/api/v1/admin/users` : `/api/v1/admin/users/${userModal.id}`, {
+        method: userModal.mode === `create` ? `POST` : `PATCH`, body: JSON.stringify(payload),
+      });
+      setUserModal(null); await load(); showAdminToast(userModal.mode === `create` ? `사용자가 등록되었습니다.` : `사용자 정보가 수정되었습니다.`);
+    } catch (requestError) { setError(requestError.message === `USER_ALREADY_EXISTS` ? `이미 등록된 사번 또는 이메일입니다.` : `사용자 정보를 저장하지 못했습니다.`); }
+    finally { setSaving(false); }
+  };
+  const changeStatus = async (user) => {
+    try { await apiRequest(`/api/v1/admin/users/${user.id}`, { method: `PATCH`, body: JSON.stringify({ status: user.status === `ACTIVE` ? `INACTIVE` : `ACTIVE` }) }); await load(); }
+    catch { setError(`계정 상태를 변경하지 못했습니다.`); }
+  };
+  const deleteUser = async (user) => {
+    if (!window.confirm(`${user.name} 사용자를 삭제하시겠습니까?`)) return;
+    try { await apiRequest(`/api/v1/admin/users/${user.id}`, { method: `DELETE` }); await load(); showAdminToast(`사용자가 삭제되었습니다.`); }
+    catch (requestError) { setError(requestError.message === `CANNOT_DELETE_SELF` ? `현재 로그인한 관리자 계정은 삭제할 수 없습니다.` : `사용자를 삭제하지 못했습니다.`); }
+  };
+  const saveOrganization = async () => {
+    if (!organizationForm.name.trim()) return;
+    setSaving(true); setError(``);
+    try {
+      await apiRequest(`/api/v1/admin/organizations`, { method: `POST`, body: JSON.stringify({ name: organizationForm.name, parentId: organizationForm.parentId || null }) });
+      setOrganizationModal(false); setOrganizationForm({ name: ``, parentId: `` }); await load(); showAdminToast(`조직이 등록되었습니다.`);
+    } catch (requestError) { setError(requestError.message === `ORGANIZATION_DEPTH_EXCEEDED` ? `조직은 최대 3단계까지만 만들 수 있습니다.` : `조직을 등록하지 못했습니다.`); }
+    finally { setSaving(false); }
+  };
+  const toggleOrganization = async (organization) => {
+    try { await apiRequest(`/api/v1/admin/organizations/${organization.id}`, { method: `PATCH`, body: JSON.stringify({ status: organization.status === `ACTIVE` ? `INACTIVE` : `ACTIVE` }) }); await load(); }
+    catch { setError(`조직 상태를 변경하지 못했습니다.`); }
+  };
+  const downloadTemplate = () => {
+    const samplePath = organizations.find((item) => item.status === `ACTIVE`)?.pathLabel || `개발본부 > 부동산팀 > 개발파트`;
+    const csv = `사번,이름,이메일,조직경로,직책,권한,상태\nSP1001,홍길동,hong.gildong@sparkplus.co,"${samplePath}",매니저,LEARNER,ACTIVE\n`;
+    const blob = new Blob([`\ufeff${csv}`], { type: `text/csv;charset=utf-8` }); const url = URL.createObjectURL(blob);
+    const anchor = document.createElement(`a`); anchor.href = url; anchor.download = `SPARKPLUS_LMS_사용자등록양식.csv`; anchor.click(); URL.revokeObjectURL(url);
+  };
+  const importCsv = async (event) => {
+    const file = event.target.files?.[0]; event.target.value = ``; if (!file) return;
+    try {
+      const lines = (await file.text()).replace(/^\ufeff/, ``).split(/\r?\n/).filter(Boolean); const headers = parseCsvLine(lines[0]);
+      const expected = [`사번`, `이름`, `이메일`, `조직경로`, `직책`, `권한`, `상태`];
+      if (expected.some((header, index) => headers[index] !== header)) throw new Error(`INVALID_HEADERS`);
+      const rows = lines.slice(1).map((line) => { const cells = parseCsvLine(line); return {
+        employeeNumber: cells[0], name: cells[1], email: cells[2], organizationPath: cells[3], position: cells[4] || ``,
+        role: cells[5] || `LEARNER`, status: cells[6] || `ACTIVE`,
+      }; });
+      const result = await apiRequest(`/api/v1/admin/users/import`, { method: `POST`, body: JSON.stringify({ rows }) });
+      await load(); showAdminToast(`${result.imported}명의 사용자가 일괄 등록되었습니다.`);
+    } catch (requestError) { setError(requestError.message === `IMPORT_VALIDATION_FAILED` ? `파일의 중복값 또는 조직경로를 확인해주세요.` : `CSV 양식과 입력값을 확인해주세요.`); }
+  };
+  return <section className="database-learner-management">
+    <div className="database-management-toolbar">
+      <div><h2>사용자 및 조직 관리</h2><p>Google 로그인 전에 사용자를 등록하고 3단계 조직을 관리합니다.</p></div>
+      <div className="database-management-actions">
+        <button className="secondary" onClick={downloadTemplate}><Icon icon={Download01Icon} size={16} />양식 다운로드</button>
+        <input ref={importInputRef} type="file" accept=".csv,text/csv" hidden onChange={importCsv} />
+        <button className="secondary" onClick={() => importInputRef.current?.click()}><Icon icon={File01Icon} size={16} />Excel/CSV 일괄 등록</button>
+        <button className="secondary" onClick={() => setOrganizationModal(true)}><Icon icon={Add01Icon} size={16} />조직 등록</button>
+        <button className="primary" onClick={openCreate}><Icon icon={Add01Icon} size={16} />사용자 등록</button>
+      </div>
+    </div>
+    {error && <div className="database-management-error">{error}<button onClick={() => setError(``)}>닫기</button></div>}
+    <div className="organization-strip">
+      {organizations.length ? organizations.map((organization) => <div key={organization.id} className={`organization-chip ${organization.status.toLowerCase()}`}>
+        <span><small>{organization.depth}단계</small>{organization.pathLabel}</span>
+        <button onClick={() => toggleOrganization(organization)}>{organization.status === `ACTIVE` ? `사용 중` : `비활성`}</button>
+      </div>) : <p>등록된 조직이 없습니다. 먼저 조직을 등록해주세요.</p>}
+    </div>
+    <SearchFilterPanel value={query} onValueChange={setQuery} placeholder="이름, 사번, 이메일 검색" filters={[
+      { label: `조직`, value: organizationFilter, onChange: setOrganizationFilter, options: [{ value: ``, label: `전체 조직` }, ...organizations.map((item) => ({ value: item.id, label: item.pathLabel }))] },
+      { label: `계정 상태`, value: statusFilter, onChange: setStatusFilter, options: [{ value: ``, label: `전체 상태` }, { value: `ACTIVE`, label: `활성` }, { value: `INACTIVE`, label: `비활성` }] },
+    ]} onSearch={() => {}} onReset={() => { setQuery(``); setOrganizationFilter(``); setStatusFilter(``); }} />
+    <div className="table-wrap learner-table database-user-table"><table><thead><tr><th>사용자</th><th>조직</th><th>직책</th><th>권한</th><th>상태</th><th>관리</th></tr></thead><tbody>
+      {filteredUsers.map((user) => <tr key={user.id}><td><div className="person"><span>{user.name[0]}</span><div><b>{user.name}</b><small>{user.employeeNumber} · {user.email}</small></div></div></td>
+        <td>{user.organizationName || `미지정`}</td><td>{user.position || `미지정`}</td><td>{user.role === `ADMIN` ? `관리자` : `학습자`}</td>
+        <td><span className={`learner-account-status ${user.status === `ACTIVE` ? `active` : `inactive`}`}>{user.status === `ACTIVE` ? `활성` : `비활성`}</span></td>
+        <td><div className="database-row-actions"><button onClick={() => openEdit(user)}>수정</button><button onClick={() => changeStatus(user)}>{user.status === `ACTIVE` ? `비활성화` : `활성화`}</button><button className="danger" onClick={() => deleteUser(user)}>삭제</button></div></td></tr>)}
+    </tbody></table>{!loading && !filteredUsers.length && <div className="learner-management-empty">등록된 사용자가 없습니다.</div>}{loading && <div className="learner-management-empty">데이터를 불러오고 있습니다.</div>}</div>
+    {userModal && <div className="overlay center" onMouseDown={() => setUserModal(null)}><section className="learner-registration-modal database-modal" onMouseDown={(event) => event.stopPropagation()}><header><div><h2>{userModal.mode === `create` ? `사용자 등록` : `사용자 수정`}</h2><p>@sparkplus.co Google 계정과 연결될 정보를 입력합니다.</p></div><button onClick={() => setUserModal(null)}><Icon icon={Cancel01Icon} /></button></header><div className="learner-registration-form">
+      <label><span>사번 *</span><input value={userForm.employeeNumber} onChange={(event) => setUserForm({ ...userForm, employeeNumber: event.target.value })} /></label>
+      <label><span>이름 *</span><input value={userForm.name} onChange={(event) => setUserForm({ ...userForm, name: event.target.value })} /></label>
+      <label className="learner-registration-wide"><span>회사 이메일 *</span><input type="email" value={userForm.email} onChange={(event) => setUserForm({ ...userForm, email: event.target.value })} placeholder="name@sparkplus.co" /></label>
+      <label><span>조직</span><select value={userForm.organizationId} onChange={(event) => setUserForm({ ...userForm, organizationId: event.target.value })}><option value="">미지정</option>{organizations.filter((item) => item.status === `ACTIVE`).map((item) => <option key={item.id} value={item.id}>{item.pathLabel}</option>)}</select></label>
+      <label><span>직책</span><input value={userForm.position} onChange={(event) => setUserForm({ ...userForm, position: event.target.value })} placeholder="매니저" /></label>
+      <label><span>권한</span><select value={userForm.role} onChange={(event) => setUserForm({ ...userForm, role: event.target.value })}><option value="LEARNER">학습자</option><option value="ADMIN">관리자</option></select></label>
+      <label><span>상태</span><select value={userForm.status} onChange={(event) => setUserForm({ ...userForm, status: event.target.value })}><option value="ACTIVE">활성</option><option value="INACTIVE">비활성</option></select></label>
+    </div><footer><button className="secondary" onClick={() => setUserModal(null)}>취소</button><button className="primary" disabled={saving} onClick={saveUser}>{saving ? `저장 중` : `저장`}</button></footer></section></div>}
+    {organizationModal && <div className="overlay center" onMouseDown={() => setOrganizationModal(false)}><section className="learner-registration-modal database-modal compact" onMouseDown={(event) => event.stopPropagation()}><header><div><h2>조직 등록</h2><p>상위 조직을 선택하여 최대 3단계로 구성합니다.</p></div><button onClick={() => setOrganizationModal(false)}><Icon icon={Cancel01Icon} /></button></header><div className="learner-registration-form">
+      <label className="learner-registration-wide"><span>조직명 *</span><input value={organizationForm.name} onChange={(event) => setOrganizationForm({ ...organizationForm, name: event.target.value })} placeholder="개발본부" /></label>
+      <label className="learner-registration-wide"><span>상위 조직</span><select value={organizationForm.parentId} onChange={(event) => setOrganizationForm({ ...organizationForm, parentId: event.target.value })}><option value="">최상위 조직(1단계)</option>{organizations.filter((item) => item.depth < 3 && item.status === `ACTIVE`).map((item) => <option key={item.id} value={item.id}>{item.pathLabel}</option>)}</select></label>
+    </div><footer><button className="secondary" onClick={() => setOrganizationModal(false)}>취소</button><button className="primary" disabled={saving || !organizationForm.name.trim()} onClick={saveOrganization}>등록</button></footer></section></div>}
+  </section>;
 }
 
 function LearnerDepartmentHub({ onSelect }) {
