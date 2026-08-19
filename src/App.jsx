@@ -704,55 +704,37 @@ function DateRangeFilter({ value, onChange, mode = `dashboard` }) {
   </div>;
 }
 
-const ADMIN_MONTHLY_STATS = [
-  { key:`2026-01`, month:`1월`, completed:31, active:55, courses:4, newLearners:49, progress:68, completionRate:62 },
-  { key:`2026-02`, month:`2월`, completed:37, active:61, courses:5, newLearners:57, progress:71, completionRate:65 },
-  { key:`2026-03`, month:`3월`, completed:42, active:68, courses:5, newLearners:64, progress:72, completionRate:67 },
-  { key:`2026-04`, month:`4월`, completed:51, active:73, courses:6, newLearners:69, progress:74, completionRate:70 },
-  { key:`2026-05`, month:`5월`, completed:58, active:81, courses:7, newLearners:76, progress:76, completionRate:73 },
-  { key:`2026-06`, month:`6월`, completed:63, active:88, courses:8, newLearners:83, progress:77, completionRate:74 },
-  { key:`2026-07`, month:`7월`, completed:72, active:94, courses:9, newLearners:89, progress:78, completionRate:76 },
-  { key:`2026-08`, month:`8월`, completed:78, active:102, courses:8, newLearners:96, progress:79, completionRate:78 },
-];
-const monthsInRange = (range) => ADMIN_MONTHLY_STATS.filter((item) => item.key >= range.start.slice(0, 7) && item.key <= range.end.slice(0, 7));
-
 function p({ onGo: e }) {
-  const [liveTotals,setLiveTotals]=r.useState(null);
-  r.useEffect(()=>{apiRequest(`/api/v1/admin/dashboard`).then(setLiveTotals).catch(()=>{});},[]);
+  const [liveDashboard,setLiveDashboard]=r.useState({totals:{courses:0,learners:0,completed:0,progress:0,completionRate:0,requiredIncomplete:0,delayed:0},monthly:[]});
+  r.useEffect(()=>{apiRequest(`/api/v1/admin/dashboard`).then(setLiveDashboard).catch(()=>{});},[]);
   const [range, setRange] = r.useState({ preset:`sixMonths`, ...adminQuickRange(`sixMonths`) });
   const validRange = Boolean(range.start && range.end && range.start <= range.end);
   const lastValidRange = r.useRef(range);
   if (validRange) lastValidRange.current = range;
   const effectiveRange = validRange ? range : lastValidRange.current;
-  const data = monthsInRange(effectiveRange);
+  const data = (liveDashboard.monthly || []).filter((item) => item.key >= effectiveRange.start.slice(0,7) && item.key <= effectiveRange.end.slice(0,7));
   const average = (key) => data.length ? Math.round(data.reduce((sum, item) => sum + item[key], 0) / data.length) : 0;
-  const totals = liveTotals || {
-    courses: data.reduce((sum, item) => sum + item.courses, 0),
-    learners: data.reduce((sum, item) => sum + item.newLearners, 0),
-    completed: data.reduce((sum, item) => sum + item.completed, 0),
-    progress: average(`progress`),
-    completionRate: average(`completionRate`),
-  };
+  const totals = liveDashboard.totals;
   const [hovered, setHovered] = (0, r.useState)(null);
 
   const tasks = [
     {
       title: `학습 지연자`,
-      count: 14,
+      count: totals.delayed || 0,
       detail: `진도율이 낮거나 최근 학습 기록이 없는 학습자`,
       tone: `delay`,
       page: `learners`,
     },
     {
       title: `필수교육 미완료`,
-      count: liveTotals?.requiredIncomplete ?? 11,
+      count: totals.requiredIncomplete || 0,
       detail: `필수교육 수료 조건을 아직 충족하지 못한 학습자`,
       tone: `waiting`,
       page: `learners`,
     },
     {
       title: `리워드 확인`,
-      count: 3,
+      count: 0,
       detail: `이번 달 학습 랭킹 상위 학습자`,
       tone: `survey`,
       page: `rewards`,
@@ -978,7 +960,7 @@ function CourseAdminGrid({ onEdit, onCreate }) {
   const [level, setLevel] = r.useState(`전체 레벨`);
   const [status, setStatus] = r.useState(`전체 상태`);
   const [sort, setSort] = r.useState(`최신 등록순`);
-  const [courses, setCourses] = r.useState(() => [...a]);
+  const [courses, setCourses] = r.useState([]);
   const [courseLoading, setCourseLoading] = r.useState(true);
   const [openMenu, setOpenMenu] = r.useState(null);
   const [deleteTarget, setDeleteTarget] = r.useState(null);
@@ -8950,7 +8932,7 @@ function M() {
     [p, m] = (0, r.useState)(``),
     [authLoading, setAuthLoading] = (0, r.useState)(!0),
     [authenticatedUser, setAuthenticatedUser] = (0, r.useState)(null),
-    [h, g] = (0, r.useState)(O),
+    [h, g] = (0, r.useState)([]),
     [_, v] = (0, r.useState)(1),
     [y, b] = (0, r.useState)(``),
     [x, S] = (0, r.useState)(`전체 분야`),
@@ -8973,16 +8955,6 @@ function M() {
     [wishlistIds, setWishlistIds] = (0, r.useState)(() => O.filter((course) => localStorage.getItem(`sparkplus-wishlist-${course.id}`) === `true`).map((course) => course.id)),
     [userNotices, setUserNotices] = (0, r.useState)(getUserNoticeData);
   ((0, r.useEffect)(() => {
-    let e = localStorage.getItem(`sparkplus-lms-courses`);
-    let courses = O;
-    if (e) {
-      let t = JSON.parse(e);
-      courses = O.map((e) => {
-          let n = t.find((t) => t.id === e.id);
-          return n ? { ...e, enrolled: n.enrolled, progress: n.progress } : e;
-        });
-    }
-    g(applyManagedCourseAssignments(courses, CURRENT_USER));
     apiRequest(`/api/v1/learning/courses`).then((items) => {
       g(items.map((course) => ({ ...course, enrolled:Boolean(course.enrollmentId), progress:course.progress || 0, requiredTraining:Boolean(course.required), assignmentDeadline:course.dueDate || ``, description:course.description || ``, status:`운영 중`, lessons:0 })));
     }).catch(() => {});
@@ -9010,10 +8982,6 @@ function M() {
         });
       return () => { active = !1; };
     }, []),
-    (0, r.useEffect)(() => {
-      e !== `login` &&
-        localStorage.setItem(`sparkplus-lms-courses`, JSON.stringify(h));
-    }, [h, e]),
     (0, r.useEffect)(() => {
       const refreshNotices = () => setUserNotices(getUserNoticeData());
       window.addEventListener(`sparkplus-notices-updated`, refreshNotices);
