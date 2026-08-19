@@ -12124,6 +12124,7 @@ textarea {
 .database-row-actions button { border:1px solid var(--ui-line); border-radius:8px; padding:6px 8px; background:var(--ui-surface); font-size:11px; }
 .database-row-actions .danger { color:#b42318; }
 .database-modal { max-height:min(780px,90vh); overflow:auto; }.database-modal.compact { width:min(520px,calc(100vw - 32px)); }
+.leader-scope-field { display:grid; gap:8px; margin:0; padding:14px; border:1px solid var(--ui-line); border-radius:12px; }.leader-scope-field legend{font-weight:800}.leader-scope-field>p{margin:0 0 4px;color:var(--ui-sub);font-size:12px}.leader-scope-field>label{display:flex;align-items:center;gap:8px}
 @media(max-width:1100px){.database-management-toolbar{flex-direction:column}.database-management-actions{width:100%}}
 
 /* Global header */
