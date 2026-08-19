@@ -4,6 +4,8 @@ import type { DatabasePool } from "../database/pool.js";
 import { requireRole, requireUser } from "../auth/middleware.js";
 import { buildOrganizationTree } from "../auth/policy.js";
 import type { OrganizationRecord } from "../types.js";
+import type { AppConfig } from "../config.js";
+import { syncGoogleArchive } from "../google/archive.js";
 
 const companyEmail = z.string().trim().toLowerCase().email().refine((value) => value.endsWith("@sparkplus.co"));
 const userInput = z.object({
@@ -29,7 +31,7 @@ async function audit(pool: DatabasePool, actor: string, action: string, type: st
     VALUES ($1,$2,$3,$4,$5,$6,$7)`, [actor, action, type, id, before ? JSON.stringify(before) : null, after ? JSON.stringify(after) : null, ip || null]);
 }
 
-export function createAdminRouter(pool: DatabasePool) {
+export function createAdminRouter(pool: DatabasePool, config?: AppConfig) {
   const router = Router();
   router.use(requireUser(pool), requireRole("ADMIN"));
 
@@ -168,6 +170,27 @@ export function createAdminRouter(pool: DatabasePool) {
       response.json({ data: result.rows[0], error: null });
     } catch (error: any) {
       if (error?.code === "23505") return response.status(409).json({ data: null, error: { code: "ORGANIZATION_ALREADY_EXISTS" } });
+      next(error);
+    }
+  });
+
+  router.get("/archive/status", async (_request, response, next) => {
+    try {
+      const latest = await pool.query(`SELECT action,after_data AS "afterData",created_at AS "createdAt" FROM audit_logs
+        WHERE action IN ('GOOGLE_ARCHIVE_SYNCED','GOOGLE_ARCHIVE_FAILED') ORDER BY created_at DESC LIMIT 1`);
+      response.json({ data: { configured: Boolean(config?.GOOGLE_SERVICE_ACCOUNT_JSON && config.GOOGLE_SHEET_ID && config.GOOGLE_DRIVE_ROOT_FOLDER_ID), latest: latest.rows[0] || null }, error: null });
+    } catch (error) { next(error); }
+  });
+
+  router.post("/archive/sync", async (request, response, next) => {
+    if (!config) return response.status(503).json({ data: null, error: { code: "GOOGLE_ARCHIVE_NOT_CONFIGURED" } });
+    try {
+      const result = await syncGoogleArchive(config, pool);
+      await audit(pool, request.currentUser!.id, "GOOGLE_ARCHIVE_SYNCED", "GOOGLE_ARCHIVE", null, null, result, request.ip);
+      response.json({ data: result, error: null });
+    } catch (error: any) {
+      await audit(pool, request.currentUser!.id, "GOOGLE_ARCHIVE_FAILED", "GOOGLE_ARCHIVE", null, null, { message: error?.message || "UNKNOWN" }, request.ip).catch(() => undefined);
+      if (error?.message === "GOOGLE_ARCHIVE_NOT_CONFIGURED") return response.status(503).json({ data: null, error: { code: error.message } });
       next(error);
     }
   });

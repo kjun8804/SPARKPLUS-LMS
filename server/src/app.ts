@@ -44,7 +44,7 @@ export function createApp(config: AppConfig, pool: DatabasePool, options: AppOpt
   });
 
   app.use("/api/v1/auth", createAuthRouter(config, pool));
-  app.use("/api/v1/admin", createAdminRouter(pool));
+  app.use("/api/v1/admin", createAdminRouter(pool, config));
   app.use("/api/v1/leader", createLeaderRouter(pool));
 
   app.use((_request, response) => response.status(404).json({ data: null, error: { code: "NOT_FOUND" } }));
