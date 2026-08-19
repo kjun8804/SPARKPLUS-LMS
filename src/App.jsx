@@ -441,7 +441,7 @@ function d({ value: e }) {
     children: (0, i.jsx)(`span`, { style: { width: `${e}%` } }),
   });
 }
-function f({ logout: e }) {
+function f({ logout: e, user }) {
   let [theme, setTheme] = (0, r.useState)(
     () => localStorage.getItem(`sparkplus-theme`) || `light`,
   );
@@ -558,8 +558,8 @@ function f({ logout: e }) {
                   (0, i.jsx)(`span`, { className: `avatar`, children: `관` }),
                   (0, i.jsxs)(`span`, {
                     children: [
-                      (0, i.jsx)(`b`, { children: `관리자` }),
-                      (0, i.jsx)(`small`, { children: `People팀` }),
+                      (0, i.jsx)(`b`, { children: user?.name || `관리자` }),
+                      (0, i.jsx)(`small`, { children: user?.email || `LMS 관리자` }),
                     ],
                   }),
                 ],
@@ -574,7 +574,7 @@ function f({ logout: e }) {
                     }),
                     (0, i.jsx)(`button`, {
                       onClick: () => B(`profile`),
-                      children: `비밀번호 변경`,
+                      children: `계정 정보`,
                     }),
                     (0, i.jsx)(`hr`, {}),
                     (0, i.jsx)(`button`, { onClick: e, children: `로그아웃` }),
@@ -8771,9 +8771,9 @@ function M() {
   let [e, t] = (0, r.useState)(`login`),
     [n, a] = (0, r.useState)(`user`),
     [o, s] = (0, r.useState)(!1),
-    [c, l] = (0, r.useState)(`user@company.com`),
-    [u, d] = (0, r.useState)(`1234`),
     [p, m] = (0, r.useState)(``),
+    [authLoading, setAuthLoading] = (0, r.useState)(!0),
+    [authenticatedUser, setAuthenticatedUser] = (0, r.useState)(null),
     [h, g] = (0, r.useState)(O),
     [_, v] = (0, r.useState)(1),
     [y, b] = (0, r.useState)(``),
@@ -8809,6 +8809,29 @@ function M() {
     g(applyManagedCourseAssignments(courses, CURRENT_USER));
   }, []),
     (0, r.useEffect)(() => {
+      let active = !0;
+      fetch(`/api/v1/auth/me`, { credentials: `include`, headers: { Accept: `application/json` } })
+        .then(async (response) => {
+          if (!response.ok) return null;
+          const result = await response.json();
+          return result?.data?.user ?? null;
+        })
+        .then((user) => {
+          if (!active || !user) return;
+          const role = user.role === `ADMIN` ? `admin` : `user`;
+          setAuthenticatedUser(user);
+          a(role);
+          t(role === `admin` ? `adminDashboard` : `userDashboard`);
+        })
+        .catch(() => {
+          if (active) m(`로그인 상태를 확인하지 못했습니다. 잠시 후 다시 시도해 주세요.`);
+        })
+        .finally(() => {
+          if (active) setAuthLoading(!1);
+        });
+      return () => { active = !1; };
+    }, []),
+    (0, r.useEffect)(() => {
       e !== `login` &&
         localStorage.setItem(`sparkplus-lms-courses`, JSON.stringify(h));
     }, [h, e]),
@@ -8836,6 +8859,16 @@ function M() {
     }, []));
   let Z = h.find((e) => e.id === _) ?? h[0],
     Q = h.filter((e) => e.enrolled),
+    activeUser = authenticatedUser
+      ? {
+          ...CURRENT_USER,
+          id: authenticatedUser.employeeNumber || authenticatedUser.id,
+          name: authenticatedUser.name,
+          email: authenticatedUser.email,
+          department: authenticatedUser.organizationName || `소속 미지정`,
+          position: authenticatedUser.position || `직책 미지정`,
+        }
+      : CURRENT_USER,
     le = (0, r.useMemo)(
       () =>
         h.filter((e) => {
@@ -8863,15 +8896,16 @@ function M() {
       z(!1),
       window.scrollTo({ top: 0, behavior: `smooth` }));
   }
-  function ue(e) {
-    if (
-      (e.preventDefault(),
-      (!o && c === `user@company.com` && u === `1234`) ||
-        (o && c === `admin@company.com` && u === `1234`))
-    ) {
-      let e = o ? `admin` : `user`;
-      (a(e), t(e === `user` ? `userDashboard` : `adminDashboard`), m(``));
-    } else m(`${o ? `관리자` : `사용자`} 데모 계정 정보를 확인해 주세요.`);
+  function ue() {
+    window.location.assign(`/api/v1/auth/google`);
+  }
+  async function logout() {
+    try {
+      await fetch(`/api/v1/auth/logout`, { method: `POST`, credentials: `include` });
+    } finally {
+      setAuthenticatedUser(null);
+      window.location.assign(`/`);
+    }
   }
   function de() {
     if (isManagedUserInactive(CURRENT_USER)) {
@@ -8899,22 +8933,28 @@ function M() {
       I(`학습 진도가 저장되었습니다.`),
       setTimeout(() => I(``), 2600));
   }
+  if (authLoading) return (0, i.jsx)(`main`, {
+    className: `auth-loading`,
+    children: (0, i.jsxs)(`div`, {
+      children: [
+        (0, i.jsxs)(`div`, { className: `auth-loading-logo`, children: [
+          (0, i.jsx)(`b`, { children: `SPARKPLUS` }),
+          (0, i.jsx)(`em`, { children: `LMS` }),
+        ] }),
+        (0, i.jsx)(`span`, { className: `auth-spinner`, "aria-hidden": `true` }),
+        (0, i.jsx)(`p`, { children: `로그인 상태를 확인하고 있습니다.` }),
+      ],
+    }),
+  });
   return e === `login`
     ? (0, i.jsx)(N, {
-        adminMode: o,
-        setAdminMode: s,
-        email: c,
-        setEmail: l,
-        password: u,
-        setPassword: d,
         error: p,
-        onSubmit: ue,
+        onLogin: ue,
       })
     : n === `admin`
       ? (0, i.jsx)(f, {
-          logout: () => {
-            (t(`login`), a(`user`), s(!1), l(`user@company.com`), z(!1));
-          },
+          logout,
+          user: authenticatedUser,
         })
       : (0, i.jsxs)(`div`, {
           className: `app-shell user-portal ${e === `userRewards` ? `reward-canvas-active` : ``}`,
@@ -8927,11 +8967,10 @@ function M() {
               setProfileOpen: z,
               theme: theme,
               setTheme: setTheme,
-              logout: () => {
-                (t(`login`), z(!1));
-              },
+              logout,
+              user: activeUser,
             }),
-            e === `userDashboard` && (0, i.jsx)(L, { courses: Q, go: $, notices: userNotices, user: CURRENT_USER }),
+            e === `userDashboard` && (0, i.jsx)(L, { courses: Q, go: $, notices: userNotices, user: activeUser }),
             e === `adminDashboard` && (0, i.jsx)(U, { go: $ }),
             e === `catalog` &&
               (0, i.jsx)(K, {
@@ -9047,16 +9086,7 @@ function M() {
           ],
         });
 }
-function N({
-  adminMode: e,
-  setAdminMode: t,
-  email: n,
-  setEmail: r,
-  password: a,
-  setPassword: o,
-  error: s,
-  onSubmit: c,
-}) {
+function N({ error, onLogin }) {
   return (0, i.jsxs)(`main`, {
     className: `login-page`,
     children: [
@@ -9082,9 +9112,8 @@ function N({
       }),
       (0, i.jsx)(`section`, {
         className: `login-panel`,
-        children: (0, i.jsxs)(`form`, {
+        children: (0, i.jsxs)(`div`, {
           className: `login-card`,
-          onSubmit: c,
           children: [
             (0, i.jsx)(`div`, {
               className: `mobile-logo`,
@@ -9094,76 +9123,20 @@ function N({
               className: `login-title`,
               children: [
                 (0, i.jsx)(P, {}),
-                e && (0, i.jsx)(`em`, { children: `관리자` }),
               ],
             }),
-            (0, i.jsxs)(`label`, {
-              children: [
-                `아이디 또는 이메일`,
-                (0, i.jsx)(`input`, {
-                  value: n,
-                  onChange: (e) => r(e.target.value),
-                  placeholder: `이메일을 입력해 주세요`,
-                }),
-              ],
-            }),
-            (0, i.jsxs)(`label`, {
-              children: [
-                `비밀번호`,
-                (0, i.jsx)(`input`, {
-                  value: a,
-                  type: `password`,
-                  onChange: (e) => o(e.target.value),
-                  placeholder: `비밀번호를 입력해 주세요`,
-                }),
-              ],
-            }),
-            s && (0, i.jsx)(`div`, { className: `form-error`, children: s }),
-            (0, i.jsxs)(`div`, {
-              className: `login-options`,
-              children: [
-                (0, i.jsxs)(`label`, {
-                  className: `check`,
-                  children: [
-                    (0, i.jsx)(`input`, { type: `checkbox` }),
-                    ` 아이디 저장`,
-                  ],
-                }),
-                (0, i.jsx)(`button`, {
-                  type: `button`,
-                  className: `text-button`,
-                  children: `비밀번호 찾기`,
-                }),
-              ],
-            }),
+            (0, i.jsx)(`p`, { className: `login-description`, children: `회사 Google 계정으로 안전하게 로그인하세요.` }),
+            error && (0, i.jsx)(`div`, { className: `form-error`, children: error }),
             (0, i.jsx)(`button`, {
-              className: `primary large`,
-              type: `submit`,
-              children: `로그인`,
-            }),
-            (0, i.jsxs)(`div`, {
-              className: `demo-box`,
-              children: [
-                (0, i.jsx)(`b`, { children: `데모 계정` }),
-                (0, i.jsx)(`span`, {
-                  children: e ? `admin@company.com` : `user@company.com`,
-                }),
-                (0, i.jsx)(`span`, { children: `비밀번호 1234` }),
-              ],
-            }),
-            (0, i.jsxs)(`button`, {
+              className: `primary large google-login-button`,
               type: `button`,
-              className: `switch-login`,
-              onClick: () => {
-                let n = !e;
-                (t(n), r(n ? `admin@company.com` : `user@company.com`));
-              },
+              onClick: onLogin,
               children: [
-                e ? `일반 사용자 로그인으로 전환` : `관리자 로그인으로 전환`,
-                ` `,
-                (0, i.jsx)(`b`, { children: `→` }),
+                (0, i.jsx)(`span`, { className: `google-mark`, children: `G` }),
+                (0, i.jsx)(`span`, { children: `회사 Google 계정으로 로그인` }),
               ],
             }),
+            (0, i.jsx)(`p`, { className: `login-domain-note`, children: `@sparkplus.co 계정만 이용할 수 있습니다.` }),
           ],
         }),
       }),
@@ -9191,6 +9164,7 @@ function F({
   logout: o,
   theme: s,
   setTheme: c,
+  user,
 }) {
   return (0, i.jsx)(`header`, {
     className: `topbar`,
@@ -9242,16 +9216,16 @@ function F({
               children: [
                 (0, i.jsx)(`span`, {
                   className: `avatar`,
-                  children: e === `user` ? CURRENT_USER.name[0] : `관`,
+                  children: e === `user` ? user.name[0] : `관`,
                 }),
                 (0, i.jsxs)(`span`, {
                   className: `profile-copy`,
                   children: [
                     (0, i.jsx)(`b`, {
-                      children: e === `user` ? CURRENT_USER.name : `관리자`,
+                      children: e === `user` ? user.name : `관리자`,
                     }),
                     (0, i.jsx)(`small`, {
-                      children: e === `user` ? CURRENT_USER.department : `인재개발팀`,
+                      children: e === `user` ? user.department : `인재개발팀`,
                     }),
                   ],
                 }),
@@ -9266,13 +9240,13 @@ function F({
                     className: `profile-menu-head`,
                     children: [
                       (0, i.jsx)(`b`, {
-                        children: e === `user` ? CURRENT_USER.name : `LMS 관리자`,
+                        children: e === `user` ? user.name : `LMS 관리자`,
                       }),
                       (0, i.jsx)(`small`, {
                         children:
                           e === `user`
-                            ? CURRENT_USER.email
-                            : `admin@company.com`,
+                            ? user.email
+                            : user?.email || `LMS 관리자`,
                       }),
                     ],
                   }),
@@ -9283,13 +9257,6 @@ function F({
                           onClick: () => n(`profile`),
                           children: [
                             (0, i.jsx)(`span`, { children: `회원정보 수정` }),
-                            (0, i.jsx)(`em`, { children: `›` }),
-                          ],
-                        }),
-                        (0, i.jsxs)(`button`, {
-                          onClick: () => n(`password`),
-                          children: [
-                            (0, i.jsx)(`span`, { children: `비밀번호 변경` }),
                             (0, i.jsx)(`em`, { children: `›` }),
                           ],
                         }),
