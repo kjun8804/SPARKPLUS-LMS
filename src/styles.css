@@ -12006,6 +12006,73 @@ textarea {
   height: 50px;
   border-radius: 14px !important;
 }
+.login-description {
+  margin: -12px 0 28px;
+  color: var(--ui-sub);
+  font-size: 14px;
+  line-height: 1.6;
+}
+.google-login-button {
+  width: 100%;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+.google-mark {
+  display: grid;
+  width: 24px;
+  height: 24px;
+  place-items: center;
+  border-radius: 50%;
+  background: #fff;
+  color: #4285f4;
+  font-weight: 800;
+}
+.login-domain-note {
+  margin: 16px 0 0;
+  color: var(--ui-sub);
+  text-align: center;
+  font-size: 12px;
+}
+.auth-loading {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  background: var(--ui-surface-soft);
+}
+.auth-loading > div {
+  display: grid;
+  justify-items: center;
+  gap: 18px;
+  color: var(--ui-sub);
+}
+.auth-loading-logo {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  color: var(--ui-ink);
+}
+.auth-loading-logo b {
+  font-size: 28px;
+  letter-spacing: -1px;
+}
+.auth-loading-logo em {
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 800;
+}
+.auth-spinner {
+  width: 30px;
+  height: 30px;
+  border: 3px solid var(--ui-line);
+  border-top-color: var(--blue);
+  border-radius: 50%;
+  animation: auth-spin 0.8s linear infinite;
+}
+@keyframes auth-spin {
+  to { transform: rotate(360deg); }
+}
 
 /* Global header */
 .topbar {
