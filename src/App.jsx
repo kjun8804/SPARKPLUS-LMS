@@ -6229,25 +6229,11 @@ function LearningRewardsPage() {
   const [rankingRange, setRankingRange] = r.useState({ preset:`month`, ...adminQuickRange(`month`) });
   const [dept, setDept] = r.useState(`전체 부서`);
   const [detail, setDetail] = r.useState(null);
-  const [pointRules, setPointRules] = r.useState([
-    { id: 1, activityType: `차시 완료`, targetType: `전체 교육과정`, course: ``, threshold: 1, frequency: `조건 달성마다`, points: 20, enabled: true },
-    { id: 2, activityType: `과정 수료`, targetType: `전체 교육과정`, course: ``, threshold: 1, frequency: `최초 1회`, points: 100, enabled: true },
-    { id: 3, activityType: `퀴즈 완료`, targetType: `전체 교육과정`, course: ``, threshold: 80, frequency: `조건 달성마다`, points: 50, enabled: true },
-    { id: 4, activityType: `설문 제출`, targetType: `전체 교육과정`, course: ``, threshold: 1, frequency: `최초 1회`, points: 10, enabled: true },
-  ]);
+  const [pointRules, setPointRules] = r.useState([]);
   const [pointRuleForm, setPointRuleForm] = r.useState(null);
   const [badgeFilter, setBadgeFilter] = r.useState(`전체`);
   const [badgeRuleForm, setBadgeRuleForm] = r.useState(null);
-  const rewardPeople = [
-    { name:`이지은`, dept:`마케팅팀`, points:[210,260,310,420,510,690,760,1280] },
-    { name:`정유진`, dept:`운영팀`, points:[280,240,390,350,620,740,910,1160] },
-    { name:`김지수`, dept:`People팀`, points:[320,300,460,520,580,810,400,1040] },
-    { name:`박서연`, dept:`개발팀`, points:[190,370,330,610,720,680,980,960] },
-    { name:`최하늘`, dept:`세일즈팀`, points:[260,290,510,430,660,570,830,890] },
-    { name:`한도윤`, dept:`People팀`, points:[170,410,280,640,490,720,700,760] },
-    { name:`윤서아`, dept:`개발팀`, points:[350,180,570,470,540,630,620,710] },
-    { name:`송민호`, dept:`마케팅팀`, points:[230,330,420,560,450,590,680,650] },
-  ];
+  const rewardPeople = [];
   const rangeIsValid = Boolean(rankingRange.start && rankingRange.end && rankingRange.start <= rankingRange.end);
   const lastValidRankingRange = r.useRef(rankingRange);
   if (rangeIsValid) lastValidRankingRange.current = rankingRange;
@@ -6271,18 +6257,12 @@ function LearningRewardsPage() {
     const averagePoint = members.length ? Math.round(members.reduce((sum, item) => sum + item.point, 0) / members.length) : 0;
     return { dept:department, averagePoint, members:members.length, completionRate:Math.min(96, 58 + Math.round(averagePoint / 45)), completedCourses:members.reduce((sum, item) => sum + item.courses, 0) };
   }).sort((a, b) => b.averagePoint - a.averagePoint).map((item, index) => ({ ...item, rank:index + 1 }));
-  const [badges, setBadges] = r.useState([
-    { id: 1, name: `이달의 학습왕`, activityType: `월간 포인트 순위`, targetType: `전체 교육과정`, course: ``, threshold: 1, people: 8, type: `랭킹형`, icon: Medal01Icon, tone: `gold`, enabled: true },
-    { id: 2, name: `이달의 TOP3`, activityType: `월간 포인트 TOP`, targetType: `전체 교육과정`, course: ``, threshold: 3, people: 24, type: `랭킹형`, icon: RankingIcon, tone: `silver`, enabled: true },
-    { id: 3, name: `완주왕`, activityType: `과정 수료`, targetType: `전체 교육과정`, course: ``, threshold: 5, people: 42, type: `성취형`, icon: CheckmarkCircle02Icon, tone: `blue`, enabled: true },
-    { id: 4, name: `꾸준한 학습자`, activityType: `연속 학습`, targetType: `전체 교육과정`, course: ``, threshold: 4, people: 67, type: `성취형`, icon: Award01Icon, tone: `violet`, enabled: true },
-    { id: 5, name: `퀴즈 마스터`, activityType: `퀴즈 완료`, targetType: `전체 교육과정`, course: ``, threshold: 10, people: 31, type: `성취형`, icon: Quiz01Icon, tone: `green`, enabled: true },
-  ]);
+  const [badges, setBadges] = r.useState([]);
   const filteredRanking = ranking.filter(
     (item) => dept === `전체 부서` || item.dept === dept,
   );
   const period = formatAdminPeriod(effectiveRankingRange);
-  const courseOptions = [`개인정보보호 필수교육`, `생성형 AI 업무 활용`, `데이터 분석 기초 입문`, `리더십 기본 과정`];
+  const courseOptions = [];
   const conditionUnit = (activity) => activity === `퀴즈 완료` ? `점 이상` : activity === `연속 학습` ? `주 이상` : activity.includes(`순위`) ? `위` : activity.includes(`TOP`) ? `위 이내` : `회 이상`;
   const ruleSummary = (rule) => `${rule.targetType === `특정 교육과정` ? rule.course : `전체 과정`} · ${rule.activityType} ${rule.threshold}${conditionUnit(rule.activityType)} · ${rule.frequency}`;
   const badgeSummary = (badge) => `${badge.targetType === `특정 교육과정` ? badge.course : `전체 과정`} · ${badge.activityType} ${badge.threshold}${conditionUnit(badge.activityType)}`;
@@ -6364,6 +6344,9 @@ function LearningRewardsPage() {
                   </tr>
                 </thead>
                 <tbody>
+                  {filteredRanking.length === 0 && (
+                    <tr><td colSpan="7" className="table-empty">선택한 기간에 적립된 실제 학습 포인트가 없습니다.</td></tr>
+                  )}
                   {filteredRanking.map((item) => (
                     <tr key={item.rank} className={item.rank <= 3 ? `ranking-list-top rank-${item.rank}` : ``}>
                       <td>
@@ -6405,8 +6388,8 @@ function LearningRewardsPage() {
       ) : tab === `points` ? (
         <>
           <div className="point-management-head"><div><h2>포인트 지급 기준</h2><p>실제 학습 활동과 지급 조건을 연결해 관리합니다.</p></div><button type="button" className="point-rule-add" onClick={() => setPointRuleForm({ id: null, activityType: `차시 완료`, targetType: `전체 교육과정`, course: ``, threshold: 1, frequency: `조건 달성마다`, points: 20, enabled: true })}><Icon icon={Add01Icon} size={16} />포인트 기준 추가</button></div>
-          <div className="table-wrap results-table point-rule-table"><table><thead><tr><th>활동 유형</th><th>적용 조건</th><th>지급 포인트</th><th>상태</th><th>관리</th></tr></thead><tbody>{pointRules.map((rule) => <tr key={rule.id}><td><b>{rule.activityType}</b></td><td><span className="rule-target-summary">{ruleSummary(rule)}</span></td><td><strong>+{rule.points}P</strong></td><td><span className={`point-rule-status ${rule.enabled ? `enabled` : ``}`}>{rule.enabled ? `사용 중` : `사용 안 함`}</span></td><td><button type="button" className="analysis-button" onClick={() => setPointRuleForm({ ...rule })}>수정</button></td></tr>)}</tbody></table></div>
-          <div className="recent-point-section"><div><h2>최근 포인트 적립 내역</h2></div><div className="recent-point-list">{[[`김지수`, `개인정보보호 필수교육 수료`, `+100P`, `2026.08.12`],[`이지은`, `생성형 AI 업무 활용 퀴즈 완료`, `+50P`, `2026.08.11`],[`정유진`, `데이터 분석 기초 입문 차시 완료`, `+20P`, `2026.08.10`]].map((item) => <div key={`${item[0]}-${item[3]}`}><b>{item[0]}</b><span>{item[1]}</span><strong>{item[2]}</strong><time>{item[3]}</time></div>)}</div></div>
+          <div className="table-wrap results-table point-rule-table"><table><thead><tr><th>활동 유형</th><th>적용 조건</th><th>지급 포인트</th><th>상태</th><th>관리</th></tr></thead><tbody>{pointRules.length === 0 && <tr><td colSpan="5" className="table-empty">등록된 포인트 지급 기준이 없습니다.</td></tr>}{pointRules.map((rule) => <tr key={rule.id}><td><b>{rule.activityType}</b></td><td><span className="rule-target-summary">{ruleSummary(rule)}</span></td><td><strong>+{rule.points}P</strong></td><td><span className={`point-rule-status ${rule.enabled ? `enabled` : ``}`}>{rule.enabled ? `사용 중` : `사용 안 함`}</span></td><td><button type="button" className="analysis-button" onClick={() => setPointRuleForm({ ...rule })}>수정</button></td></tr>)}</tbody></table></div>
+          <div className="recent-point-section"><div><h2>최근 포인트 적립 내역</h2></div><div className="recent-point-list"><p className="table-empty">실제 포인트 적립 내역이 없습니다.</p></div></div>
         </>
       ) : (
         <>
@@ -6421,6 +6404,7 @@ function LearningRewardsPage() {
             {[`전체`, `랭킹형`, `성취형`].map((item) => <button key={item} className={badgeFilter === item ? `active` : ``} onClick={() => setBadgeFilter(item)}>{item}</button>)}
           </div>
           <div className="fixed-badge-grid">
+            {badges.length === 0 && <p className="table-empty">등록된 뱃지가 없습니다.</p>}
             {badges.filter((badge) => badgeFilter === `전체` || badge.type === badgeFilter).map((badge) => {
               return (
               <article className="fixed-badge-card" key={badge.name}>
@@ -6459,9 +6443,9 @@ function LearningRewardsPage() {
         >
           {detail.type === `points` ? (
             <><div className="point-detail-summary"><div><span>선택 기간 포인트</span><b>{detail.point.toLocaleString()}P</b></div><div><span>선택 기간 순위</span><b>{detail.rank}위</b></div><div><span>획득 뱃지</span><b>{detail.badges}개</b></div></div>
-            <div className="point-history actual-history">{[[`08.10`, `데이터 분석 기초 입문`, `과정 수료`, `+100P`],[`08.10`, `데이터 분석 기초 입문 · 5차시`, `차시 학습 완료`, `+20P`],[`08.08`, `개인정보보호 필수교육`, `퀴즈 완료`, `+50P`],[`08.08`, `개인정보보호 필수교육`, `설문 제출`, `+10P`]].map((x, index) => <div key={`${x[0]}-${index}`}><time>{x[0]}</time><span><b>{x[1]}</b><small>{x[2]}</small></span><strong>{x[3]}</strong></div>)}</div></>
+            <div className="point-history actual-history"><p className="table-empty">실제 포인트 적립 내역이 없습니다.</p></div></>
           ) : (
-            <div className="badge-recipient-list">{[[`김지수`, `People팀`, `2026.07`],[`이지은`, `마케팅팀`, `2026.06`],[`정유진`, `운영팀`, `2026.05`]].map((x) => <div key={x[0]}><span className="recipient-avatar">{x[0][0]}</span><b>{x[0]}</b><span>{x[1]}</span><time>{x[2]}</time></div>)}</div>
+            <div className="badge-recipient-list"><p className="table-empty">실제 뱃지 획득 내역이 없습니다.</p></div>
           )}
         </ResultsDetailModal>
       )}
@@ -6516,6 +6500,9 @@ function DepartmentRankingTable({ departments, period }) {
             </tr>
           </thead>
           <tbody>
+            {departments.length === 0 && (
+              <tr><td colSpan="6" className="table-empty">선택한 기간에 집계된 실제 부서 포인트가 없습니다.</td></tr>
+            )}
             {departments.map((item) => (
               <tr
                 key={item.dept}

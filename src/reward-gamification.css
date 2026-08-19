@@ -257,3 +257,8 @@ html,body,#root{min-height:100%}
 @media(prefers-reduced-motion:reduce){
   .reward-canvas-active .reward-confetti i{animation-play-state:paused!important}
 }
+
+/* Empty reward datasets must be explicit instead of looking like a broken panel. */
+.rewards-page .table-empty{box-sizing:border-box;width:100%;min-height:96px;padding:34px 20px!important;color:var(--ui-sub,#7c8798)!important;font-size:13px!important;font-weight:500!important;text-align:center!important}
+.rewards-page td.table-empty{height:110px!important}
+.rewards-page .fixed-badge-grid>.table-empty{grid-column:1/-1;display:grid;place-items:center;border:1px dashed var(--ui-line,#d8e0eb);border-radius:16px;background:var(--ui-surface-soft,#f8fafc)}
