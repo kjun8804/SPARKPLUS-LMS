@@ -34,6 +34,14 @@
   display:block!important; grid-column:1/-1; width:100%; margin:7px 0 0!important; padding:0!important;
   border:0!important; background:transparent!important; box-shadow:none!important;
 }
+.user-portal .my-learning-page .my-learning-reward-summary{display:flex;align-items:center;justify-content:space-between;gap:18px;margin:18px 0 4px;padding:18px 22px;border:1px solid #dfe6ed;border-radius:16px;background:#fff;box-shadow:0 4px 14px rgba(34,67,99,.045)}
+.user-portal .my-learning-page .my-learning-reward-summary>div{display:flex;align-items:center;gap:13px}
+.user-portal .my-learning-page .my-learning-reward-summary p{display:flex;align-items:baseline;gap:12px;margin:0}
+.user-portal .my-learning-page .my-learning-reward-summary span{color:#667685;font-size:12px;font-weight:650}
+.user-portal .my-learning-page .my-learning-reward-summary strong{color:#3979b6;font-size:22px}
+.user-portal .my-learning-page .my-learning-reward-summary small{color:#72808d;font-size:11px}
+html[data-theme="dark"] .user-portal .my-learning-page .my-learning-reward-summary{border-color:var(--ui-line);background:var(--ui-surface)}
+html[data-theme="dark"] .user-portal .my-learning-page .my-learning-reward-summary strong{color:#8fc7ff}
 .user-portal .my-learning-page .learning-summary > .progress-block > div:first-child { display:none!important; }
 .user-portal .my-learning-page .learning-summary .progress-track {
   width:100%; height:7px; margin:0; border:0!important; border-radius:999px; background:#e8eff6!important;

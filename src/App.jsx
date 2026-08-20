@@ -8998,10 +8998,11 @@ function M() {
     [rewardInitialTab, setRewardInitialTab] = (0, r.useState)(`ranking`),
     [wishlistIds, setWishlistIds] = (0, r.useState)(() => O.filter((course) => localStorage.getItem(`sparkplus-wishlist-${course.id}`) === `true`).map((course) => course.id)),
     [userNotices, setUserNotices] = (0, r.useState)(getUserNoticeData);
+  const loadLearningCourses = () => apiRequest(`/api/v1/learning/courses`).then((items) => {
+    g(items.map((course) => ({ ...course, enrolled:Boolean(course.enrollmentId), progress:Number(course.progress||0), totalLessons:Number(course.totalLessons||0), completedLessons:Number(course.completedLessons||0), requiredTraining:Boolean(course.required), assignmentDeadline:course.dueDate || ``, description:course.description || ``, status:`운영 중`, lessons:Number(course.totalLessons||0) })));
+  });
   ((0, r.useEffect)(() => {
-    apiRequest(`/api/v1/learning/courses`).then((items) => {
-      g(items.map((course) => ({ ...course, enrolled:Boolean(course.enrollmentId), progress:course.progress || 0, requiredTraining:Boolean(course.required), assignmentDeadline:course.dueDate || ``, description:course.description || ``, status:`운영 중`, lessons:0 })));
-    }).catch(() => {});
+    loadLearningCourses().catch(() => {});
   }, []),
     (0, r.useEffect)(() => {
       let active = !0;
@@ -9036,7 +9037,7 @@ function M() {
       };
     }, []),
     (0, r.useEffect)(() => {
-      const refreshAssignments = () => g((courses) => applyManagedCourseAssignments(courses, CURRENT_USER));
+      const refreshAssignments = () => loadLearningCourses().catch(() => {});
       window.addEventListener(`sparkplus-course-assignments-updated`, refreshAssignments);
       window.addEventListener(`sparkplus-course-config-updated`, refreshAssignments);
       window.addEventListener(`sparkplus-course-progress`, refreshAssignments);
@@ -10501,7 +10502,6 @@ function ee({ kind: e, course: t, close: n, enroll: r, goLearning: a }) {
   });
 }
 function LearningCourseTable({ courses, completed = false, completionDates = [], go, issueCertificate }) {
-  const lessonTotals = { 1: 5, 2: 6, 3: 6, 4: 5, 5: 5, 6: 6 };
   return <div className="my-learning-table-wrap">
     <table className="my-learning-table">
       <thead>
@@ -10519,9 +10519,9 @@ function LearningCourseTable({ courses, completed = false, completionDates = [],
         {courses.map((course, index) => {
           const progress = completed ? 100 : course.progress ?? 0;
           const surveyRequired = courseSurveyEnabled(course);
-          const surveySubmitted = localStorage.getItem(`sparkplus-survey-complete-${course.id}`) === `true` || (completed && surveyRequired);
-          const totalLessons = lessonTotals[course.id] || k[course.id]?.length || 5;
-          const completedLessons = completed ? totalLessons : Math.min(totalLessons, Math.floor((progress / 100) * totalLessons));
+          const surveySubmitted = Boolean(course.surveySubmitted);
+          const totalLessons = Number(course.totalLessons ?? course.curriculum?.length ?? 0);
+          const completedLessons = Number(course.completedLessons ?? (completed ? totalLessons : 0));
           return <tr key={course.id}>
             <td className="my-learning-course-cell">
               <button onClick={() => go(completed ? `courseDetail` : `lectureDetail`, course.id)}>{course.title}</button>
@@ -10603,33 +10603,19 @@ function UserLearningRewards({ initialTab = `ranking` }) {
 function te({ courses: e, allCourses = [], wishlistIds = [], toggleWishlist, go: t, notify: n }) {
   let [a, o] = (0, r.useState)(`active`),
     [s, c] = (0, r.useState)(null),
+    [rewardSummary, setRewardSummary] = (0, r.useState)({ totalPoints:0, monthlyPoints:0 }),
     autoCompleted = e.filter((course) => isCourseCompleted(course)),
     activeCourses = e.filter((course) => !isCourseCompleted(course)),
-    l = [...autoCompleted,
-      {
-        ...O[1],
-        period: `2026.04.01 ~ 2026.04.30`,
-        duration: `4시간`,
-        progress: 100,
-      },
-      {
-        ...O[3],
-        period: `2026.03.10 ~ 2026.03.31`,
-        duration: `3시간`,
-        progress: 100,
-      },
-      {
-        ...O[5],
-        period: `2026.01.15 ~ 2026.02.15`,
-        duration: `5시간`,
-        progress: 100,
-      },
-    ],
-    u = [...autoCompleted.map(() => new Date().toISOString().slice(0,10).replaceAll(`-`,`.`)), `2026.04.30`, `2026.03.31`, `2026.02.15`],
+    l = autoCompleted,
+    u = autoCompleted.map((course) => course.completedAt ? new Date(course.completedAt).toLocaleDateString(`ko-KR`) : `-`),
     d = Math.round(
       activeCourses.reduce((e, t) => e + (t.progress ?? 0), 0) / Math.max(activeCourses.length, 1),
     ),
     wishlistCourses = allCourses.filter((course) => wishlistIds.includes(course.id));
+  (0, r.useEffect)(() => {
+    const month = new Date().toISOString().slice(0,7);
+    apiRequest(`/api/v1/rewards/me?month=${month}`).then((data) => setRewardSummary({ totalPoints:Number(data.totalPoints||0), monthlyPoints:Number(data.me?.points||0) })).catch(() => setRewardSummary({ totalPoints:0, monthlyPoints:0 }));
+  }, [e]);
   return (0, i.jsxs)(`main`, {
     className: `page my-learning-page`,
     children: [
@@ -10640,6 +10626,10 @@ function te({ courses: e, allCourses = [], wishlistIds = [], toggleWishlist, go:
         hero: !0,
         heroVariant: `learning`,
       }),
+      (0, i.jsxs)(`section`, { className:`my-learning-reward-summary`, children:[
+        (0, i.jsxs)(`div`, { children:[(0, i.jsx)(PointCoin, {}),(0, i.jsxs)(`p`, { children:[(0, i.jsx)(`span`, { children:`내 리워드 점수` }),(0, i.jsxs)(`strong`, { children:[rewardSummary.totalPoints.toLocaleString(),`P`] }),(0, i.jsxs)(`small`, { children:[`이번 달 +`,rewardSummary.monthlyPoints.toLocaleString(),`P`] })] })] }),
+        (0, i.jsx)(`button`, { className:`secondary`, onClick:()=>t(`userRewards`,`points`), children:`적립 내역 보기` }),
+      ] }),
       (0, i.jsxs)(`div`, {
         className: `tabs standalone`,
         role: `tablist`,
