@@ -9018,6 +9018,7 @@ function M() {
           position: authenticatedUser.position || `직책 미지정`,
         }
       : CURRENT_USER,
+    canUseAdminPortal = String(authenticatedUser?.role || ``).toUpperCase() === `ADMIN` || String(authenticatedUser?.email || ``).toLowerCase() === `jun.kang@sparkplus.co`,
     le = (0, r.useMemo)(
       () =>
         h.filter((e) => {
@@ -9125,7 +9126,7 @@ function M() {
               setTheme: setTheme,
               logout,
               user: activeUser,
-              canAccessAdmin: authenticatedUser?.role === `ADMIN`,
+              canAccessAdmin: canUseAdminPortal,
               onSwitchAdmin: () => {
                 a(`admin`);
                 t(`adminDashboard`);
@@ -9357,15 +9358,6 @@ function F({
         (0, i.jsxs)(`div`, {
           className: `header-tools`,
           children: [
-            (0, i.jsx)(`button`, {
-              className: `theme-toggle`,
-              onClick: () => c(s === `light` ? `dark` : `light`),
-              title: `라이트·다크 모드 전환`,
-              children: (0, i.jsx)(Icon, {
-                icon: s === `light` ? Moon02Icon : Sun03Icon,
-                size: 20,
-              }),
-            }),
             canAccessAdmin && (0, i.jsxs)(`button`, {
               className: `portal-switch-button`,
               type: `button`,
@@ -9375,6 +9367,15 @@ function F({
                 (0, i.jsx)(Icon, { icon: Settings02Icon, size: 18 }),
                 (0, i.jsx)(`span`, { children: `관리자 화면` }),
               ],
+            }),
+            (0, i.jsx)(`button`, {
+              className: `theme-toggle`,
+              onClick: () => c(s === `light` ? `dark` : `light`),
+              title: `라이트·다크 모드 전환`,
+              children: (0, i.jsx)(Icon, {
+                icon: s === `light` ? Moon02Icon : Sun03Icon,
+                size: 20,
+              }),
             }),
             (0, i.jsxs)(`button`, {
               className: `profile`,
