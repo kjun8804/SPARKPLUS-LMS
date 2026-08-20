@@ -35,6 +35,37 @@ export function createAdminRouter(pool: DatabasePool, config?: AppConfig) {
   const router = Router();
   router.use(requireUser(pool), requireRole("ADMIN"));
 
+  router.get("/management", async (request, response, next) => {
+    try {
+      const [users, organizations, latestArchive] = await Promise.all([
+        pool.query(`SELECT u.id, u.employee_number AS "employeeNumber", u.name, u.email,
+          u.organization_id AS "organizationId", o.name AS "organizationName", u.position, u.role, u.status,
+          u.last_login_at AS "lastLoginAt" FROM users u LEFT JOIN organizations o ON o.id=u.organization_id
+          WHERE u.status<>'DELETED' ORDER BY u.name`),
+        pool.query<{ id: string; name: string; parentId: string | null; depth: number; status: OrganizationRecord["status"] }>(
+          `SELECT id,name,parent_id AS "parentId",depth,status FROM organizations ORDER BY path`),
+        pool.query(`SELECT action,after_data AS "afterData",created_at AS "createdAt" FROM audit_logs
+          WHERE action IN ('GOOGLE_ARCHIVE_SYNCED','GOOGLE_ARCHIVE_FAILED') ORDER BY created_at DESC LIMIT 1`),
+      ]);
+      console.info("[admin/management] loaded", {
+        actor: request.currentUser!.id,
+        users: users.rowCount,
+        organizations: organizations.rowCount,
+      });
+      response.json({ data: {
+        users: users.rows,
+        organizationTree: buildOrganizationTree(organizations.rows),
+        archiveStatus: {
+          configured: Boolean(config?.GOOGLE_SERVICE_ACCOUNT_JSON && config.GOOGLE_SHEET_ID && config.GOOGLE_DRIVE_ROOT_FOLDER_ID),
+          latest: latestArchive.rows[0] || null,
+        },
+      }, error: null });
+    } catch (error) {
+      console.error("[admin/management] failed", { actor: request.currentUser?.id, error });
+      next(error);
+    }
+  });
+
   router.get("/dashboard", async (_request, response, next) => { try {
     const [totals,monthly]=await Promise.all([
       pool.query(`SELECT (SELECT COUNT(*) FROM courses WHERE deleted_at IS NULL AND status='OPEN')::int courses,(SELECT COUNT(*) FROM enrollments WHERE status<>'CANCELLED')::int learners,(SELECT COUNT(*) FROM enrollments WHERE status='COMPLETED')::int completed,COALESCE((SELECT ROUND(AVG(progress)) FROM enrollments WHERE status<>'CANCELLED'),0)::int progress,COALESCE((SELECT ROUND(100.0*COUNT(*) FILTER(WHERE status='COMPLETED')/NULLIF(COUNT(*),0)) FROM enrollments WHERE status<>'CANCELLED'),0)::int AS "completionRate",(SELECT COUNT(*) FROM enrollments WHERE required AND status<>'COMPLETED' AND status<>'CANCELLED')::int AS "requiredIncomplete",(SELECT COUNT(*) FROM enrollments e WHERE e.status='IN_PROGRESS' AND NOT EXISTS(SELECT 1 FROM lesson_progress lp WHERE lp.enrollment_id=e.id AND lp.updated_at>=now()-interval '14 days'))::int AS delayed`),

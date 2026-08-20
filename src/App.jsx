@@ -3192,6 +3192,17 @@ const apiRequest = async (url, options = {}) => {
   if (!response.ok) throw new Error(result?.error?.code || `REQUEST_FAILED`);
   return result.data;
 };
+const apiRequestWithRetry = async (url, options = {}, attempts = 2) => {
+  let lastError;
+  for (let attempt = 0; attempt < attempts; attempt += 1) {
+    try { return await apiRequest(url, options); }
+    catch (error) {
+      lastError = error;
+      if (attempt + 1 < attempts) await new Promise((resolve) => setTimeout(resolve, 350));
+    }
+  }
+  throw lastError;
+};
 
 function DatabaseLearnerManagement() {
   const emptyUser = { employeeNumber: ``, name: ``, email: ``, organizationId: ``, position: ``, role: `LEARNER`, status: `ACTIVE`, leaderOrganizationIds:[] };
@@ -3205,18 +3216,24 @@ function DatabaseLearnerManagement() {
   const organizations = r.useMemo(() => flattenOrganizationTree(organizationTree), [organizationTree]);
   const load = r.useCallback(async () => {
     setLoading(true); setError(``);
-    const [userResult,organizationResult,archiveResult]=await Promise.allSettled([
-      apiRequest(`/api/v1/admin/users`),apiRequest(`/api/v1/admin/organizations/tree`),apiRequest(`/api/v1/admin/archive/status`),
-    ]);
-    if(userResult.status===`fulfilled`)setUsers(userResult.value);
-    if(organizationResult.status===`fulfilled`)setOrganizationTree(organizationResult.value);
-    if(archiveResult.status===`fulfilled`)setArchiveStatus(archiveResult.value);
-    else setArchiveStatus({configured:false,unavailable:true,latest:null});
-    const failed=[];
-    if(userResult.status===`rejected`)failed.push(`사용자`);
-    if(organizationResult.status===`rejected`)failed.push(`조직`);
-    if(failed.length)setError(`${failed.join(`·`)} 정보를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.`);
-    setLoading(false);
+    try {
+      const result = await apiRequestWithRetry(`/api/v1/admin/management`);
+      setUsers(result.users || []);
+      setOrganizationTree(result.organizationTree || []);
+      setArchiveStatus(result.archiveStatus || { configured: false, unavailable: true, latest: null });
+    } catch (managementError) {
+      const [userResult, organizationResult] = await Promise.allSettled([
+        apiRequestWithRetry(`/api/v1/admin/users`), apiRequestWithRetry(`/api/v1/admin/organizations/tree`),
+      ]);
+      if (userResult.status === `fulfilled`) setUsers(userResult.value);
+      if (organizationResult.status === `fulfilled`) setOrganizationTree(organizationResult.value);
+      const failed = [];
+      if (userResult.status === `rejected`) failed.push(`사용자(${userResult.reason?.message || `요청 실패`})`);
+      if (organizationResult.status === `rejected`) failed.push(`조직(${organizationResult.reason?.message || `요청 실패`})`);
+      if (failed.length) setError(`${failed.join(` · `)} 정보를 불러오지 못했습니다.`);
+      try { setArchiveStatus(await apiRequest(`/api/v1/admin/archive/status`)); }
+      catch { setArchiveStatus({ configured: false, unavailable: true, latest: null }); }
+    } finally { setLoading(false); }
   }, []);
   r.useEffect(() => { load(); }, [load]);
   const filteredUsers = users.filter((user) => {
@@ -3303,7 +3320,7 @@ function DatabaseLearnerManagement() {
         <button className="primary" onClick={openCreate}><Icon icon={Add01Icon} size={16} />사용자 등록</button>
       </div>
     </div>
-    {error && <div className="database-management-error">{error}<button onClick={() => setError(``)}>닫기</button></div>}
+    {error && <div className="database-management-error">{error}<div><button onClick={load}>다시 불러오기</button><button onClick={() => setError(``)}>닫기</button></div></div>}
     <div className={`archive-sync-panel ${archiveStatus?.configured ? `configured` : `not-configured`}`}>
       <Icon icon={archiveStatus?.latest?.action === `GOOGLE_ARCHIVE_SYNCED` ? CheckmarkCircle02Icon : RefreshIcon} size={19} />
       <div><b>{archiveStatus?.configured ? `Google Drive · Sheets 연결 준비 완료` : `Google 아카이브 연결 설정 필요`}</b>
@@ -3324,7 +3341,7 @@ function DatabaseLearnerManagement() {
         <td>{user.organizationName || `미지정`}</td><td>{user.position || `미지정`}</td><td>{user.role === `ADMIN` ? `관리자` : `학습자`}</td>
         <td><span className={`learner-account-status ${user.status === `ACTIVE` ? `active` : `inactive`}`}>{user.status === `ACTIVE` ? `활성` : `비활성`}</span></td>
         <td><div className="database-row-actions"><button onClick={() => openEdit(user)}>수정</button><button onClick={() => changeStatus(user)}>{user.status === `ACTIVE` ? `비활성화` : `활성화`}</button><button className="danger" onClick={() => deleteUser(user)}>삭제</button></div></td></tr>)}
-    </tbody></table>{!loading && !filteredUsers.length && <div className="learner-management-empty">등록된 사용자가 없습니다.</div>}{loading && <div className="learner-management-empty">데이터를 불러오고 있습니다.</div>}</div>
+    </tbody></table>{!loading && !error && !filteredUsers.length && <div className="learner-management-empty">등록된 사용자가 없습니다.</div>}{!loading && error && !filteredUsers.length && <div className="learner-management-empty">데이터 조회에 실패했습니다. 위의 ‘다시 불러오기’를 눌러주세요.</div>}{loading && <div className="learner-management-empty">데이터를 불러오고 있습니다.</div>}</div>
     {userModal && <div className="overlay center" onMouseDown={() => setUserModal(null)}><section className="learner-registration-modal database-modal" onMouseDown={(event) => event.stopPropagation()}><header><div><h2>{userModal.mode === `create` ? `사용자 등록` : `사용자 수정`}</h2><p>@sparkplus.co Google 계정과 연결될 정보를 입력합니다.</p></div><button onClick={() => setUserModal(null)}><Icon icon={Cancel01Icon} /></button></header><div className="learner-registration-form">
       <label><span>사번 *</span><input value={userForm.employeeNumber} onChange={(event) => setUserForm({ ...userForm, employeeNumber: event.target.value })} /></label>
       <label><span>이름 *</span><input value={userForm.name} onChange={(event) => setUserForm({ ...userForm, name: event.target.value })} /></label>
