@@ -6230,56 +6230,54 @@ function LearningRewardsPage() {
   const [dept, setDept] = r.useState(`전체 부서`);
   const [detail, setDetail] = r.useState(null);
   const [pointRules, setPointRules] = r.useState([]);
+  const [rewardPeople, setRewardPeople] = r.useState([]);
+  const [recentRewards, setRecentRewards] = r.useState([]);
+  const [rewardLoading, setRewardLoading] = r.useState(true);
   const [pointRuleForm, setPointRuleForm] = r.useState(null);
   const [badgeFilter, setBadgeFilter] = r.useState(`전체`);
   const [badgeRuleForm, setBadgeRuleForm] = r.useState(null);
-  const rewardPeople = [];
   const rangeIsValid = Boolean(rankingRange.start && rankingRange.end && rankingRange.start <= rankingRange.end);
   const lastValidRankingRange = r.useRef(rankingRange);
   if (rangeIsValid) lastValidRankingRange.current = rankingRange;
   const effectiveRankingRange = rangeIsValid ? rankingRange : lastValidRankingRange.current;
-  const rewardMonthKeys = (rewardPeople[0]?.points || []).map((_, index) =>
-    `${ADMIN_TODAY.getFullYear()}-${padDatePart(index + 1)}`,
-  );
-  const selectedMonthIndexes = rewardMonthKeys
-    .map((key, index) => ({ key, index }))
-    .filter(({ key }) =>
-      key >= effectiveRankingRange.start.slice(0, 7) &&
-      key <= effectiveRankingRange.end.slice(0, 7),
-    )
-    .map(({ index }) => index);
-  const ranking = rewardPeople.map((person) => {
-    const point = selectedMonthIndexes.reduce((sum, index) => sum + person.points[index], 0);
-    return { ...person, point, courses: Math.max(0, Math.round(point / 340)), tests: Math.max(0, Math.round(point / 280)), badges: Math.max(0, Math.round(point / 620)) };
-  }).sort((a, b) => b.point - a.point).map((item, index) => ({ ...item, rank:index + 1 }));
+  const ranking = rewardPeople;
   const departmentRanking = [...new Set(rewardPeople.map((item) => item.dept))].map((department) => {
     const members = ranking.filter((item) => item.dept === department);
     const averagePoint = members.length ? Math.round(members.reduce((sum, item) => sum + item.point, 0) / members.length) : 0;
     return { dept:department, averagePoint, members:members.length, completionRate:Math.min(96, 58 + Math.round(averagePoint / 45)), completedCourses:members.reduce((sum, item) => sum + item.courses, 0) };
   }).sort((a, b) => b.averagePoint - a.averagePoint).map((item, index) => ({ ...item, rank:index + 1 }));
   const [badges, setBadges] = r.useState([]);
+  r.useEffect(() => {
+    let active=true; setRewardLoading(true);
+    const query=new URLSearchParams({start:effectiveRankingRange.start,end:effectiveRankingRange.end});
+    apiRequest(`/api/v1/admin/rewards?${query}`).then((data)=>{
+      if(!active)return;
+      setRewardPeople(data.ranking || []);
+      setPointRules((data.rules || []).map((rule)=>({...rule,id:rule.activityType,targetType:`전체 교육과정`,course:``,threshold:1,frequency:`조건 달성마다`})));
+      setBadges((data.badges || []).map((badge)=>({...badge,activityType:badge.metric,targetType:`전체 교육과정`,course:``})));
+      setRecentRewards(data.recent || []);
+    }).catch(()=>{if(active){setRewardPeople([]);setRecentRewards([]);}}).finally(()=>{if(active)setRewardLoading(false);});
+    return()=>{active=false;};
+  },[effectiveRankingRange.start,effectiveRankingRange.end]);
   const filteredRanking = ranking.filter(
     (item) => dept === `전체 부서` || item.dept === dept,
   );
   const period = formatAdminPeriod(effectiveRankingRange);
   const courseOptions = [];
-  const conditionUnit = (activity) => activity === `퀴즈 완료` ? `점 이상` : activity === `연속 학습` ? `주 이상` : activity.includes(`순위`) ? `위` : activity.includes(`TOP`) ? `위 이내` : `회 이상`;
-  const ruleSummary = (rule) => `${rule.targetType === `특정 교육과정` ? rule.course : `전체 과정`} · ${rule.activityType} ${rule.threshold}${conditionUnit(rule.activityType)} · ${rule.frequency}`;
-  const badgeSummary = (badge) => `${badge.targetType === `특정 교육과정` ? badge.course : `전체 과정`} · ${badge.activityType} ${badge.threshold}${conditionUnit(badge.activityType)}`;
-  const savePointRule = () => {
+  const rewardActivityLabels={LESSON_COMPLETE:`차시 완료`,COURSE_COMPLETE:`과정 수료`,QUIZ_COMPLETE:`퀴즈 완료`,SURVEY_SUBMIT:`설문 제출`,POINTS_TOTAL:`누적 포인트`};
+  const conditionUnit = (activity) => activity === `POINTS_TOTAL` ? `P 이상` : `회 이상`;
+  const ruleSummary = (rule) => `${rule.targetType === `특정 교육과정` ? rule.course : `전체 과정`} · ${rule.label||rewardActivityLabels[rule.activityType]||rule.activityType} · ${rule.frequency}`;
+  const badgeSummary = (badge) => `${badge.targetType === `특정 교육과정` ? badge.course : `전체 과정`} · ${rewardActivityLabels[badge.activityType]||badge.activityType} ${badge.threshold}${conditionUnit(badge.activityType)}`;
+  const savePointRule = async () => {
     if (pointRuleForm.targetType === `특정 교육과정` && !pointRuleForm.course) return alert(`적용할 교육과정을 선택해주세요.`);
     const rule = { ...pointRuleForm, points: Math.max(0, Number(pointRuleForm.points) || 0) };
-    setPointRules((current) => rule.id ? current.map((item) => item.id === rule.id ? rule : item) : [...current, { ...rule, id: Date.now() }]);
-    setPointRuleForm(null);
-    showAdminToast(`포인트 기준이 저장되었습니다.`);
+    try{const saved=await apiRequest(`/api/v1/admin/rewards/rules/${rule.activityType}`,{method:`PATCH`,body:JSON.stringify({points:rule.points,enabled:rule.enabled})});setPointRules((current)=>current.map((item)=>item.activityType===saved.activityType?{...item,...saved}:item));setPointRuleForm(null);showAdminToast(`포인트 기준이 저장되었습니다.`);}catch{showAdminToast(`포인트 기준을 저장하지 못했습니다.`);}
   };
-  const saveBadgeRule = () => {
+  const saveBadgeRule = async () => {
     if (!badgeRuleForm.name.trim()) return alert(`뱃지명을 입력해주세요.`);
     if (badgeRuleForm.targetType === `특정 교육과정` && !badgeRuleForm.course) return alert(`적용할 교육과정을 선택해주세요.`);
     const badge = { ...badgeRuleForm, threshold: Math.max(1, Number(badgeRuleForm.threshold) || 1) };
-    setBadges((current) => badge.id ? current.map((item) => item.id === badge.id ? badge : item) : [...current, { ...badge, id: Date.now(), people: 0, icon: Award01Icon, tone: `blue` }]);
-    setBadgeRuleForm(null);
-    showAdminToast(`뱃지 기준이 저장되었습니다.`);
+    try{const payload={name:badge.name,description:badge.description||badgeSummary(badge),metric:badge.activityType,threshold:badge.threshold,type:badge.type,tone:badge.tone||`blue`,enabled:badge.enabled};const saved=await apiRequest(badge.id?`/api/v1/admin/rewards/badges/${badge.id}`:`/api/v1/admin/rewards/badges`,{method:badge.id?`PATCH`:`POST`,body:JSON.stringify(payload)});setBadges((current)=>badge.id?current.map((item)=>item.id===badge.id?{...item,...saved,activityType:saved.metric}:item):[...current,{...saved,activityType:saved.metric,people:0}]);setBadgeRuleForm(null);showAdminToast(`뱃지 기준이 저장되었습니다.`);}catch{showAdminToast(`뱃지 기준을 저장하지 못했습니다.`);}
   };
   return (
     <section className="results-section rewards-page">
@@ -6313,14 +6311,7 @@ function LearningRewardsPage() {
             </div>
             {rankingScope === `individual` && (
               <select value={dept} onChange={(e) => setDept(e.target.value)}>
-                {[
-                  `전체 부서`,
-                  `People팀`,
-                  `개발팀`,
-                  `마케팅팀`,
-                  `세일즈팀`,
-                  `운영팀`,
-                ].map((v) => (
+                {[`전체 부서`, ...new Set(rewardPeople.map((item) => item.dept))].map((v) => (
                   <option key={v}>{v}</option>
                 ))}
               </select>
@@ -6345,7 +6336,7 @@ function LearningRewardsPage() {
                 </thead>
                 <tbody>
                   {filteredRanking.length === 0 && (
-                    <tr><td colSpan="7" className="table-empty">선택한 기간에 적립된 실제 학습 포인트가 없습니다.</td></tr>
+                    <tr><td colSpan="7" className="table-empty">{rewardLoading ? `리워드 데이터를 불러오고 있습니다.` : `선택한 기간에 적립된 실제 학습 포인트가 없습니다.`}</td></tr>
                   )}
                   {filteredRanking.map((item) => (
                     <tr key={item.rank} className={item.rank <= 3 ? `ranking-list-top rank-${item.rank}` : ``}>
@@ -6387,9 +6378,9 @@ function LearningRewardsPage() {
         </>
       ) : tab === `points` ? (
         <>
-          <div className="point-management-head"><div><h2>포인트 지급 기준</h2><p>실제 학습 활동과 지급 조건을 연결해 관리합니다.</p></div><button type="button" className="point-rule-add" onClick={() => setPointRuleForm({ id: null, activityType: `차시 완료`, targetType: `전체 교육과정`, course: ``, threshold: 1, frequency: `조건 달성마다`, points: 20, enabled: true })}><Icon icon={Add01Icon} size={16} />포인트 기준 추가</button></div>
+          <div className="point-management-head"><div><h2>포인트 지급 기준</h2><p>실제 학습 활동과 지급 조건을 연결해 관리합니다.</p></div></div>
           <div className="table-wrap results-table point-rule-table"><table><thead><tr><th>활동 유형</th><th>적용 조건</th><th>지급 포인트</th><th>상태</th><th>관리</th></tr></thead><tbody>{pointRules.length === 0 && <tr><td colSpan="5" className="table-empty">등록된 포인트 지급 기준이 없습니다.</td></tr>}{pointRules.map((rule) => <tr key={rule.id}><td><b>{rule.activityType}</b></td><td><span className="rule-target-summary">{ruleSummary(rule)}</span></td><td><strong>+{rule.points}P</strong></td><td><span className={`point-rule-status ${rule.enabled ? `enabled` : ``}`}>{rule.enabled ? `사용 중` : `사용 안 함`}</span></td><td><button type="button" className="analysis-button" onClick={() => setPointRuleForm({ ...rule })}>수정</button></td></tr>)}</tbody></table></div>
-          <div className="recent-point-section"><div><h2>최근 포인트 적립 내역</h2></div><div className="recent-point-list"><p className="table-empty">실제 포인트 적립 내역이 없습니다.</p></div></div>
+          <div className="recent-point-section"><div><h2>최근 포인트 적립 내역</h2></div><div className="recent-point-list">{recentRewards.length===0?<p className="table-empty">실제 포인트 적립 내역이 없습니다.</p>:recentRewards.map((item)=><div key={item.id}><b>{item.name}</b><span>{item.description || item.label}</span><strong>+{item.points}P</strong><time>{new Date(item.createdAt).toLocaleDateString(`ko-KR`)}</time></div>)}</div></div>
         </>
       ) : (
         <>
@@ -6398,7 +6389,7 @@ function LearningRewardsPage() {
               <h2>지급 뱃지</h2>
               <p>사전에 정의된 뱃지의 조건과 자동 지급 여부를 관리합니다.</p>
             </div>
-            <div className="badge-intro-actions"><span>활성 {badges.filter((badge) => badge.enabled).length}개</span><button type="button" className="point-rule-add" onClick={() => setBadgeRuleForm({ id: null, name: ``, activityType: `과정 수료`, targetType: `전체 교육과정`, course: ``, threshold: 1, type: `성취형`, enabled: true })}><Icon icon={Add01Icon} size={16} />뱃지 추가</button></div>
+            <div className="badge-intro-actions"><span>활성 {badges.filter((badge) => badge.enabled).length}개</span><button type="button" className="point-rule-add" onClick={() => setBadgeRuleForm({ id: null, name: ``, activityType: `COURSE_COMPLETE`, targetType: `전체 교육과정`, course: ``, threshold: 1, type: `성취형`, tone:`blue`, enabled: true })}><Icon icon={Add01Icon} size={16} />뱃지 추가</button></div>
           </div>
           <div className="badge-filter-tabs">
             {[`전체`, `랭킹형`, `성취형`].map((item) => <button key={item} className={badgeFilter === item ? `active` : ``} onClick={() => setBadgeFilter(item)}>{item}</button>)}
@@ -10525,52 +10516,36 @@ function MonthlyChallenges() {
 }
 function UserLearningRewards({ initialTab = `ranking` }) {
   const [tab, setTab] = r.useState(initialTab);
-  const [month, setMonth] = r.useState(`2026.08`);
-  const ranking = [
-    { rank:1, name:`이지은`, dept:`마케팅팀`, points:1420, streak:`5일 연속 학습`, tone:`coral` },
-    { rank:2, name:`김민지`, dept:`People팀`, points:1280, streak:`과정 3개 수료`, tone:`indigo` },
-    { rank:3, name:`박서연`, dept:`개발팀`, points:1190, streak:`퀴즈 정답률 96%`, tone:`mint` },
-    { rank:4, name:`정유진`, dept:`운영팀`, points:1120, tone:`violet` },
-    { rank:5, name:`최현우`, dept:`영업팀`, points:1100, tone:`orange` },
-    { rank:6, name:`한서준`, dept:`개발팀`, points:1080, tone:`blue` },
-    { rank:7, name:`윤하늘`, dept:`마케팅팀`, points:1085, tone:`pink` },
-    { rank:8, name:`김수민`, dept:`People팀`, points:1040, me:true, tone:`indigo` },
-    { rank:9, name:`이민호`, dept:`재무팀`, points:980, tone:`mint` },
-    { rank:10, name:`조아라`, dept:`운영팀`, points:940, tone:`coral` },
-  ];
-  const badges = [
-    { type:`medal`, title:`이달의 TOP 3`, condition:`월간 학습 랭킹 3위 이내`, date:`2026.07 획득`, tone:`gold` },
-    { type:`trophy`, title:`수료 마스터`, condition:`과정 5개 수료`, date:`2026.08 획득`, tone:`blue` },
-    { type:`star`, title:`필수교육 완료`, condition:`필수 과정 전체 수료`, date:`2026.08 획득`, tone:`mint` },
-    { type:`flame`, title:`꾸준한 학습자`, condition:`3주 연속 학습`, date:`2026.08 획득`, tone:`violet` },
-    { type:`quiz`, title:`퀴즈 마스터`, condition:`퀴즈 정답률 90% 달성 시 획득`, date:`아직 획득하지 않았어요`, tone:`pink`, locked:true },
-    { type:`badge`, title:`성장의 달인`, condition:`한 달 동안 500P 적립 시 획득`, date:`320 / 500P`, tone:`orange`, locked:true },
-  ];
-  const pointHistory = [
-    { type:`course`, label:`과정 수료`, detail:`데이터 분석 기초 입문`, points:100, date:`08.12` },
-    { type:`completion`, label:`차시 완료`, detail:`생성형 AI 업무 활용 3차시`, points:20, date:`08.11` },
-    { type:`quiz`, label:`퀴즈 완료`, detail:`개인정보보호 필수 확인 문제`, points:50, date:`08.10` },
-    { type:`survey`, label:`설문 제출`, detail:`리더십 기본 과정 만족도 조사`, points:10, date:`08.08` },
-  ];
+  const currentMonth=new Date().toISOString().slice(0,7);
+  const [month, setMonth] = r.useState(currentMonth.replace(`-`,`.`));
+  const [rewardData,setRewardData]=r.useState({ranking:[],me:{rank:null,name:``,dept:`소속 미지정`,points:0},totalPoints:0,transactions:[],rules:[],badges:[]});
+  const [rewardLoading,setRewardLoading]=r.useState(true);
+  r.useEffect(()=>{let active=true;setRewardLoading(true);apiRequest(`/api/v1/rewards/me?month=${month.replace(`.`,`-`)}`).then((data)=>{if(active)setRewardData(data);}).catch(()=>{if(active)setRewardData({ranking:[],me:{rank:null,name:``,dept:`소속 미지정`,points:0},totalPoints:0,transactions:[],rules:[],badges:[]});}).finally(()=>{if(active)setRewardLoading(false);});return()=>{active=false;};},[month]);
+  const tones=[`coral`,`indigo`,`mint`,`violet`,`orange`,`blue`,`pink`];
+  const ranking=(rewardData.ranking||[]).map((person,index)=>({...person,me:person.id===rewardData.me?.id,tone:tones[index%tones.length]}));
+  const me=rewardData.me||{rank:null,name:``,dept:`소속 미지정`,points:0};
+  const badges=(rewardData.badges||[]).map((badge)=>({type:badge.metric===`QUIZ_COMPLETE`?`quiz`:badge.metric===`COURSE_COMPLETE`?`trophy`:`medal`,title:badge.name,condition:badge.description,date:badge.awardedAt?`${new Date(badge.awardedAt).toLocaleDateString(`ko-KR`)} 획득`:`아직 획득하지 않았어요`,tone:badge.tone||`blue`,locked:!badge.awardedAt}));
+  const pointHistory=(rewardData.transactions||[]).map((item)=>({type:item.activityType===`COURSE_COMPLETE`?`course`:item.activityType===`QUIZ_COMPLETE`?`quiz`:item.activityType===`SURVEY_SUBMIT`?`survey`:`completion`,label:item.label,detail:item.description,points:item.points,date:new Date(item.createdAt).toLocaleDateString(`ko-KR`,{month:`2-digit`,day:`2-digit`})}));
+  const podium=ranking.length>=3?[ranking[1],ranking[0],ranking[2]]:ranking;
+  const nextPerson=me.rank&&me.rank>1?ranking.find((person)=>person.rank===me.rank-1):null;
   const tabs = [[`ranking`,RankingIcon,`랭킹`],[`badges`,Award01Icon,`뱃지 컬렉션`],[`points`,SparklesIcon,`포인트`]];
   return <main className="page user-rewards-page reward-game-page">
     <div className="reward-fullbleed-canvas" aria-hidden="true" />
     <div className="reward-confetti" aria-hidden="true">{Array.from({length:14},(_,index) => <i key={index} />)}</div>
     <section className="reward-league-hero">
       <div className="reward-hero-pattern" aria-hidden="true" />
-      <div className="reward-league-copy"><nav>홈 <span>›</span> 학습 리워드</nav><span className="reward-season">2026 AUGUST SEASON</span><h1>8월 Learning League</h1><p>이번 달 학습으로 쌓은 성과와 다음 목표를 확인해보세요.</p><div className="reward-hero-score"><span><small>내 순위</small><b>8위</b></span><span><small>학습 포인트</small><b>1,040P</b></span></div></div>
-      <article className="reward-me-card"><RewardAvatar tone="indigo" /><div><span>김수민 · People팀</span><strong>현재 8위</strong><small>지난달보다 <b>3계단 상승</b></small></div><div className="next-rank"><p><b>7위까지 45P</b><span>1,040 / 1,085P</span></p><div><i style={{width:`74%`}} /></div></div></article>
+      <div className="reward-league-copy"><nav>홈 <span>›</span> 학습 리워드</nav><span className="reward-season">{month.replace(`.`,` / `)} SEASON</span><h1>{Number(month.slice(5))}월 Learning League</h1><p>이번 달 학습으로 쌓은 성과와 다음 목표를 확인해보세요.</p><div className="reward-hero-score"><span><small>내 순위</small><b>{me.rank?`${me.rank}위`:`-`}</b></span><span><small>학습 포인트</small><b>{Number(me.points||0).toLocaleString()}P</b></span></div></div>
+      <article className="reward-me-card"><RewardAvatar tone="indigo" /><div><span>{me.name||`학습자`} · {me.dept||`소속 미지정`}</span><strong>{me.rank?`현재 ${me.rank}위`:`아직 순위가 없습니다`}</strong><small>{rewardLoading?`리워드 정보를 불러오는 중입니다.`:`학습을 완료하면 포인트가 자동 적립됩니다.`}</small></div><div className="next-rank"><p><b>{nextPerson?`${nextPerson.rank}위까지 ${Math.max(0,nextPerson.points-me.points)}P`:`이번 달 누적 포인트`}</b><span>{Number(me.points||0).toLocaleString()}P</span></p><div><i style={{width:nextPerson?`${Math.min(100,Math.round(100*me.points/Math.max(1,nextPerson.points)))}%`:`0%`}} /></div></div></article>
       <div className="reward-hero-object"><RewardObject type="trophy" tone="gold" /><i className="hero-spark one" /><i className="hero-spark two" /></div>
     </section>
     <div className="user-reward-tabs reward-tabs" role="tablist">{tabs.map(([value,icon,label]) => <button key={value} className={tab === value ? `active` : ``} onClick={() => setTab(value)}><Icon icon={icon} size={17} />{label}</button>)}</div>
     {tab === `ranking` && <section className="user-ranking-view reward-ranking-view">
       <div className="user-reward-toolbar"><div><span className="section-eyebrow">LEADERBOARD</span><h2>이번 달 TOP 3</h2><p>꾸준히 학습한 멤버들이 시상대에 올랐어요.</p></div><label className="reward-month-picker"><span>조회 월</span><select aria-label="조회 월" value={month} onChange={(event) => setMonth(event.target.value)}>{Array.from({length:12},(_,index) => <option key={index + 1} value={`2026.${String(index + 1).padStart(2,`0`)}`}>2026년 {index + 1}월</option>)}</select></label></div>
-      <div className="reward-podium">{[ranking[1],ranking[0],ranking[2]].map((person) => <article className={`reward-podium-card rank-${person.rank}`} key={person.rank}><div className="podium-avatar"><RewardAvatar tone={person.tone} crown={person.rank === 1} /><span>{person.rank}</span></div><div className="podium-card-copy"><em>{person.rank === 1 ? `CHAMPION` : `${person.rank}ND PLACE`.replace(`3ND`,`3RD`)}</em><h3>{person.name}</h3><p>{person.dept}</p><strong>{person.points.toLocaleString()}P</strong><small>{person.streak}</small></div><div className="podium-base"><b>{person.rank}</b></div></article>)}</div>
-      <div className="reward-leaderboard"><header><div><span className="section-eyebrow">ALL RANKING</span><h2>전체 랭킹</h2></div><span>{month.replace(`.`,`년 `)}월</span></header><div className="leaderboard-list">{ranking.map((person) => <div className={`leaderboard-row ${person.me ? `me` : ``}`} key={person.rank}><b className="leaderboard-rank">{String(person.rank).padStart(2,`0`)}</b><RewardAvatar tone={person.tone} small /><p><strong>{person.name}{person.me && <em>나</em>}</strong><small>{person.dept}</small></p><strong className="leaderboard-points">{person.points.toLocaleString()}P</strong></div>)}</div></div>
-      <MonthlyChallenges />
+      <div className="reward-podium">{podium.map((person) => <article className={`reward-podium-card rank-${person.rank}`} key={person.id||person.rank}><div className="podium-avatar"><RewardAvatar tone={person.tone} crown={person.rank === 1} /><span>{person.rank}</span></div><div className="podium-card-copy"><em>{person.rank === 1 ? `CHAMPION` : `${person.rank} PLACE`}</em><h3>{person.name}</h3><p>{person.dept}</p><strong>{Number(person.points).toLocaleString()}P</strong><small>{person.courses}개 과정 수료</small></div><div className="podium-base"><b>{person.rank}</b></div></article>)}</div>
+      <div className="reward-leaderboard"><header><div><span className="section-eyebrow">ALL RANKING</span><h2>전체 랭킹</h2></div><span>{month.replace(`.`,`년 `)}월</span></header><div className="leaderboard-list">{ranking.length===0?<p className="table-empty">{rewardLoading?`랭킹을 불러오고 있습니다.`:`이번 달 적립된 포인트가 없습니다.`}</p>:ranking.map((person) => <div className={`leaderboard-row ${person.me ? `me` : ``}`} key={person.id||person.rank}><b className="leaderboard-rank">{String(person.rank).padStart(2,`0`)}</b><RewardAvatar tone={person.tone} small /><p><strong>{person.name}{person.me && <em>나</em>}</strong><small>{person.dept}</small></p><strong className="leaderboard-points">{Number(person.points).toLocaleString()}P</strong></div>)}</div></div>
     </section>}
-    {tab === `badges` && <section className="user-badge-view reward-badge-view"><div className="user-reward-section-head"><div><span className="section-eyebrow">ACHIEVEMENT COLLECTION</span><h2>나의 뱃지 컬렉션</h2><p>획득한 뱃지 4개 · 다음 목표에도 도전해보세요.</p></div><span>4 / 6</span></div><div className="reward-badge-grid">{badges.map((badge) => <article className={`${badge.tone} ${badge.locked ? `locked` : ``}`} key={badge.title}><span className="badge-rarity">{badge.locked ? `LOCKED` : badge.tone === `gold` ? `LEGENDARY` : `ACHIEVEMENT`}</span><div className="badge-object-wrap"><i className="badge-ring" /><RewardObject type={badge.type} tone={badge.tone} />{badge.locked && <span className="badge-lock"><Icon icon={LockPasswordIcon} size={15} /></span>}</div><small className="badge-state">{badge.locked ? `도전 중` : <><Icon icon={CheckmarkCircle02Icon} size={13} />획득 완료</>}</small><h3>{badge.title}</h3><p>{badge.condition}</p><time>{badge.date}</time></article>)}</div><MonthlyChallenges /></section>}
-    {tab === `points` && <section className="user-point-view reward-point-view"><article className="reward-wallet"><div><span className="section-eyebrow">MY LEARNING WALLET</span><small>나의 학습 포인트</small><strong>1,040P</strong><p>이번 달 <b>+320P</b></p></div><PointCoin large /><i /><i /></article><div className="reward-point-grid"><section className="reward-activity"><div className="user-reward-section-head"><div><h2>최근 적립 내역</h2><p>학습할수록 포인트가 차곡차곡 쌓여요.</p></div></div><div>{pointHistory.map((item) => <article key={`${item.label}-${item.date}`}><PointCoin type={item.type} /><p><b>{item.label}</b><small>{item.detail}</small></p><strong>+{item.points}P</strong><time>{item.date}</time></article>)}</div></section><section className="reward-rules"><div className="user-reward-section-head"><div><h2>포인트 적립 방법</h2><p>현재 적용 중인 보상 기준이에요.</p></div></div><div>{[[`completion`,`차시 완료`,`+20P`],[`course`,`과정 수료`,`+100P`],[`quiz`,`퀴즈 완료`,`+50P`],[`survey`,`설문 제출`,`+10P`]].map(([type,label,value]) => <article key={label}><PointCoin type={type} /><b>{label}</b><strong>{value}</strong></article>)}</div></section></div><MonthlyChallenges /></section>}
+    {tab === `badges` && <section className="user-badge-view reward-badge-view"><div className="user-reward-section-head"><div><span className="section-eyebrow">ACHIEVEMENT COLLECTION</span><h2>나의 뱃지 컬렉션</h2><p>실제 학습 활동을 통해 획득한 뱃지입니다.</p></div><span>{badges.filter((badge)=>!badge.locked).length} / {badges.length}</span></div><div className="reward-badge-grid">{badges.length===0?<p className="table-empty">등록된 뱃지가 없습니다.</p>:badges.map((badge) => <article className={`${badge.tone} ${badge.locked ? `locked` : ``}`} key={badge.title}><span className="badge-rarity">{badge.locked ? `LOCKED` : badge.tone === `gold` ? `LEGENDARY` : `ACHIEVEMENT`}</span><div className="badge-object-wrap"><i className="badge-ring" /><RewardObject type={badge.type} tone={badge.tone} />{badge.locked && <span className="badge-lock"><Icon icon={LockPasswordIcon} size={15} /></span>}</div><small className="badge-state">{badge.locked ? `도전 중` : <><Icon icon={CheckmarkCircle02Icon} size={13} />획득 완료</>}</small><h3>{badge.title}</h3><p>{badge.condition}</p><time>{badge.date}</time></article>)}</div></section>}
+    {tab === `points` && <section className="user-point-view reward-point-view"><article className="reward-wallet"><div><span className="section-eyebrow">MY LEARNING WALLET</span><small>나의 학습 포인트</small><strong>{Number(rewardData.totalPoints||0).toLocaleString()}P</strong><p>이번 달 <b>+{Number(me.points||0).toLocaleString()}P</b></p></div><PointCoin large /><i /><i /></article><div className="reward-point-grid"><section className="reward-activity"><div className="user-reward-section-head"><div><h2>최근 적립 내역</h2><p>학습할수록 포인트가 차곡차곡 쌓여요.</p></div></div><div>{pointHistory.length===0?<p className="table-empty">아직 적립된 포인트가 없습니다.</p>:pointHistory.map((item,index) => <article key={`${item.label}-${item.date}-${index}`}><PointCoin type={item.type} /><p><b>{item.label}</b><small>{item.detail}</small></p><strong>+{item.points}P</strong><time>{item.date}</time></article>)}</div></section><section className="reward-rules"><div className="user-reward-section-head"><div><h2>포인트 적립 방법</h2><p>현재 적용 중인 보상 기준이에요.</p></div></div><div>{(rewardData.rules||[]).map((rule) => <article key={rule.activityType}><PointCoin type={rule.activityType===`COURSE_COMPLETE`?`course`:rule.activityType===`QUIZ_COMPLETE`?`quiz`:rule.activityType===`SURVEY_SUBMIT`?`survey`:`completion`} /><b>{rule.label}</b><strong>+{rule.points}P</strong></article>)}</div></section></div></section>}
   </main>;
 }
 function te({ courses: e, allCourses = [], wishlistIds = [], toggleWishlist, go: t, notify: n }) {

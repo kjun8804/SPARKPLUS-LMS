@@ -9,6 +9,8 @@ import { createAdminRouter } from "./routes/admin.js";
 import { createLeaderRouter } from "./routes/leader.js";
 import { createCoursesRouter } from "./routes/courses.js";
 import { createLearningRouter } from "./routes/learning.js";
+import { ensureLearningSchema } from "./database/learning-schema.js";
+import { createAdminRewardsRouter, createRewardsRouter } from "./routes/rewards.js";
 
 interface AppOptions {
   sessionStore?: session.Store;
@@ -36,6 +38,10 @@ export function createApp(config: AppConfig, pool: DatabasePool, options: AppOpt
     },
   }));
 
+  app.use(async (_request, _response, next) => {
+    try { await ensureLearningSchema(pool); next(); } catch (error) { next(error); }
+  });
+
   app.get(["/health", "/api/health"], async (_request, response, next) => {
     try {
       await pool.query("SELECT 1");
@@ -50,6 +56,8 @@ export function createApp(config: AppConfig, pool: DatabasePool, options: AppOpt
   app.use("/api/v1/leader", createLeaderRouter(pool));
   app.use("/api/v1/courses", createCoursesRouter(pool));
   app.use("/api/v1/learning", createLearningRouter(pool, config));
+  app.use("/api/v1/rewards", createRewardsRouter(pool));
+  app.use("/api/v1/admin/rewards", createAdminRewardsRouter(pool));
 
   app.use((_request, response) => response.status(404).json({ data: null, error: { code: "NOT_FOUND" } }));
 

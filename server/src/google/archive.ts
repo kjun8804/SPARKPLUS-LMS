@@ -12,7 +12,7 @@ function cell(value: unknown) {
 }
 
 export async function buildArchiveTables(pool: DatabasePool): Promise<Table[]> {
-  const [users, organizations, audits, completions] = await Promise.all([
+  const [users, organizations, audits, completions, rewards, badges] = await Promise.all([
     pool.query(`SELECT u.employee_number AS "employeeNumber", u.name, u.email,
       COALESCE(o.name, '') AS "organizationName", COALESCE(u.position, '') AS position,
       u.role, u.status, u.last_login_at AS "lastLoginAt", u.created_at AS "createdAt", u.updated_at AS "updatedAt"
@@ -29,6 +29,11 @@ export async function buildArchiveTables(pool: DatabasePool): Promise<Table[]> {
       EXISTS(SELECT 1 FROM quiz_attempts qa WHERE qa.enrollment_id=e.id) AS "quizCompleted"
       FROM enrollments e JOIN users u ON u.id=e.user_id JOIN courses c ON c.id=e.course_id
       WHERE e.status='COMPLETED' ORDER BY e.completed_at DESC`),
+    pool.query(`SELECT u.employee_number AS "employeeNumber",u.name,u.email,rr.label,rt.description,rt.points,rt.source_key AS "sourceKey",rt.created_at AS "createdAt"
+      FROM reward_transactions rt JOIN users u ON u.id=rt.user_id JOIN reward_rules rr ON rr.activity_type=rt.activity_type
+      ORDER BY rt.created_at DESC`),
+    pool.query(`SELECT u.employee_number AS "employeeNumber",u.name,br.name AS "badgeName",br.description,ub.awarded_at AS "awardedAt"
+      FROM user_badges ub JOIN users u ON u.id=ub.user_id JOIN badge_rules br ON br.id=ub.badge_rule_id ORDER BY ub.awarded_at DESC`),
   ]);
   return [
     { sheet: "사용자", values: [["사번","이름","이메일","조직","직책","권한","상태","최근 로그인","등록일","수정일"],
@@ -39,6 +44,10 @@ export async function buildArchiveTables(pool: DatabasePool): Promise<Table[]> {
       ...completions.rows.map((row) => [row.employeeNumber,row.name,row.title,row.required?"필수":"선택",cell(row.completedAt),row.progress,row.quizCompleted?"완료":"해당 없음",row.status])] },
     { sheet: "변경이력", values: [["작업","대상","작업자","변경 전","변경 후","일시"],
       ...audits.rows.map((row) => [row.action,row.targetType,row.actor,cell(row.beforeData),cell(row.afterData),cell(row.createdAt)])] },
+    { sheet: "포인트이력", values: [["사번","이름","이메일","활동","상세","포인트","중복방지키","적립일"],
+      ...rewards.rows.map((row) => [row.employeeNumber,row.name,row.email,row.label,row.description,row.points,row.sourceKey,cell(row.createdAt)])] },
+    { sheet: "뱃지이력", values: [["사번","이름","뱃지","설명","획득일"],
+      ...badges.rows.map((row) => [row.employeeNumber,row.name,row.badgeName,row.description,cell(row.awardedAt)])] },
   ];
 }
 
@@ -77,7 +86,7 @@ export async function syncGoogleArchive(config: AppConfig, pool: DatabasePool) {
   const spreadsheetId = config.GOOGLE_SHEET_ID;
   const metadata = await client.request<any>({ url: `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}?fields=sheets.properties.title` });
   const existing = new Set((metadata.data.sheets || []).map((sheet: any) => sheet.properties.title));
-  const required = ["사용자","조직","수료이력","변경이력","동기화기록"];
+  const required = ["사용자","조직","수료이력","변경이력","포인트이력","뱃지이력","동기화기록"];
   const missing = required.filter((name) => !existing.has(name));
   if (missing.length) await client.request({ method: "POST", url: `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}:batchUpdate`,
     data: { requests: missing.map((title) => ({ addSheet: { properties: { title } } })) } });
