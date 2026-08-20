@@ -964,6 +964,10 @@ function CourseAdminGrid({ onEdit, onCreate }) {
   const [courseLoading, setCourseLoading] = r.useState(true);
   const [openMenu, setOpenMenu] = r.useState(null);
   const [deleteTarget, setDeleteTarget] = r.useState(null);
+  const [tagSettings,setTagSettings]=r.useState([]);
+  const [featuredTags,setFeaturedTags]=r.useState([]);
+  const [tagPanelOpen,setTagPanelOpen]=r.useState(false);
+  const [tagSaving,setTagSaving]=r.useState(false);
   const filtered = courses
     .filter(
       (course) =>
@@ -975,7 +979,8 @@ function CourseAdminGrid({ onEdit, onCreate }) {
     .sort((first, second) =>
       sort === `최신 등록순` ? second.id - first.id : first.id - second.id,
     );
-  r.useEffect(() => { apiRequest(`/api/v1/courses`).then((items) => setCourses(items.map((course) => ({ ...course, status: ({ DRAFT:`오픈 전`, OPEN:`운영 중`, CLOSED:`종료` })[course.status] || course.status, period: course.startDate && course.endDate ? `${String(course.startDate).slice(0,10).replaceAll(`-`,`.`)} ~ ${String(course.endDate).slice(0,10).replaceAll(`-`,`.`)}` : `기간 미설정` })))).catch(() => {}).finally(() => setCourseLoading(false)); }, []);
+  r.useEffect(() => { Promise.all([apiRequest(`/api/v1/courses`),apiRequest(`/api/v1/courses/tags/settings`)]).then(([items,tags])=>{setCourses(items.map((course) => ({ ...course, status: ({ DRAFT:`오픈 전`, OPEN:`운영 중`, CLOSED:`종료` })[course.status] || course.status, period: course.startDate && course.endDate ? `${String(course.startDate).slice(0,10).replaceAll(`-`,`.`)} ~ ${String(course.endDate).slice(0,10).replaceAll(`-`,`.`)}` : `기간 미설정` })));setTagSettings(tags);setFeaturedTags(tags.filter((tag)=>tag.featured).map((tag)=>tag.tag));}).catch(() => {}).finally(() => setCourseLoading(false)); }, []);
+  const saveFeaturedTags=async()=>{setTagSaving(true);try{const saved=await apiRequest(`/api/v1/courses/tags/featured`,{method:`PUT`,body:JSON.stringify({tags:featuredTags})});setFeaturedTags(saved);showAdminToast(`학습자 빠른 선택 태그가 저장되었습니다.`);setTagPanelOpen(false);}catch{showAdminToast(`빠른 선택 태그를 저장하지 못했습니다.`,`error`);}finally{setTagSaving(false);}};
   const openCourse = async (course) => { try { const detail = await apiRequest(`/api/v1/courses/${course.id}`); onEdit({ ...course, ...detail, status: ({ DRAFT:`오픈 전`, OPEN:`운영 중`, CLOSED:`종료` })[detail.status] || detail.status, curriculum: detail.lessons }); } catch { showAdminToast(`교육과정을 불러오지 못했습니다.`, `error`); } };
   const deleteCourse = (course) => {
     setDeleteTarget(course);
@@ -1015,9 +1020,11 @@ function CourseAdminGrid({ onEdit, onCreate }) {
           <select className="course-sort-select" aria-label="교육과정 정렬" value={sort} onChange={(event) => setSort(event.target.value)}>
             <option>최신 등록순</option><option>오래된 등록순</option>
           </select>
+          <button type="button" className="secondary" onClick={()=>setTagPanelOpen((open)=>!open)}>빠른 선택 태그 관리</button>
           <button type="button" className="primary course-create-compact" onClick={onCreate}><Icon icon={Add01Icon} size={16} />새 교육과정 등록</button>
         </div>
       </div>
+      {tagPanelOpen && <section className="admin-featured-tags-panel"><div><h3>빠른 선택 태그 관리</h3><p>과정에 등록된 해시태그 중 학습자 교육과정 조회 화면에 노출할 태그를 선택하세요. 최대 8개까지 노출됩니다.</p></div><div className="admin-featured-tag-list">{tagSettings.map((item)=><label className={featuredTags.includes(item.tag)?`selected`:``} key={item.tag}><input type="checkbox" checked={featuredTags.includes(item.tag)} disabled={!featuredTags.includes(item.tag)&&featuredTags.length>=8} onChange={()=>setFeaturedTags((current)=>current.includes(item.tag)?current.filter((tag)=>tag!==item.tag):[...current,item.tag])}/><span>#{item.tag}</span><small>{item.courseCount}개 과정</small></label>)}</div>{tagSettings.length===0&&<div className="admin-course-empty">과정에 등록된 해시태그가 없습니다.</div>}<div className="admin-featured-tag-actions"><button className="secondary" onClick={()=>setTagPanelOpen(false)}>취소</button><button className="primary" disabled={tagSaving} onClick={saveFeaturedTags}>{tagSaving?`저장 중...`:`노출 설정 저장`}</button></div></section>}
       <div className="admin-course-card-grid">
         {filtered.map((course, index) => (
           <article
@@ -1327,6 +1334,7 @@ function CourseEditorV2({ selected, onBack, isNew = false }) {
     thumbnail: selected.thumbnail || ``,
     introduction: isNew ? `` : selected.description || `${selected.title} 과정의 핵심 개념을 이해하고 실제 업무에 활용할 수 있도록 구성된 교육과정입니다.`,
     curriculumSummary: isNew ? `` : selected.curriculumSummary || `기초 개념부터 실무 적용까지 단계적으로 학습합니다.`,
+    tags: isNew ? [] : selected.tags || [],
     lessons: isNew ? [] : selected.curriculum || baseLessons,
     surveyEnabled: isNew ? false : selected.surveyEnabled ?? true,
     googleFormUrl: isNew ? `` : selected.googleFormUrl || SAMPLE_GOOGLE_FORM_URL,
@@ -1344,6 +1352,7 @@ function CourseEditorV2({ selected, onBack, isNew = false }) {
     assignmentDeadlineEnabled: Boolean(storedAssignment.deadline),
     assignmentDeadline: storedAssignment.deadline || ``,
   });
+  const [tagInput,setTagInput]=r.useState((isNew?[]:selected.tags||[]).map((tag)=>`#${tag}`).join(`, `));
   const [editingIndex, setEditingIndex] = r.useState(null);
   const [activeSection, setActiveSection] = r.useState(`basic`);
   const [dirty, setDirty] = r.useState(false);
@@ -1510,6 +1519,7 @@ function CourseEditorV2({ selected, onBack, isNew = false }) {
       title:form.title, category:form.category, level:form.level || `레벨 1`, status:({ '오픈 전':`DRAFT`, '운영 중':`OPEN`, '종료':`CLOSED` })[form.status] || `DRAFT`,
       description:form.introduction, curriculumSummary:form.curriculumSummary, thumbnail:form.thumbnail || null, startDate:form.startDate || null, endDate:form.endDate || null,
       surveyEnabled:form.surveyEnabled, googleFormUrl:form.googleFormUrl || null, completionThreshold:60,
+      tags:[...new Set(tagInput.split(/[,\s]+/).map((tag)=>tag.replace(/^#+/,``).trim()).filter(Boolean))].slice(0,12),
       lessons:form.lessons.map((item) => ({ title:item.title, description:item.description || ``, durationMinutes:parseInt(item.duration,10)||item.durationMinutes||0,
         videoType:item.videoType || `YOUTUBE`, videoUrl:item.videoUrl || null, driveFileId:item.driveFileId || null, attachmentName:item.attachments || item.attachmentName || null,
         attachmentDriveFileId:item.attachmentDriveFileId || null, goals:item.goals || ``, contents:item.contents || ``, completionThreshold:item.videoType === `DRIVE` ? 90 : 60,
@@ -1685,6 +1695,11 @@ function CourseEditorV2({ selected, onBack, isNew = false }) {
               placeholder="교육과정에 대한 소개를 입력해주세요."
               onChange={(event) => update(`introduction`, event.target.value)}
             />
+          </label>
+          <label className="wide course-tag-field">
+            해시태그
+            <input value={tagInput} placeholder="#신입사원, #리더십, #AI" onChange={(event)=>{setTagInput(event.target.value);setDirty(true);}}/>
+            <small>쉼표 또는 띄어쓰기로 구분해 최대 12개까지 입력할 수 있습니다. 노출 여부는 교육과정 목록의 ‘빠른 선택 태그 관리’에서 설정합니다.</small>
           </label>
         </div>
         <div className="course-assignment-section">
@@ -8902,8 +8917,8 @@ function getUserNoticeData() {
     const published = managed
       .filter((notice) => notice.status === `게시 중` && (notice.target === `전체 임직원` || notice.target?.includes(`People팀`) || notice.target?.includes(`수강자`)))
       .map((notice) => ({ ...notice, writer: `LMS 관리자`, date: (notice.start || `2026-08-11`).replaceAll(`-`, `.`) }));
-    return [...published, ...j.filter((notice) => !published.some((item) => item.title === notice.title))].sort((left, right) => Number(right.important) - Number(left.important) || right.date.localeCompare(left.date));
-  } catch { return j; }
+    return published.sort((left, right) => Number(right.important) - Number(left.important) || right.date.localeCompare(left.date));
+  } catch { return []; }
 }
 function M() {
   let [theme, setTheme] = (0, r.useState)(
@@ -9008,7 +9023,7 @@ function M() {
         h.filter((e) => {
           let t = D.search.toLowerCase();
           return (
-            (!t || `${e.title} ${e.description}`.toLowerCase().includes(t)) &&
+            (!t || `${e.title} ${e.description} ${(e.tags||[]).join(` `)}`.toLowerCase().includes(t)) &&
             (D.category === `전체 분야` || e.category === D.category) &&
             (D.level === `전체 레벨` || e.level === D.level) &&
             (D.recruit === `전체 상태` || userCourseStatus(e.status) === D.recruit)
@@ -9133,17 +9148,9 @@ function M() {
                 applyFilters: () =>
                   k({ search: y, category: x, level: C, recruit: T }),
                 quickTag: (e) => {
-                  let t =
-                    e === `리더십`
-                      ? `리더십`
-                      : e === `AI`
-                        ? `AI·DX`
-                        : e === `필수교육`
-                          ? `법정의무`
-                          : `전체 분야`;
                   (b(e),
-                    S(t),
-                    k({ search: e, category: t, level: C, recruit: T }));
+                    S(`전체 분야`),
+                    k({ search: e, category: `전체 분야`, level: C, recruit: T }));
                 },
                 reset: () => {
                   (b(``),
@@ -9412,6 +9419,14 @@ function F({
                   e === `user` &&
                     (0, i.jsxs)(i.Fragment, {
                       children: [
+                        canAccessAdmin && (0, i.jsxs)(`button`, {
+                          className: `profile-admin-switch`,
+                          onClick: onSwitchAdmin,
+                          children: [
+                            (0, i.jsx)(`span`, { children: `관리자 화면으로 전환` }),
+                            (0, i.jsx)(`em`, { children: `›` }),
+                          ],
+                        }),
                         (0, i.jsxs)(`button`, {
                           onClick: () => n(`profile`),
                           children: [
@@ -9463,18 +9478,13 @@ function PageHeader({ kicker: e, title: t, description: n, action: r, hero = fal
     ],
   });
 }
-function L({ courses: e, go: t, notices = j, user = CURRENT_USER }) {
-  let n = e.find((course) => !isCourseCompleted(course)) ?? e[0] ?? O[0];
-  const ranking = [
-    { rank: 1, name: `이지은`, dept: `마케팅팀`, score: 1280 },
-    { rank: 2, name: `정유진`, dept: `운영팀`, score: 1160 },
-    { rank: 3, name: `김지수`, dept: `People팀`, score: 1040 },
-  ];
-  const popular = [
-    { ...O[5], likes: 126 },
-    { ...O[2], likes: 98 },
-    { ...O[1], likes: 87 },
-  ];
+function L({ courses: e, go: t, notices = [], user = CURRENT_USER }) {
+  const n = e.find((course) => !isCourseCompleted(course)) ?? e[0] ?? null;
+  const [homeData,setHomeData]=r.useState({stats:{inProgress:0,completed:0,rank:null},ranking:[],popular:[],badges:[]});
+  const [homeLoading,setHomeLoading]=r.useState(true);
+  r.useEffect(()=>{let active=true;apiRequest(`/api/v1/learning/home`).then((data)=>active&&setHomeData(data)).catch(()=>{}).finally(()=>active&&setHomeLoading(false));return()=>{active=false;};},[]);
+  const ranking=homeData.ranking||[],popular=homeData.popular||[],badges=homeData.badges||[];
+  const todayLabel=new Intl.DateTimeFormat(`ko-KR`,{month:`long`,day:`numeric`,weekday:`long`}).format(new Date());
   return (
     <main className="page dashboard-page home-minimal">
       <section className="home-welcome">
@@ -9483,7 +9493,7 @@ function L({ courses: e, go: t, notices = j, user = CURRENT_USER }) {
             <HomeGreetingSticker />
           </div>
           <div className="home-welcome-copy">
-            <span>8월 10일 월요일</span>
+            <span>{todayLabel}</span>
             <h1>
               <span>{user.name}님,</span>
               <span>오늘도 가볍게 시작해볼까요?</span>
@@ -9493,15 +9503,15 @@ function L({ courses: e, go: t, notices = j, user = CURRENT_USER }) {
         <div className="home-quick-stats">
           <div>
             <span>수강 중</span>
-            <b>3</b>
+            <b>{homeData.stats?.inProgress ?? 0}</b>
           </div>
           <div>
             <span>수료</span>
-            <b>12</b>
+            <b>{homeData.stats?.completed ?? 0}</b>
           </div>
           <div>
             <span>현재 순위</span>
-            <b>3위</b>
+            <b>{homeData.stats?.rank ? `${homeData.stats.rank}위` : `-`}</b>
           </div>
         </div>
       </section>
@@ -9514,7 +9524,7 @@ function L({ courses: e, go: t, notices = j, user = CURRENT_USER }) {
             </span>
             이어서 학습하기
           </div>
-          <div className="home-continue-content">
+          {n ? <div className="home-continue-content">
             <J accent={n.accent} label={n.category} />
             <div>
               <small>
@@ -9523,14 +9533,14 @@ function L({ courses: e, go: t, notices = j, user = CURRENT_USER }) {
               <h2>{n.title}</h2>
               {n.requiredTraining && <div className="course-title-status-line"><RequiredTrainingBadge deadline={n.assignmentDeadline} compact completed={isCourseCompleted(n)} /></div>}
               <div className="home-progress-line">
-                <Z value={n.progress ?? 65} />
-                <span>{n.progress ?? 65}%</span>
+                <Z value={n.progress ?? 0} />
+                <span>{n.progress ?? 0}%</span>
               </div>
               <button className="primary" onClick={() => t(`player`, n.id)}>
                 학습 이어가기 <Icon icon={ArrowRight01Icon} />
               </button>
             </div>
-          </div>
+          </div> : <div className="home-data-empty">현재 수강 중인 교육과정이 없습니다.</div>}
         </article>
 
         <article className="home-ranking">
@@ -9542,13 +9552,13 @@ function L({ courses: e, go: t, notices = j, user = CURRENT_USER }) {
               </span>
               <div>
                 <h2>이달의 학습</h2>
-                <small>8월 Learning League TOP 3</small>
+                <small>{new Date().getMonth()+1}월 Learning League TOP 3</small>
               </div>
             </div>
             <button className="home-reward-cta" onClick={() => t(`userRewards`, `ranking`)}>전체 보기 <Icon icon={ArrowRight01Icon} size={14} /></button>
           </div>
           <div className="home-mini-podium">
-            {[ranking[1], ranking[0], ranking[2]].map((person) => (
+            {[ranking[1], ranking[0], ranking[2]].filter(Boolean).map((person) => (
               <div className={`home-podium-player rank-${person.rank}`} key={person.rank}>
                 <div className="home-podium-avatar"><RewardAvatar tone={person.rank === 1 ? `coral` : person.rank === 2 ? `indigo` : `mint`} crown={person.rank === 1} /><span>{person.rank}</span></div>
                 <b>{person.name}</b>
@@ -9558,6 +9568,7 @@ function L({ courses: e, go: t, notices = j, user = CURRENT_USER }) {
               </div>
             ))}
           </div>
+          {!homeLoading && ranking.length===0 && <div className="home-data-empty">이번 달 학습 포인트 기록이 없습니다.</div>}
         </article>
       </section>
 
@@ -9588,14 +9599,15 @@ function L({ courses: e, go: t, notices = j, user = CURRENT_USER }) {
                 <small>{course.category}</small>
                 <b>{course.title}</b>
                 <em>
-                  <Icon icon={ThumbsUpIcon} size={14} />
-                  {course.likes}
+                  <Icon icon={BookOpen01Icon} size={14} />
+                  수강 {course.learners}명
                 </em>
               </div>
               <Icon icon={ArrowRight01Icon} className="home-course-arrow" />
             </button>
           ))}
         </div>
+        {!homeLoading && popular.length===0 && <div className="home-data-empty">현재 운영 중인 교육과정이 없습니다.</div>}
       </section>
 
       <section className="home-bottom-grid">
@@ -9627,6 +9639,7 @@ function L({ courses: e, go: t, notices = j, user = CURRENT_USER }) {
               </button>
             ))}
           </div>
+          {notices.length===0 && <div className="home-data-empty">등록된 공지사항이 없습니다.</div>}
         </article>
         <article className="home-badge">
           <div className="home-reward-confetti badge-confetti" aria-hidden="true"><i /><i /><i /><i /></div>
@@ -9644,13 +9657,8 @@ function L({ courses: e, go: t, notices = j, user = CURRENT_USER }) {
               전체보기 <Icon icon={ArrowRight01Icon} size={15} />
             </button>
           </div>
-          <div className="home-badge-preview">
-            {[[`medal`,`gold`,`이달의 TOP 3`],[`trophy`,`blue`,`수료 마스터`],[`star`,`mint`,`필수교육 완료`]].map(([type,tone,title]) => <div className={tone} key={title}><span><RewardObject type={type} tone={tone} /></span><b>{title}</b><small>획득 완료</small></div>)}
-          </div>
-          <div className="home-next-badge">
-            <span><Icon icon={SparklesIcon} size={14} /> 다음 뱃지까지</span>
-            <b>160P</b>
-          </div>
+          <div className="home-badge-preview">{badges.map((badge)=><div className={badge.tone||`blue`} key={badge.name}><span><RewardObject type="medal" tone={badge.tone||`blue`} /></span><b>{badge.name}</b><small>획득 완료</small></div>)}</div>
+          {!homeLoading && badges.length===0 && <div className="home-data-empty">아직 획득한 뱃지가 없습니다.</div>}
         </article>
       </section>
     </main>
@@ -9983,7 +9991,8 @@ function K({
   wishlistIds = [],
   onWishlistChange,
 }) {
-  const tags = [`신입사원`, `리더십`, `AI`, `보안`, `필수교육`];
+  const [tags,setTags]=r.useState([]);
+  r.useEffect(()=>{let active=true;apiRequest(`/api/v1/learning/featured-tags`).then((items)=>active&&setTags(items)).catch(()=>{});return()=>{active=false;};},[]);
   const useTag = (tag) => p(tag);
   return (
     <main className="page toss-page">

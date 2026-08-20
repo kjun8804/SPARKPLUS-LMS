@@ -9,6 +9,15 @@ CREATE TABLE IF NOT EXISTS courses (
   created_by uuid REFERENCES users(id) ON DELETE SET NULL, created_at timestamptz NOT NULL DEFAULT now(), updated_at timestamptz NOT NULL DEFAULT now(), deleted_at timestamptz
 );
 CREATE INDEX IF NOT EXISTS courses_status_dates_idx ON courses(status,start_date,end_date) WHERE deleted_at IS NULL;
+CREATE TABLE IF NOT EXISTS course_tags (
+  course_id uuid NOT NULL REFERENCES courses(id) ON DELETE CASCADE,
+  tag varchar(40) NOT NULL, created_at timestamptz NOT NULL DEFAULT now(), PRIMARY KEY(course_id,tag)
+);
+CREATE INDEX IF NOT EXISTS course_tags_tag_idx ON course_tags(tag);
+CREATE TABLE IF NOT EXISTS featured_course_tags (
+  tag varchar(40) PRIMARY KEY, display_order integer NOT NULL DEFAULT 0,
+  enabled boolean NOT NULL DEFAULT true, updated_at timestamptz NOT NULL DEFAULT now()
+);
 CREATE TABLE IF NOT EXISTS lessons (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(), course_id uuid NOT NULL REFERENCES courses(id) ON DELETE CASCADE,
   sequence integer NOT NULL, title varchar(240) NOT NULL, description text NOT NULL DEFAULT '', duration_minutes integer NOT NULL DEFAULT 0,
