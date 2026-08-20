@@ -41,10 +41,7 @@ function lessonDetails(course, lesson, index) {
       `업무 적용을 위한 단계별 방법과 확인 기준`,
       `사례를 통한 실전 적용 방법과 주의사항`,
     ],
-    files: [
-      { type: "PDF", name: `${number}차시_${course.category}_학습자료.pdf`, size: "2.4MB" },
-      { type: "XLS", name: `${number}차시_실습자료.xlsx`, size: "820KB" },
-    ],
+    files: lesson?.attachmentName ? [{ type:lesson.attachmentName.split(".").pop()?.toUpperCase() || "FILE", name:lesson.attachmentName, driveFileId:lesson.attachmentDriveFileId }] : [],
     question: lesson?.quiz?.[0]?.question || ``,
   };
 }
@@ -60,7 +57,8 @@ export default function ClassroomPlayer({
   videoProgress,
   saveProgress,
 }) {
-  const initialIndex = course.id === 6 ? 0 : Math.min(2, Math.max(lessons.length - 1, 0));
+  const firstIncompleteIndex = Math.max(0, lessons.findIndex((lesson) => !lesson.completed));
+  const initialIndex = firstIncompleteIndex >= 0 ? firstIncompleteIndex : 0;
   const storedLesson = Number(sessionStorage.getItem(`sparkplus-active-lesson-${course.id}`));
   const [activeLesson, setActiveLesson] = useState(Number.isInteger(storedLesson) && storedLesson >= 0 && storedLesson < lessons.length ? storedLesson : initialIndex);
   const [activeTab, setActiveTab] = useState("goals");
@@ -68,28 +66,43 @@ export default function ClassroomPlayer({
   const [quizDone, setQuizDone] = useState(false);
   const [quizResult, setQuizResult] = useState(null);
   const [completionOpen, setCompletionOpen] = useState(false);
-  const [courseCompleted, setCourseCompleted] = useState(() => localStorage.getItem(`sparkplus-lessons-complete-${course.id}`) === "true");
+  const [completedLessonIds, setCompletedLessonIds] = useState(() => new Set(lessons.filter((lesson) => lesson.completed).map((lesson) => lesson.id)));
+  const [courseCompleted, setCourseCompleted] = useState(course.enrollmentStatus === "COMPLETED");
+  const [currentProgress, setCurrentProgress] = useState(Number(course.progress || 0));
   const mainRef = useRef(null);
   const detail = useMemo(
     () => lessonDetails(course, lessons[activeLesson], activeLesson),
     [course, lessons, activeLesson],
   );
   const currentLesson = lessons[activeLesson];
-  const youtubeCourse = currentLesson?.videoType === "YOUTUBE" || course.id === 6;
+  const youtubeCourse = currentLesson?.videoType === "YOUTUBE";
   const surveyRequired = course.surveyEnabled !== false;
   const lastLesson = Math.max(lessons.length - 1, 0);
-  const demoProgress = courseCompleted ? 100 : (course.progress || 0);
+  const displayedProgress = courseCompleted ? 100 : currentProgress;
 
   useEffect(() => {
     setQuizAnswer(null);
-    setQuizDone(false);
+    const answered=Boolean(lessons[activeLesson]?.quiz?.[0]?.correctlyAnswered);
+    setQuizDone(answered);
+    setQuizResult(answered ? { correct:true, explanation:lessons[activeLesson]?.quiz?.[0]?.explanation } : null);
     setPlaying(false);
-  }, [activeLesson, setPlaying]);
+  }, [activeLesson, lessons, setPlaying]);
+
+  useEffect(() => {
+    setCompletedLessonIds(new Set(lessons.filter((lesson) => lesson.completed).map((lesson) => lesson.id)));
+    setCourseCompleted(course.enrollmentStatus === "COMPLETED");
+    setCurrentProgress(Number(course.progress || 0));
+  }, [course.id, course.enrollmentStatus, course.progress, lessons]);
 
   const saveLessonProgress = async (lesson = currentLesson) => {
     if (!course.enrollmentId || !lesson?.id) return null;
     const response = await fetch(`/api/v1/learning/enrollments/${course.enrollmentId}/lessons/${lesson.id}/progress`, { method:"PUT", credentials:"include", headers:{"Content-Type":"application/json"}, body:JSON.stringify({ watchedPercent:lesson.videoType === "DRIVE" ? Math.max(90,videoProgress || 0) : 100, manualComplete:lesson.videoType !== "DRIVE" }) });
-    return response.ok ? (await response.json()).data : null;
+    if (!response.ok) return null;
+    const result=(await response.json()).data;
+    setCompletedLessonIds((current) => new Set([...current, lesson.id]));
+    setCurrentProgress(Number(result?.progress || 0));
+    setCourseCompleted(Boolean(result?.completed));
+    return result;
   };
   const selectLesson = async (index) => {
     if (index < 0 || index > lastLesson || index === activeLesson) return;
@@ -103,8 +116,6 @@ export default function ClassroomPlayer({
   const finishCourse = async () => {
     const result = await saveLessonProgress().catch(() => null);
     if (currentLesson?.quiz?.length && !quizResult?.correct) { setActiveTab("quiz"); return; }
-    localStorage.setItem(`sparkplus-lessons-complete-${course.id}`, "true");
-    if (!surveyRequired) localStorage.setItem(`sparkplus-course-complete-${course.id}`, "true");
     setCourseCompleted(Boolean(result?.completed) || !course.enrollmentId);
     saveProgress?.(true);
     window.dispatchEvent(new CustomEvent("sparkplus-course-progress", { detail: { courseId: course.id } }));
@@ -119,14 +130,14 @@ export default function ClassroomPlayer({
           <button onClick={() => setLessonOpen(false)} aria-label="차시 목록 닫기"><Icon icon={Cancel01Icon} /></button>
         </div>
         <div className="side-progress">
-          <div className="classroom-progress-copy"><span>전체 진도율</span><b>{demoProgress}%</b></div>
-          <div className="classroom-progress-track"><i style={{ width: `${demoProgress}%` }} /></div>
+          <div className="classroom-progress-copy"><span>전체 진도율</span><b>{displayedProgress}%</b></div>
+          <div className="classroom-progress-track"><i style={{ width: `${displayedProgress}%` }} /></div>
         </div>
         <div className="sidebar-lessons">
           {lessons.map((lesson, index) => {
             const selected = index === activeLesson;
-            const completed = courseCompleted || index < 2;
-            const inProgress = !courseCompleted && index === 2;
+            const completed = courseCompleted || completedLessonIds.has(lesson.id);
+            const inProgress = !completed && index === activeLesson;
             const status = completed ? "수강 완료" : inProgress ? "수강 중" : "미수강";
             return (
               <button
@@ -150,17 +161,17 @@ export default function ClassroomPlayer({
           <button className="secondary exit-classroom" onClick={() => go("lectureDetail", course.id)}>← 강의실 나가기</button>
         </div>
 
-        {youtubeCourse ? (
+        {youtubeCourse && currentLesson?.videoUrl ? (
           <div className="video youtube-embed" key={`youtube-${activeLesson}`}>
             <iframe
-              src={currentLesson?.videoUrl ? currentLesson.videoUrl.replace(`youtu.be/`,`www.youtube-nocookie.com/embed/`).replace(`watch?v=`,`embed/`) : `https://www.youtube-nocookie.com/embed/P8pEFQBXbKI?rel=0&start=${activeLesson * 30}`}
+              src={currentLesson.videoUrl.replace(`youtu.be/`,`www.youtube-nocookie.com/embed/`).replace(`watch?v=`,`embed/`)}
               title={`${detail.number}차시 ${detail.title}`}
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
               referrerPolicy="strict-origin-when-cross-origin"
               allowFullScreen
             />
           </div>
-        ) : (
+        ) : currentLesson?.videoType === "DRIVE" ? (
           <div className="video" key={`video-${activeLesson}`}>
             <div className="video-art" style={{ background: `radial-gradient(circle at 30% 20%, ${lessonThemes[activeLesson % lessonThemes.length][0]}, ${lessonThemes[activeLesson % lessonThemes.length][1]} 68%)` }}>
               <div className="data-card"><span>{detail.number}</span><h2>{detail.title}</h2><p>{course.category} 업무에 바로 적용할 핵심 내용을 학습합니다.</p></div>
@@ -177,7 +188,7 @@ export default function ClassroomPlayer({
               <button aria-label="전체 화면"><span className="control-symbol fullscreen-symbol">⌗</span></button>
             </div>
           </div>
-        )}
+        ) : <div className="video"><div className="home-data-empty">등록된 학습 영상이 없습니다.</div></div>}
 
         <div className="auto-save">
           <span><Icon icon={CheckmarkCircle02Icon} /></span>
@@ -194,7 +205,7 @@ export default function ClassroomPlayer({
         <div className="player-tab-content">
           {activeTab === "goals" && <div className="lesson-info"><h3>이번 차시 학습 목표</h3><ul>{detail.goals.map((item) => <li key={item}>{item}</li>)}</ul></div>}
           {activeTab === "contents" && <div className="lesson-info"><h3>주요 내용</h3><ol>{detail.contents.map((item) => <li key={item}>{item}</li>)}</ol></div>}
-          {activeTab === "files" && <div className="player-files">{detail.files.map((file) => <button key={file.name}><span>{file.type}</span><div><b>{file.name}</b><small>{file.size}</small></div><em><Icon icon={Download01Icon} size={16} />다운로드</em></button>)}</div>}
+          {activeTab === "files" && <div className="player-files">{detail.files.length ? detail.files.map((file) => <button key={file.name} disabled={!file.driveFileId} onClick={() => file.driveFileId && window.open(`https://drive.google.com/open?id=${file.driveFileId}`, `_blank`, `noopener,noreferrer`)}><span>{file.type}</span><div><b>{file.name}</b></div><em><Icon icon={Download01Icon} size={16} />열기</em></button>) : <div className="lesson-info"><p>등록된 첨부 자료가 없습니다.</p></div>}</div>}
           {activeTab === "quiz" && (
             <div className="ai-quiz-panel">
               <div className="ai-quiz-head"><span><Icon icon={SparklesIcon} size={20} /></span><div><div className="ai-title-line"><h3>AI 퀴즈</h3></div><p>이번 차시의 핵심 내용을 확인해보세요.</p></div></div>
@@ -207,7 +218,7 @@ export default function ClassroomPlayer({
                   </button>
                 ))}
               </div>
-              <button className="primary quiz-submit" disabled={quizAnswer === null} onClick={async () => { const question=currentLesson?.quiz?.[0]; if(course.enrollmentId&&question?.id){const response=await fetch(`/api/v1/learning/enrollments/${course.enrollmentId}/quiz/${question.id}`,{method:"POST",credentials:"include",headers:{"Content-Type":"application/json"},body:JSON.stringify({selectedOption:quizAnswer})});if(response.ok)setQuizResult((await response.json()).data);}else setQuizResult({correct:quizAnswer===0});setQuizDone(true); }}>정답 확인</button>
+              <button className="primary quiz-submit" disabled={quizAnswer === null} onClick={async () => { const question=currentLesson?.quiz?.[0]; if(course.enrollmentId&&question?.id){const response=await fetch(`/api/v1/learning/enrollments/${course.enrollmentId}/quiz/${question.id}`,{method:"POST",credentials:"include",headers:{"Content-Type":"application/json"},body:JSON.stringify({selectedOption:quizAnswer})});if(response.ok){const result=(await response.json()).data;setQuizResult(result);setCurrentProgress(Number(result?.progress || currentProgress));setCourseCompleted(Boolean(result?.completed));}}else setQuizResult({correct:quizAnswer===0});setQuizDone(true); }}>정답 확인</button>
               {quizDone && <div className={`quiz-result ${quizResult?.correct ? "correct" : "wrong"}`}><b>{quizResult?.correct ? "정답입니다!" : "다시 한번 생각해 보세요."}</b><span>{quizResult?.explanation || (quizResult?.correct ? "정답이 학습 기록에 저장되었습니다." : "강의 내용을 확인한 후 다시 응시해주세요.")}</span></div>}
               </> : <div className="lesson-info"><p>이 차시에 등록된 퀴즈가 없습니다.</p></div>}
             </div>

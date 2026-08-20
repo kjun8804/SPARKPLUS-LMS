@@ -127,10 +127,7 @@ function deadlineTone(deadline) {
 function courseSurveyEnabled(course) { return course?.surveyEnabled !== false; }
 function isCourseCompleted(course) {
   if (!course) return false;
-  if (localStorage.getItem(`sparkplus-course-complete-${course.id}`) === `true`) return true;
-  const lessonsComplete = localStorage.getItem(`sparkplus-lessons-complete-${course.id}`) === `true`;
-  const surveyComplete = localStorage.getItem(`sparkplus-survey-complete-${course.id}`) === `true`;
-  return lessonsComplete && (!courseSurveyEnabled(course) || surveyComplete);
+  return course.enrollmentStatus === `COMPLETED` || Boolean(course.completedAt || course.certificateNumber);
 }
 function RequiredTrainingBadge({ deadline, compact = false, completed = false }) {
   const due = completed ? `수료 완료` : assignmentDeadlineLabel(deadline);
@@ -1532,10 +1529,10 @@ function CourseEditorV2({ selected, onBack, isNew = false }) {
       description:form.introduction, curriculumSummary:form.curriculumSummary, thumbnail:form.thumbnail || null, startDate:form.startDate || null, endDate:form.endDate || null,
       surveyEnabled:form.surveyEnabled, googleFormUrl:form.googleFormUrl || null, completionThreshold:60,
       tags:[...new Set(tagInput.split(/[,\s]+/).map((tag)=>tag.replace(/^#+/,``).trim()).filter(Boolean))].slice(0,12),
-      lessons:form.lessons.map((item) => ({ title:item.title, description:item.description || ``, durationMinutes:parseInt(item.duration,10)||item.durationMinutes||0,
+      lessons:form.lessons.map((item) => ({ id:item.id, title:item.title, description:item.description || ``, durationMinutes:parseInt(item.duration,10)||item.durationMinutes||0,
         videoType:item.videoType || `YOUTUBE`, videoUrl:item.videoUrl || null, driveFileId:item.driveFileId || null, attachmentName:item.attachments || item.attachmentName || null,
         attachmentDriveFileId:item.attachmentDriveFileId || null, goals:item.goals || ``, contents:item.contents || ``, completionThreshold:item.videoType === `DRIVE` ? 90 : 60,
-        quiz:(item.quizEnabled ? item.quiz : []).slice(0,1).map((question) => { const options=[...(question.options || [])]; while(options.length<4) options.push(`선택지 ${options.length+1}`); return { question:question.question, options:options.slice(0,4), correctOption:Math.min(3,Number.isInteger(question.correctOption) ? question.correctOption : 0), explanation:question.explanation || `` }; }) })), assignments,
+        quiz:(item.quizEnabled ? item.quiz : []).slice(0,1).map((question) => { const options=[...(question.options || [])]; while(options.length<4) options.push(`선택지 ${options.length+1}`); return { id:question.id, question:question.question, options:options.slice(0,4), correctOption:Math.min(3,Number.isInteger(question.correctOption) ? question.correctOption : 0), explanation:question.explanation || `` }; }) })), assignments,
     };
     try {
       const saved=await apiRequest(isNew ? `/api/v1/courses` : `/api/v1/courses/${selected.id}`, { method:isNew ? `POST` : `PUT`, body:JSON.stringify(payload) });
@@ -9234,7 +9231,7 @@ function M() {
                 },
               }),
             e === `userRewards` && (0, i.jsx)(UserLearningRewards, { initialTab: rewardInitialTab }),
-            e === `lectureDetail` && (0, i.jsx)(LectureDetailQuest, { course: Z, go: $ }),
+            e === `lectureDetail` && (0, i.jsx)(LectureDetailQuest, { course: Z, go: $, user:activeUser }),
             e === `courseSurvey` && (0, i.jsx)(GoogleFormSurveyPage, { course: Z, go: $ }),
             e === `player` &&
               (0, i.jsx)(re, {
@@ -10791,32 +10788,36 @@ function Z({ value: e, small: t = !1 }) {
   });
 }
 function GoogleFormSurveyPage({ course, go }) {
-  const responseUrl = googleFormEmbedUrl(course.googleFormUrl || SAMPLE_GOOGLE_FORM_URL);
-  const completeSurvey = () => {
-    localStorage.setItem(`sparkplus-survey-complete-${course.id}`, `true`);
-    if (localStorage.getItem(`sparkplus-lessons-complete-${course.id}`) === `true`) localStorage.setItem(`sparkplus-course-complete-${course.id}`, `true`);
+  const responseUrl = googleFormEmbedUrl(course.googleFormUrl || ``);
+  const [submitting,setSubmitting]=r.useState(false);
+  const completeSurvey = async () => {
+    if(!course.enrollmentId)return;
+    setSubmitting(true);
+    try{await apiRequest(`/api/v1/learning/enrollments/${course.enrollmentId}/survey`,{method:`POST`});}
+    catch{return showAdminToast(`설문 완료 상태를 저장하지 못했습니다.`,`error`);}
+    finally{setSubmitting(false);}
     window.dispatchEvent(new CustomEvent(`sparkplus-course-progress`, { detail: { courseId: course.id } }));
     go(`lectureDetail`, course.id);
   };
   return (
     <main className="page google-form-user-page">
       <div className="breadcrumb"><button onClick={() => go(`lectureDetail`, course.id)}>나의 학습</button><span>›</span>수료 후 설문</div>
-      <header className="google-form-user-head"><h1>수료 후 설문</h1><a href={responseUrl.replace(`?embedded=true`, ``)} target="_blank" rel="noreferrer">새 창에서 열기 ↗</a></header>
-      <iframe className="google-form-user-frame" src={responseUrl} title={`${course.title} 수료 후 설문`} />
-      <div className="google-form-complete-bar"><div><b>Google Forms 설문을 제출하셨나요?</b><span>제출을 완료한 뒤 아래 버튼을 눌러 수료 Quest에 반영해주세요.</span></div><button className="primary" onClick={completeSurvey}><Icon icon={CheckmarkCircle02Icon} size={17} />설문 제출을 완료했어요</button></div>
+      <header className="google-form-user-head"><h1>수료 후 설문</h1>{responseUrl && <a href={responseUrl.replace(`?embedded=true`, ``)} target="_blank" rel="noreferrer">새 창에서 열기 ↗</a>}</header>
+      {responseUrl ? <iframe className="google-form-user-frame" src={responseUrl} title={`${course.title} 수료 후 설문`} /> : <div className="home-data-empty">관리자가 연결한 Google Forms 설문이 없습니다.</div>}
+      <div className="google-form-complete-bar"><div><b>Google Forms 설문을 제출하셨나요?</b><span>제출을 완료한 뒤 아래 버튼을 눌러 수료 Quest에 반영해주세요.</span></div><button className="primary" disabled={submitting||!responseUrl} onClick={completeSurvey}><Icon icon={CheckmarkCircle02Icon} size={17} />{submitting?`저장 중…`:`설문 제출을 완료했어요`}</button></div>
     </main>
   );
 }
 
-function LectureDetailQuest({ course, go }) {
-  const lessons = k[course.id] ?? [];
+function LectureDetailQuest({ course, go, user }) {
+  const lessons = course.curriculum || k[course.id] || [];
   const [certificateOpen, setCertificateOpen] = r.useState(false);
-  const allLessonsComplete = localStorage.getItem(`sparkplus-lessons-complete-${course.id}`) === `true`;
-  const surveyComplete = localStorage.getItem(`sparkplus-survey-complete-${course.id}`) === `true`;
+  const allLessonsComplete = lessons.length > 0 && lessons.every((lesson)=>lesson.completed);
+  const surveyComplete = Boolean(course.surveySubmitted);
   const surveyRequired = courseSurveyEnabled(course);
-  const demoCompleted = allLessonsComplete ? lessons.length : Math.min(2, lessons.length);
-  const currentIndex = allLessonsComplete ? -1 : Math.min(demoCompleted, Math.max(lessons.length - 1, 0));
-  const completedQuestCount = demoCompleted + (surveyRequired && surveyComplete ? 1 : 0);
+  const completedLessons = lessons.filter((lesson)=>lesson.completed).length;
+  const currentIndex = allLessonsComplete ? -1 : Math.max(0,lessons.findIndex((lesson)=>!lesson.completed));
+  const completedQuestCount = completedLessons + (surveyRequired && surveyComplete ? 1 : 0);
   const totalQuestCount = lessons.length + (surveyRequired ? 1 : 0);
   const remaining = Math.max(0, totalQuestCount - completedQuestCount);
   const certificateReady = allLessonsComplete && (!surveyRequired || surveyComplete);
@@ -10828,11 +10829,11 @@ function LectureDetailQuest({ course, go }) {
     <div className="breadcrumb"><button onClick={() => go(`learning`)}>나의 학습</button><span>›</span>강의 상세</div>
     <section className="lecture-hero"><J accent={course.accent} label={course.category} /><div className="lecture-hero-copy"><div><span className="badge blue-badge">{course.category}</span><span className={`level-badge ${userLevelTone(course.level)}`}>{userLevelLabel(course.level)}</span></div><h1>{course.title}</h1><p>{course.description}</p><div className="lecture-meta"><span><small>교육 기간</small><b>{course.period}</b></span><span><small>전체 학습 시간</small><b>{course.duration}</b></span></div><div className="lecture-primary-actions"><button className="primary" onClick={() => openLesson(currentIndex < 0 ? lessons.length - 1 : currentIndex)}>{allLessonsComplete ? `강의 다시 보기` : `학습 이어가기`}</button></div></div></section>
     <section className="completion-quest-card"><header className="quest-head"><div><span>LEARNING QUEST</span><h2>{remaining === 0 ? `모든 수료 조건을 완료했어요!` : `수료까지 ${remaining}단계 남았어요`}</h2><p>{surveyRequired ? `차시 학습과 설문을 완료하면 수료증을 발급할 수 있습니다.` : `모든 차시를 완료하면 자동으로 수료 처리됩니다.`}</p></div><div className="quest-progress-copy"><strong>{completedQuestCount} / {totalQuestCount}</strong><span>완료</span></div></header><div className="quest-progress-track" aria-label={`수료 진행도 ${completedQuestCount}/${totalQuestCount}`}><i style={{width:`${completedQuestCount / Math.max(totalQuestCount,1) * 100}%`}} /></div>
-      <div className="quest-list">{lessons.map((lesson,index) => { const complete = index < demoCompleted; const current = index === currentIndex; const state = complete ? `complete` : current ? `current` : `pending`; return <button className={`quest-item ${state}`} key={lesson.title} onClick={() => openLesson(index)}><span className="quest-state">{complete ? <Icon icon={CheckmarkCircle02Icon} size={19} /> : current ? <Icon icon={PlayIcon} size={17} /> : <i />}</span><span className="quest-number">{String(index + 1).padStart(2,`0`)}</span><span className="quest-copy"><b>{lesson.title}</b><small>영상 · {lesson.duration}</small></span><em>{complete ? `완료` : current ? `학습 중` : `미수강`}</em><span className="quest-arrow">›</span></button>; })}</div>
+      <div className="quest-list">{lessons.map((lesson,index) => { const complete = Boolean(lesson.completed); const current = index === currentIndex; const state = complete ? `complete` : current ? `current` : `pending`; return <button className={`quest-item ${state}`} key={lesson.id||lesson.title} onClick={() => openLesson(index)}><span className="quest-state">{complete ? <Icon icon={CheckmarkCircle02Icon} size={19} /> : current ? <Icon icon={PlayIcon} size={17} /> : <i />}</span><span className="quest-number">{String(index + 1).padStart(2,`0`)}</span><span className="quest-copy"><b>{lesson.title}</b><small>영상 · {lesson.duration||`${lesson.durationMinutes||0}분`}</small></span><em>{complete ? `완료` : current ? `학습 중` : `미수강`}</em><span className="quest-arrow">›</span></button>; })}</div>
       {surveyRequired && <div className={`survey-quest-step ${surveyComplete ? `complete` : allLessonsComplete ? `available` : `locked`}`}><span className="quest-state">{surveyComplete ? <Icon icon={CheckmarkCircle02Icon} size={20} /> : <i />}</span><div><small>마지막 단계</small><h3>수료 후 설문</h3><p>{surveyComplete ? `설문 제출이 완료되었습니다.` : allLessonsComplete ? `학습 경험에 대한 간단한 설문을 작성해주세요.` : `모든 차시를 완료하면 설문에 참여할 수 있습니다.`}</p></div>{surveyComplete ? <span className="survey-done">설문 완료</span> : <button disabled={!allLessonsComplete} onClick={() => go(`courseSurvey`,course.id)}>설문하기 <span>→</span></button>}</div>}
       <div className={`certificate-quest ${certificateReady ? `ready` : `locked`}`}><span className="certificate-quest-icon"><Icon icon={Award01Icon} size={27} /></span><div><h3>{certificateReady ? `모든 수료 조건을 완료했어요!` : `수료증 발급`}</h3><p>{certificateReady ? `지금 바로 수료증을 확인하고 발급할 수 있습니다.` : surveyRequired ? `모든 차시와 설문을 완료하면 발급할 수 있습니다.` : `모든 차시를 완료하면 발급할 수 있습니다.`}</p></div><button className={certificateReady ? `primary` : ``} disabled={!certificateReady} onClick={() => setCertificateOpen(true)}>수료증 발급</button></div>
     </section>
-    {certificateOpen && <div className="modal-backdrop" onMouseDown={(event) => event.target === event.currentTarget && setCertificateOpen(false)}><section className="modal certificate-modal quest-certificate-modal"><button className="modal-close" onClick={() => setCertificateOpen(false)}><Icon icon={Cancel01Icon} /></button><P /><p className="certificate-kicker">CERTIFICATE OF COMPLETION</p><h2>수료증</h2><p className="certificate-number">제 2026-{String(course.id).padStart(4,`0`)}호</p><strong>김지수</strong><p>위 사람은 아래 교육과정을 성실히 이수하였으므로<br />이 수료증을 수여합니다.</p><h3>{course.title}</h3><dl><div><dt>교육 기간</dt><dd>{course.period}</dd></div><div><dt>총 학습 시간</dt><dd>{course.duration}</dd></div></dl><p className="certificate-date">2026년 8월 13일<br /><b>SPARKPLUS 대표이사</b></p><div className="stamp">직인</div><div className="modal-actions"><button className="secondary" onClick={() => window.print()}>인쇄</button><button className="primary" onClick={() => window.print()}>PDF 다운로드</button></div></section></div>}
+    {certificateOpen && <div className="modal-backdrop" onMouseDown={(event) => event.target === event.currentTarget && setCertificateOpen(false)}><section className="modal certificate-modal quest-certificate-modal"><button className="modal-close" onClick={() => setCertificateOpen(false)}><Icon icon={Cancel01Icon} /></button><P /><p className="certificate-kicker">CERTIFICATE OF COMPLETION</p><h2>수료증</h2><p className="certificate-number">{course.certificateNumber || `수료 처리 중`}</p><strong>{user?.name || `학습자`}</strong><p>위 사람은 아래 교육과정을 성실히 이수하였으므로<br />이 수료증을 수여합니다.</p><h3>{course.title}</h3><dl><div><dt>교육 기간</dt><dd>{course.period}</dd></div><div><dt>총 학습 시간</dt><dd>{course.duration}</dd></div></dl><p className="certificate-date">{course.completedAt ? new Date(course.completedAt).toLocaleDateString(`ko-KR`) : new Date().toLocaleDateString(`ko-KR`)}<br /><b>SPARKPLUS</b></p><div className="stamp">직인</div><div className="modal-actions"><button className="secondary" onClick={() => window.print()}>인쇄</button><button className="primary" onClick={() => window.print()}>PDF 저장</button></div></section></div>}
   </main>;
 }
 
