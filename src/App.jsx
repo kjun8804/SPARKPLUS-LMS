@@ -1918,8 +1918,10 @@ function CourseEditorV2({ selected, onBack, isNew = false }) {
                 <div>
                   <div>
                     <b>차시 퀴즈</b>
-                    <span>학습 후 간단한 이해도 확인 퀴즈를 제공합니다.</span>
+                    <span>4지선다형 1문항을 직접 입력하거나 YouTube 영상으로 자동 생성합니다.</span>
                   </div>
+                  <div className="lesson-quiz-header-actions">
+                  {lesson.quizEnabled && <button type="button" className="ai-quiz-generate-button" disabled={generatingQuiz || !lesson.videoUrl?.trim()} onClick={generateAiQuiz}>{generatingQuiz ? `영상 분석 중…` : `✦ 퀴즈 자동 생성하기`}</button>}
                   <button
                     className={
                       lesson.quizEnabled ? `rule-switch on` : `rule-switch`
@@ -1930,22 +1932,20 @@ function CourseEditorV2({ selected, onBack, isNew = false }) {
                   >
                     <i />
                   </button>
+                  </div>
                 </div>
                 {lesson.quizEnabled && (
                   <>
-                    <div className="ai-quiz-generator">
-                      <div><b>영상으로 퀴즈 자동 생성</b><span>공개 YouTube 영상을 분석해 차시당 객관식 1문항을 만듭니다. 생성 후 반드시 내용을 검토해 주세요.</span></div>
-                      <button type="button" className="secondary" disabled={generatingQuiz || !lesson.videoUrl?.trim()} onClick={generateAiQuiz}>{generatingQuiz ? `영상 분석 중…` : `✦ AI로 1문항 생성`}</button>
-                    </div>
+                    <p className="ai-quiz-generator-note">공개 YouTube 링크를 먼저 등록하면 AI가 선택지 4개와 정답·해설을 생성합니다. 생성 후 내용을 검토하고 저장해 주세요.</p>
                     <div className="lesson-quiz-list">
                       {(lesson.quiz || []).map((question, index) => (
                         <article key={index}>
                           <div className="quiz-builder-head"><b>Q{index + 1}</b></div>
                           <label className="quiz-question-field">질문<input className="quiz-question-input" value={question.question} placeholder="질문을 입력해주세요" onChange={(event) => updateQuiz(index, `question`, event.target.value)} /></label>
-                          <div className="quiz-option-list">{(question.options?.length >= 2 ? question.options : [``, ``]).map((option, optionIndex) => {
+                          <div className="quiz-option-list">{[...(question.options || []), ``, ``, ``, ``].slice(0,4).map((option, optionIndex) => {
                             const correctOption = Number.isInteger(question.correctOption) ? question.correctOption : Math.max(0, (question.options || []).indexOf(question.answer));
                             return <div key={optionIndex} className={correctOption === optionIndex ? `correct` : ``}><input type="radio" name={`quiz-${index}-correct`} aria-label={`${optionIndex + 1}번 선택지를 정답으로 지정`} checked={correctOption === optionIndex} onChange={() => updateLesson(`quiz`, lesson.quiz.map((item, itemIndex) => itemIndex === index ? { ...item, correctOption: optionIndex, answer: option } : item))} /><input value={option} placeholder={`선택지 ${optionIndex + 1}`} onChange={(event) => updateQuizOption(index, optionIndex, event.target.value)} /><button type="button" aria-label={`${optionIndex + 1}번 선택지 삭제`} onClick={() => removeQuizOption(index, optionIndex)}>×</button></div>;
-                          })}<button type="button" className="quiz-option-add" onClick={() => updateQuiz(index, `options`, [...(question.options || [``, ``]), ``])}>+ 선택지 추가</button></div>
+                          })}</div>
                           <label className="quiz-question-field">정답 해설<textarea rows="2" value={question.explanation || ``} placeholder="정답인 이유를 입력해주세요" onChange={(event) => updateQuiz(index, `explanation`, event.target.value)} /></label>
                           {question.evidenceTimestamp && <p className="ai-quiz-evidence">영상 근거 시각: {question.evidenceTimestamp}</p>}
                           <div className="quiz-builder-actions"><button className="delete" onClick={() => updateLesson(`quiz`, lesson.quiz.filter((_, itemIndex) => itemIndex !== index))}>삭제</button></div>
