@@ -45,7 +45,7 @@ function lessonDetails(course, lesson, index) {
       { type: "PDF", name: `${number}차시_${course.category}_학습자료.pdf`, size: "2.4MB" },
       { type: "XLS", name: `${number}차시_실습자료.xlsx`, size: "820KB" },
     ],
-    question: lesson?.quiz?.[0]?.question || `${title}의 내용을 업무에 적용할 때 가장 먼저 해야 할 일은 무엇인가요?`,
+    question: lesson?.quiz?.[0]?.question || ``,
   };
 }
 
@@ -198,9 +198,10 @@ export default function ClassroomPlayer({
           {activeTab === "quiz" && (
             <div className="ai-quiz-panel">
               <div className="ai-quiz-head"><span><Icon icon={SparklesIcon} size={20} /></span><div><div className="ai-title-line"><h3>AI 퀴즈</h3></div><p>이번 차시의 핵심 내용을 확인해보세요.</p></div></div>
+              {currentLesson?.quiz?.[0] ? <>
               <div className="quiz-question"><span>Q1.</span><b>{detail.question}</b></div>
               <div className="quiz-options">
-                {(currentLesson?.quiz?.[0]?.options || ["목표와 현재 상황을 확인한다", "도구부터 새로 구매한다", "모든 업무를 한 번에 변경한다", "검토 없이 바로 실행한다"]).map((option, index) => (
+                {currentLesson.quiz[0].options.map((option, index) => (
                   <button key={option} className={quizAnswer === index ? "selected" : ""} onClick={() => { setQuizAnswer(index); setQuizDone(false); }}>
                     <i aria-hidden="true" /> <span>{option}</span>
                   </button>
@@ -208,6 +209,7 @@ export default function ClassroomPlayer({
               </div>
               <button className="primary quiz-submit" disabled={quizAnswer === null} onClick={async () => { const question=currentLesson?.quiz?.[0]; if(course.enrollmentId&&question?.id){const response=await fetch(`/api/v1/learning/enrollments/${course.enrollmentId}/quiz/${question.id}`,{method:"POST",credentials:"include",headers:{"Content-Type":"application/json"},body:JSON.stringify({selectedOption:quizAnswer})});if(response.ok)setQuizResult((await response.json()).data);}else setQuizResult({correct:quizAnswer===0});setQuizDone(true); }}>정답 확인</button>
               {quizDone && <div className={`quiz-result ${quizResult?.correct ? "correct" : "wrong"}`}><b>{quizResult?.correct ? "정답입니다!" : "다시 한번 생각해 보세요."}</b><span>{quizResult?.explanation || (quizResult?.correct ? "정답이 학습 기록에 저장되었습니다." : "강의 내용을 확인한 후 다시 응시해주세요.")}</span></div>}
+              </> : <div className="lesson-info"><p>이 차시에 등록된 퀴즈가 없습니다.</p></div>}
             </div>
           )}
         </div>

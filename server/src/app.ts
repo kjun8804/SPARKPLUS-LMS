@@ -73,6 +73,7 @@ export function createApp(config: AppConfig, pool: DatabasePool, options: AppOpt
         criticalTables: tables.rows[0]?.count === 5,
         initialAdmin: initialAdmin.rows[0]?.role === "ADMIN" && initialAdmin.rows[0]?.status === "ACTIVE",
         googleArchiveConfigured: Boolean(config.GOOGLE_SERVICE_ACCOUNT_JSON && config.GOOGLE_SHEET_ID && config.GOOGLE_DRIVE_ROOT_FOLDER_ID),
+        geminiConfigured: Boolean(config.GEMINI_API_KEY),
       };
       const ready = checks.database && checks.criticalTables && checks.initialAdmin;
       response.status(ready ? 200 : 503).json({ data: { status: ready ? "ready" : "not_ready", checks }, error: null });
@@ -82,7 +83,7 @@ export function createApp(config: AppConfig, pool: DatabasePool, options: AppOpt
   app.use("/api/v1/auth", createAuthRouter(config, pool));
   app.use("/api/v1/admin", createAdminRouter(pool, config));
   app.use("/api/v1/leader", createLeaderRouter(pool));
-  app.use("/api/v1/courses", createCoursesRouter(pool));
+  app.use("/api/v1/courses", createCoursesRouter(pool, config));
   app.use("/api/v1/learning", createLearningRouter(pool, config));
   app.use("/api/v1/rewards", createRewardsRouter(pool));
   app.use("/api/v1/admin/rewards", createAdminRewardsRouter(pool));

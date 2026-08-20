@@ -1362,6 +1362,7 @@ function CourseEditorV2({ selected, onBack, isNew = false }) {
   const [assignmentListOpen, setAssignmentListOpen] = r.useState(false);
   const [lessonDeleteIndex, setLessonDeleteIndex] = r.useState(null);
   const [courseDeleteOpen, setCourseDeleteOpen] = r.useState(false);
+  const [generatingQuiz, setGeneratingQuiz] = r.useState(false);
   const assignmentLearners = r.useMemo(() => getAssignmentLearners(), []);
   const formMounted = r.useRef(false);
   const sectionRefs = { basic: r.useRef(null), lessons: r.useRef(null), survey: r.useRef(null) };
@@ -1422,10 +1423,21 @@ function CourseEditorV2({ selected, onBack, isNew = false }) {
     setEditingIndex(form.lessons.length);
   };
   const addQuiz = () =>
-    updateLesson(`quiz`, [
-      ...(lesson.quiz || []),
-      { question: ``, type: `객관식`, options: [``, ``], correctOption: 0 },
-    ]);
+    updateLesson(`quiz`, [{ question: ``, type: `객관식`, options: [``, ``, ``, ``], correctOption: 0, explanation: `` }]);
+  const generateAiQuiz = async () => {
+    if (!lesson?.videoUrl?.trim()) return showAdminToast(`먼저 공개 YouTube 영상 링크를 입력해 주세요.`, `error`);
+    if ((lesson.quiz || []).some((item) => item.question?.trim()) && !window.confirm(`기존 퀴즈를 AI가 만든 1문항으로 교체할까요?`)) return;
+    setGeneratingQuiz(true);
+    try {
+      const generated = await apiRequest(`/api/v1/courses/ai/quiz`, { method:`POST`, body:JSON.stringify({ youtubeUrl:lesson.videoUrl.trim(), lessonTitle:lesson.title }) });
+      setDirty(true);
+      setForm((current) => ({ ...current, lessons:current.lessons.map((item,index) => index === editingIndex ? { ...item, quizEnabled:true, quiz:[{ ...generated, type:`객관식`, answer:generated.options[generated.correctOption] }] } : item) }));
+      showAdminToast(`영상 분석이 완료됐습니다. 문제와 정답을 검토한 뒤 과정을 저장해 주세요.`);
+    } catch (error) {
+      const messages = { INVALID_YOUTUBE_URL:`공개 YouTube 영상 주소를 확인해 주세요.`, GEMINI_NOT_CONFIGURED:`Gemini API 연결 설정이 아직 배포되지 않았습니다.`, GEMINI_GENERATION_FAILED:`영상을 분석하지 못했습니다. 공개 영상인지 확인한 뒤 다시 시도해 주세요.` };
+      showAdminToast(messages[error.message] || `AI 퀴즈 생성에 실패했습니다. 잠시 후 다시 시도해 주세요.`, `error`);
+    } finally { setGeneratingQuiz(false); }
+  };
   const updateQuiz = (index, key, value) =>
     updateLesson(
       `quiz`,
@@ -1523,7 +1535,7 @@ function CourseEditorV2({ selected, onBack, isNew = false }) {
       lessons:form.lessons.map((item) => ({ title:item.title, description:item.description || ``, durationMinutes:parseInt(item.duration,10)||item.durationMinutes||0,
         videoType:item.videoType || `YOUTUBE`, videoUrl:item.videoUrl || null, driveFileId:item.driveFileId || null, attachmentName:item.attachments || item.attachmentName || null,
         attachmentDriveFileId:item.attachmentDriveFileId || null, goals:item.goals || ``, contents:item.contents || ``, completionThreshold:item.videoType === `DRIVE` ? 90 : 60,
-        quiz:(item.quizEnabled ? item.quiz : []).map((question) => ({ question:question.question, options:question.options?.length >= 2 ? question.options : [question.answer || `정답`, `오답`], correctOption:Number.isInteger(question.correctOption) ? question.correctOption : 0, explanation:question.explanation || `` })) })), assignments,
+        quiz:(item.quizEnabled ? item.quiz : []).slice(0,1).map((question) => { const options=[...(question.options || [])]; while(options.length<4) options.push(`선택지 ${options.length+1}`); return { question:question.question, options:options.slice(0,4), correctOption:Math.min(3,Number.isInteger(question.correctOption) ? question.correctOption : 0), explanation:question.explanation || `` }; }) })), assignments,
     };
     try {
       const saved=await apiRequest(isNew ? `/api/v1/courses` : `/api/v1/courses/${selected.id}`, { method:isNew ? `POST` : `PUT`, body:JSON.stringify(payload) });
@@ -1921,6 +1933,10 @@ function CourseEditorV2({ selected, onBack, isNew = false }) {
                 </div>
                 {lesson.quizEnabled && (
                   <>
+                    <div className="ai-quiz-generator">
+                      <div><b>영상으로 퀴즈 자동 생성</b><span>공개 YouTube 영상을 분석해 차시당 객관식 1문항을 만듭니다. 생성 후 반드시 내용을 검토해 주세요.</span></div>
+                      <button type="button" className="secondary" disabled={generatingQuiz || !lesson.videoUrl?.trim()} onClick={generateAiQuiz}>{generatingQuiz ? `영상 분석 중…` : `✦ AI로 1문항 생성`}</button>
+                    </div>
                     <div className="lesson-quiz-list">
                       {(lesson.quiz || []).map((question, index) => (
                         <article key={index}>
@@ -1930,14 +1946,16 @@ function CourseEditorV2({ selected, onBack, isNew = false }) {
                             const correctOption = Number.isInteger(question.correctOption) ? question.correctOption : Math.max(0, (question.options || []).indexOf(question.answer));
                             return <div key={optionIndex} className={correctOption === optionIndex ? `correct` : ``}><input type="radio" name={`quiz-${index}-correct`} aria-label={`${optionIndex + 1}번 선택지를 정답으로 지정`} checked={correctOption === optionIndex} onChange={() => updateLesson(`quiz`, lesson.quiz.map((item, itemIndex) => itemIndex === index ? { ...item, correctOption: optionIndex, answer: option } : item))} /><input value={option} placeholder={`선택지 ${optionIndex + 1}`} onChange={(event) => updateQuizOption(index, optionIndex, event.target.value)} /><button type="button" aria-label={`${optionIndex + 1}번 선택지 삭제`} onClick={() => removeQuizOption(index, optionIndex)}>×</button></div>;
                           })}<button type="button" className="quiz-option-add" onClick={() => updateQuiz(index, `options`, [...(question.options || [``, ``]), ``])}>+ 선택지 추가</button></div>
-                          <div className="quiz-builder-actions"><button onClick={() => updateLesson(`quiz`, [...lesson.quiz.slice(0, index + 1), { ...question, options: [...(question.options || [])] }, ...lesson.quiz.slice(index + 1)])}>복제</button><button className="delete" onClick={() => updateLesson(`quiz`, lesson.quiz.filter((_, itemIndex) => itemIndex !== index))}>삭제</button></div>
+                          <label className="quiz-question-field">정답 해설<textarea rows="2" value={question.explanation || ``} placeholder="정답인 이유를 입력해주세요" onChange={(event) => updateQuiz(index, `explanation`, event.target.value)} /></label>
+                          {question.evidenceTimestamp && <p className="ai-quiz-evidence">영상 근거 시각: {question.evidenceTimestamp}</p>}
+                          <div className="quiz-builder-actions"><button className="delete" onClick={() => updateLesson(`quiz`, lesson.quiz.filter((_, itemIndex) => itemIndex !== index))}>삭제</button></div>
                         </article>
                       ))}
                     </div>
-                    <button className="add-question" onClick={addQuiz}>
+                    {!lesson.quiz?.length && <button className="add-question" onClick={addQuiz}>
                       <Icon icon={Add01Icon} />
-                      퀴즈 문항 추가
-                    </button>
+                      퀴즈 1문항 직접 만들기
+                    </button>}
                   </>
                 )}
               </div>

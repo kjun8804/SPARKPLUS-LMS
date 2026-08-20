@@ -14,6 +14,7 @@ const environmentSchema = z.object({
   GOOGLE_SERVICE_ACCOUNT_JSON: z.string().optional().default(""),
   GOOGLE_SHEET_ID: z.string().optional().default(""),
   GOOGLE_DRIVE_ROOT_FOLDER_ID: z.string().optional().default(""),
+  GEMINI_API_KEY: z.string().optional().default(""),
   INITIAL_ADMIN_EMAIL: z.email().default("jun.kang@sparkplus.co"),
 });
 
