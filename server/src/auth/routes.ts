@@ -43,7 +43,7 @@ export function createAuthRouter(config: AppConfig, pool: DatabasePool) {
         return response.status(403).json({ data: null, error: { code: "AUTH_DOMAIN_NOT_ALLOWED" } });
       }
 
-      const user = await connectGoogleUser(pool, payload.email, payload.sub);
+      const user = await connectGoogleUser(pool, payload.email, payload.sub, config.INITIAL_ADMIN_EMAIL);
       if (!user) return response.status(403).json({ data: null, error: { code: "AUTH_USER_NOT_REGISTERED" } });
       request.session.userId = user.id;
       await new Promise<void>((resolve, reject) => request.session.save((error) => error ? reject(error) : resolve()));

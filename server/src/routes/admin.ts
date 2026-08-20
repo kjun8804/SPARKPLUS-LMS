@@ -106,6 +106,10 @@ export function createAdminRouter(pool: DatabasePool, config?: AppConfig) {
       const before = await pool.query(`SELECT * FROM users WHERE id=$1 AND status<>'DELETED'`, [request.params.id]);
       if (!before.rowCount) return response.status(404).json({ data: null, error: { code: "USER_NOT_FOUND" } });
       const value = parsed.data;
+      const protectedAdmin = before.rows[0].email.toLowerCase() === config?.INITIAL_ADMIN_EMAIL.toLowerCase();
+      if (protectedAdmin && (value.role === "LEARNER" || value.status === "INACTIVE")) {
+        return response.status(400).json({ data: null, error: { code: "INITIAL_ADMIN_PROTECTED" } });
+      }
       const result = await pool.query(`UPDATE users SET employee_number=COALESCE($2,employee_number), name=COALESCE($3,name),
         email=COALESCE($4,email), organization_id=CASE WHEN $5::boolean THEN $6::uuid ELSE organization_id END,
         position=CASE WHEN $7::boolean THEN $8 ELSE position END, role=COALESCE($9,role), status=COALESCE($10,status),
@@ -125,6 +129,10 @@ export function createAdminRouter(pool: DatabasePool, config?: AppConfig) {
   router.delete("/users/:id", async (request, response, next) => {
     try {
       if (request.params.id === request.currentUser!.id) return response.status(400).json({ data: null, error: { code: "CANNOT_DELETE_SELF" } });
+      const target = await pool.query(`SELECT email FROM users WHERE id=$1 AND status<>'DELETED'`, [request.params.id]);
+      if (target.rows[0]?.email.toLowerCase() === config?.INITIAL_ADMIN_EMAIL.toLowerCase()) {
+        return response.status(400).json({ data: null, error: { code: "INITIAL_ADMIN_PROTECTED" } });
+      }
       const result = await pool.query(`UPDATE users SET status='DELETED', deleted_at=now(), google_subject=NULL, updated_at=now()
         WHERE id=$1 AND status<>'DELETED' RETURNING id, employee_number AS "employeeNumber", name, email`, [request.params.id]);
       if (!result.rowCount) return response.status(404).json({ data: null, error: { code: "USER_NOT_FOUND" } });

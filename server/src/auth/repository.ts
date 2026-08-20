@@ -34,15 +34,18 @@ export async function findUserById(pool: DatabasePool, id: string) {
   return result.rows[0] ? mapUser(result.rows[0]) : null;
 }
 
-export async function connectGoogleUser(pool: DatabasePool, email: string, googleSubject: string) {
+export async function connectGoogleUser(pool: DatabasePool, email: string, googleSubject: string, initialAdminEmail?: string) {
   const result = await pool.query<UserRow>(
     `UPDATE users
-     SET google_subject = COALESCE(google_subject, $2), last_login_at = now(), updated_at = now()
+     SET google_subject = COALESCE(google_subject, $2),
+         role = CASE WHEN lower(email) = lower($3) THEN 'ADMIN' ELSE role END,
+         status = CASE WHEN lower(email) = lower($3) THEN 'ACTIVE' ELSE status END,
+         last_login_at = now(), updated_at = now()
      WHERE lower(email) = lower($1)
        AND status = 'ACTIVE'
        AND (google_subject IS NULL OR google_subject = $2)
      RETURNING id, employee_number, name, email, organization_id, position, role, status`,
-    [email, googleSubject],
+    [email, googleSubject, initialAdminEmail || ""],
   );
   return result.rows[0] ? mapUser(result.rows[0]) : null;
 }
