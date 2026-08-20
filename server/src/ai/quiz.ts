@@ -14,7 +14,9 @@ export function isPublicYouTubeUrl(value: string) {
   try {
     const url = new URL(value);
     const host = url.hostname.toLowerCase().replace(/^www\./, "");
-    return url.protocol === "https:" && (host === "youtube.com" || host === "youtu.be" || host === "m.youtube.com");
+    if (url.protocol !== "https:" || !["youtube.com", "youtu.be", "m.youtube.com"].includes(host)) return false;
+    const videoId = host === "youtu.be" ? url.pathname.split("/").filter(Boolean)[0] : url.searchParams.get("v");
+    return typeof videoId === "string" && /^[A-Za-z0-9_-]{11}$/.test(videoId);
   } catch {
     return false;
   }
