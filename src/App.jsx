@@ -3305,7 +3305,12 @@ function DatabaseLearnerManagement() {
       setArchiveStatus({ configured: true, latest: { action: `GOOGLE_ARCHIVE_SYNCED`, afterData: result, createdAt: result.syncedAt } });
       showAdminToast(`Google 운영대장에 사용자 ${result.counts.users}명과 조직 ${result.counts.organizations}개를 동기화했습니다.`);
     } catch (requestError) {
-      setError(requestError.message === `GOOGLE_ARCHIVE_NOT_CONFIGURED` ? `Google 아카이브 환경변수가 아직 적용되지 않았습니다.` : `Google Sheets/Drive 동기화에 실패했습니다. 공유 권한과 문서 ID를 확인해주세요.`);
+      const archiveErrors = {
+        GOOGLE_ARCHIVE_NOT_CONFIGURED: `Google 아카이브 환경변수가 아직 적용되지 않았습니다.`,
+        FORBIDDEN_ROLE: `관리자 권한이 확인되지 않아 동기화를 실행하지 못했습니다. 다시 로그인한 후 시도해주세요.`,
+        UNAUTHENTICATED: `로그인 세션이 만료되었습니다. 다시 로그인한 후 시도해주세요.`,
+      };
+      setError(archiveErrors[requestError.message] || `Google Sheets/Drive 동기화에 실패했습니다. 공유 권한과 문서 ID를 확인해주세요. (${requestError.message})`);
     } finally { setSyncingArchive(false); }
   };
   return <section className="database-learner-management">

@@ -23,6 +23,21 @@ export function createApp(config: AppConfig, pool: DatabasePool, options: AppOpt
   app.set("trust proxy", config.NODE_ENV === "production" ? 1 : 0);
   app.use(cors({ origin: config.APP_ORIGIN, credentials: true }));
   app.use(express.json({ limit: "1mb" }));
+  app.use((request, response, next) => {
+    if (!request.path.startsWith("/api")) return next();
+    const startedAt = Date.now();
+    const requestId = request.headers["x-vercel-id"] || request.headers["x-request-id"] || "local";
+    response.on("finish", () => console.info(JSON.stringify({
+      level: response.statusCode >= 500 ? "error" : response.statusCode >= 400 ? "warn" : "info",
+      message: "api_request",
+      method: request.method,
+      path: request.path,
+      status: response.statusCode,
+      durationMs: Date.now() - startedAt,
+      requestId,
+    })));
+    next();
+  });
   app.use(session({
     name: "sparkplus.sid",
     store,
@@ -46,6 +61,24 @@ export function createApp(config: AppConfig, pool: DatabasePool, options: AppOpt
     }
   });
 
+  app.get("/api/ready", async (_request, response, next) => {
+    try {
+      const [tables, initialAdmin] = await Promise.all([
+        pool.query(`SELECT COUNT(*)::int AS count FROM information_schema.tables
+          WHERE table_schema='public' AND table_name IN ('users','organizations','courses','enrollments','audit_logs')`),
+        pool.query(`SELECT role,status FROM users WHERE lower(email)=lower($1) LIMIT 1`, [config.INITIAL_ADMIN_EMAIL]),
+      ]);
+      const checks = {
+        database: true,
+        criticalTables: tables.rows[0]?.count === 5,
+        initialAdmin: initialAdmin.rows[0]?.role === "ADMIN" && initialAdmin.rows[0]?.status === "ACTIVE",
+        googleArchiveConfigured: Boolean(config.GOOGLE_SERVICE_ACCOUNT_JSON && config.GOOGLE_SHEET_ID && config.GOOGLE_DRIVE_ROOT_FOLDER_ID),
+      };
+      const ready = checks.database && checks.criticalTables && checks.initialAdmin;
+      response.status(ready ? 200 : 503).json({ data: { status: ready ? "ready" : "not_ready", checks }, error: null });
+    } catch (error) { next(error); }
+  });
+
   app.use("/api/v1/auth", createAuthRouter(config, pool));
   app.use("/api/v1/admin", createAdminRouter(pool, config));
   app.use("/api/v1/leader", createLeaderRouter(pool));
@@ -56,8 +89,15 @@ export function createApp(config: AppConfig, pool: DatabasePool, options: AppOpt
 
   app.use((_request, response) => response.status(404).json({ data: null, error: { code: "NOT_FOUND" } }));
 
-  const errorHandler: ErrorRequestHandler = (error, _request, response, _next) => {
-    console.error(error);
+  const errorHandler: ErrorRequestHandler = (error, request, response, _next) => {
+    console.error(JSON.stringify({
+      level: "error",
+      message: "unhandled_api_error",
+      method: request.method,
+      path: request.path,
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+    }));
     response.status(500).json({ data: null, error: { code: "INTERNAL_SERVER_ERROR" } });
   };
   app.use(errorHandler);

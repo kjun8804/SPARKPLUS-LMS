@@ -1,0 +1,30 @@
+name: Verify LMS
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: verify-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Test server
+        run: npm --workspace server test
+      - name: Type-check server
+        run: npm --workspace server run build
+      - name: Build frontend
+        run: npm run build
