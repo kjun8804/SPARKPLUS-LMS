@@ -42,6 +42,7 @@ CREATE TABLE IF NOT EXISTS enrollments (
   required boolean NOT NULL DEFAULT false, due_date date, status varchar(20) NOT NULL DEFAULT 'ENROLLED', progress integer NOT NULL DEFAULT 0,
   enrolled_at timestamptz NOT NULL DEFAULT now(), completed_at timestamptz, cancelled_at timestamptz, UNIQUE(course_id,user_id)
 );
+ALTER TABLE enrollments ADD COLUMN IF NOT EXISTS survey_submitted_at timestamptz;
 CREATE INDEX IF NOT EXISTS enrollments_user_status_idx ON enrollments(user_id,status);
 CREATE TABLE IF NOT EXISTS lesson_progress (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(), enrollment_id uuid NOT NULL REFERENCES enrollments(id) ON DELETE CASCADE,

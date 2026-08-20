@@ -10780,21 +10780,23 @@ function Z({ value: e, small: t = !1 }) {
 function GoogleFormSurveyPage({ course, go }) {
   const responseUrl = googleFormEmbedUrl(course.googleFormUrl || ``);
   const [submitting,setSubmitting]=r.useState(false);
+  const [submitError,setSubmitError]=r.useState(``);
   const completeSurvey = async () => {
     if(!course.enrollmentId)return;
     setSubmitting(true);
-    try{await apiRequest(`/api/v1/learning/enrollments/${course.enrollmentId}/survey`,{method:`POST`});}
-    catch{return showAdminToast(`설문 완료 상태를 저장하지 못했습니다.`,`error`);}
+    setSubmitError(``);
+    try{const result=await apiRequest(`/api/v1/learning/enrollments/${course.enrollmentId}/survey`,{method:`POST`});showAdminToast(result.completed?`설문 제출과 과정 수료가 완료되었습니다.`:`설문 제출이 반영되었습니다.`);}
+    catch(error){setSubmitError(`설문 완료 상태를 저장하지 못했습니다. 잠시 후 다시 눌러주세요.`);return showAdminToast(`설문 완료 상태를 저장하지 못했습니다.`,`error`);}
     finally{setSubmitting(false);}
     window.dispatchEvent(new CustomEvent(`sparkplus-course-progress`, { detail: { courseId: course.id } }));
-    go(`lectureDetail`, course.id);
+    await go(`lectureDetail`, course.id);
   };
   return (
     <main className="page google-form-user-page">
       <div className="breadcrumb"><button onClick={() => go(`lectureDetail`, course.id)}>나의 학습</button><span>›</span>수료 후 설문</div>
       <header className="google-form-user-head"><h1>수료 후 설문</h1>{responseUrl && <a href={responseUrl.replace(`?embedded=true`, ``)} target="_blank" rel="noreferrer">새 창에서 열기 ↗</a>}</header>
       {responseUrl ? <iframe className="google-form-user-frame" src={responseUrl} title={`${course.title} 수료 후 설문`} /> : <div className="home-data-empty">관리자가 연결한 Google Forms 설문이 없습니다.</div>}
-      <div className="google-form-complete-bar"><div><b>Google Forms 설문을 제출하셨나요?</b><span>제출을 완료한 뒤 아래 버튼을 눌러 수료 Quest에 반영해주세요.</span></div><button className="primary" disabled={submitting||!responseUrl} onClick={completeSurvey}><Icon icon={CheckmarkCircle02Icon} size={17} />{submitting?`저장 중…`:`설문 제출을 완료했어요`}</button></div>
+      <div className="google-form-complete-bar"><div><b>Google Forms 설문을 제출하셨나요?</b><span>Google Forms와 LMS는 별도 시스템이므로 제출 후 이 버튼을 눌러 수료 처리해 주세요.</span>{submitError&&<em className="survey-submit-error">{submitError}</em>}</div><button className="primary" disabled={submitting||!responseUrl} onClick={completeSurvey}><Icon icon={CheckmarkCircle02Icon} size={17} />{submitting?`수료 처리 중…`:`설문 완료 및 수료 처리`}</button></div>
     </main>
   );
 }
