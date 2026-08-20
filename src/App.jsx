@@ -10006,7 +10006,7 @@ function K({
   courses: e,
   search: t,
   setSearch: n,
-  category: r,
+  category: categoryFilter,
   setCategory: a,
   levelFilter: o,
   setLevelFilter: s,
@@ -10036,7 +10036,7 @@ function K({
         onValueChange={n}
         placeholder="과정명, 키워드 검색"
         filters={[
-          { label: `분야`, value: r, onChange: a, options: [`전체 분야`, `직무역량`, `리더십`, `개발`, `커뮤니케이션`, `법정의무`, `AI·DX`] },
+          { label: `분야`, value: categoryFilter, onChange: a, options: [`전체 분야`, `직무역량`, `리더십`, `개발`, `커뮤니케이션`, `법정의무`, `AI·DX`] },
           { label: `레벨`, value: o, onChange: s, options: [`전체 레벨`, `레벨 1`, `레벨 2`, `레벨 3`] },
           { label: `과정 상태`, value: c, onChange: l, options: [`전체 상태`, `오픈 전`, `운영 중`, `종료`] },
         ]}
