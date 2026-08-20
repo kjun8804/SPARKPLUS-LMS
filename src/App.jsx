@@ -3205,13 +3205,18 @@ function DatabaseLearnerManagement() {
   const organizations = r.useMemo(() => flattenOrganizationTree(organizationTree), [organizationTree]);
   const load = r.useCallback(async () => {
     setLoading(true); setError(``);
-    try {
-      const [userData, organizationData, archiveData] = await Promise.all([
-        apiRequest(`/api/v1/admin/users`), apiRequest(`/api/v1/admin/organizations/tree`), apiRequest(`/api/v1/admin/archive/status`),
-      ]);
-      setUsers(userData); setOrganizationTree(organizationData); setArchiveStatus(archiveData);
-    } catch { setError(`사용자와 조직 정보를 불러오지 못했습니다.`); }
-    finally { setLoading(false); }
+    const [userResult,organizationResult,archiveResult]=await Promise.allSettled([
+      apiRequest(`/api/v1/admin/users`),apiRequest(`/api/v1/admin/organizations/tree`),apiRequest(`/api/v1/admin/archive/status`),
+    ]);
+    if(userResult.status===`fulfilled`)setUsers(userResult.value);
+    if(organizationResult.status===`fulfilled`)setOrganizationTree(organizationResult.value);
+    if(archiveResult.status===`fulfilled`)setArchiveStatus(archiveResult.value);
+    else setArchiveStatus({configured:false,unavailable:true,latest:null});
+    const failed=[];
+    if(userResult.status===`rejected`)failed.push(`사용자`);
+    if(organizationResult.status===`rejected`)failed.push(`조직`);
+    if(failed.length)setError(`${failed.join(`·`)} 정보를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.`);
+    setLoading(false);
   }, []);
   r.useEffect(() => { load(); }, [load]);
   const filteredUsers = users.filter((user) => {
