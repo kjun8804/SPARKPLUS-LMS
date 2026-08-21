@@ -1312,13 +1312,9 @@ function CourseEditorV2({ selected, onBack, isNew = false }) {
       ],
     },
   ].slice(0, selected.lessons || 5);
-  const storedAssignment = (() => {
-    try {
-      return JSON.parse(localStorage.getItem(`sparkplus-course-assignment-${selected.id}`)) || {};
-    } catch {
-      return {};
-    }
-  })();
+  const savedAssignments = Array.isArray(selected.assignments) ? selected.assignments : [];
+  const assignmentModes = [...new Set(savedAssignments.map((item) => ({ ALL:`all`, ORGANIZATION:`department`, POSITION:`position`, USER:`individual` })[item.type]).filter(Boolean))];
+  const assignmentTargets = (type) => savedAssignments.filter((item) => item.type === type).map((item) => item.targetId).filter(Boolean);
   const [form, setForm] = r.useState({
     title: isNew ? `` : selected.title,
     category: isNew ? `` : selected.category,
@@ -1341,13 +1337,13 @@ function CourseEditorV2({ selected, onBack, isNew = false }) {
     surveyDescription: isNew ? `` : `교육 내용과 운영에 대한 의견을 들려주세요. 응답 내용은 향후 교육 개선에 활용됩니다.`,
     surveyAnonymous: true,
     surveyQuestions: isNew ? [] : selected.surveyQuestions || createDefaultSurveyQuestions(),
-    assignmentModes: storedAssignment.modes || [],
-    assignedDepartments: storedAssignment.departments || [],
-    assignedPositions: storedAssignment.positions || [],
-    assignedLearnerIds: storedAssignment.learnerIds || [],
-    requiredTraining: Boolean(storedAssignment.required),
-    assignmentDeadlineEnabled: Boolean(storedAssignment.deadline),
-    assignmentDeadline: storedAssignment.deadline || ``,
+    assignmentModes,
+    assignedDepartments: assignmentTargets(`ORGANIZATION`),
+    assignedPositions: assignmentTargets(`POSITION`),
+    assignedLearnerIds: assignmentTargets(`USER`),
+    requiredTraining: savedAssignments.some((item) => item.required),
+    assignmentDeadlineEnabled: savedAssignments.some((item) => item.dueDate),
+    assignmentDeadline: savedAssignments.find((item) => item.dueDate)?.dueDate?.slice(0,10) || ``,
   });
   const [tagInput,setTagInput]=r.useState((isNew?[]:selected.tags||[]).map((tag)=>`#${tag}`).join(`, `));
   const [editingIndex, setEditingIndex] = r.useState(null);
@@ -1360,7 +1356,10 @@ function CourseEditorV2({ selected, onBack, isNew = false }) {
   const [lessonDeleteIndex, setLessonDeleteIndex] = r.useState(null);
   const [courseDeleteOpen, setCourseDeleteOpen] = r.useState(false);
   const [generatingQuiz, setGeneratingQuiz] = r.useState(false);
-  const assignmentLearners = r.useMemo(() => getAssignmentLearners(), []);
+  const [assignmentLearners,setAssignmentLearners]=r.useState([]);
+  r.useEffect(()=>{apiRequest(`/api/v1/admin/management`).then((data)=>setAssignmentLearners((data.users||[]).filter((user)=>user.status===`ACTIVE`).map((user)=>({id:user.id,employeeNumber:user.employeeNumber,name:user.name,dept:user.organizationName||`소속 미지정`,position:user.position||`직책 미지정`})))).catch(()=>setAssignmentLearners([]));},[]);
+  const assignmentDepartments=r.useMemo(()=>[...new Set(assignmentLearners.map((learner)=>learner.dept).filter((value)=>value&&value!==`소속 미지정`))],[assignmentLearners]);
+  const assignmentPositions=r.useMemo(()=>[...new Set(assignmentLearners.map((learner)=>learner.position).filter((value)=>value&&value!==`직책 미지정`))],[assignmentLearners]);
   const formMounted = r.useRef(false);
   const sectionRefs = { basic: r.useRef(null), lessons: r.useRef(null), survey: r.useRef(null) };
   r.useEffect(() => {
@@ -1397,7 +1396,7 @@ function CourseEditorV2({ selected, onBack, isNew = false }) {
   }, [form.assignmentModes, form.assignedDepartments, form.assignedPositions, form.assignedLearnerIds, assignmentLearners]);
   const filteredAssignmentLearners = assignmentLearners.filter((learner) => {
     const keyword = assignmentSearch.trim().toLowerCase();
-    return !keyword || learner.name.toLowerCase().includes(keyword) || learner.id.toLowerCase().includes(keyword);
+    return !keyword || learner.name.toLowerCase().includes(keyword) || learner.employeeNumber.toLowerCase().includes(keyword);
   });
   const addLesson = () => {
     setForm((current) => ({
@@ -1719,9 +1718,9 @@ function CourseEditorV2({ selected, onBack, isNew = false }) {
           <div className="assignment-method-grid">
             {[[`all`,`전체 학습자`,`등록된 모든 학습자`],[`department`,`부서별`,`선택한 부서 전체`],[`position`,`직급별`,`선택한 직급 전체`],[`individual`,`개별 학습자`,`이름·사번으로 선택`]].map(([value,label,description]) => <label className={form.assignmentModes.includes(value) ? `selected` : ``} key={value}><input type="checkbox" checked={form.assignmentModes.includes(value)} onChange={() => toggleAssignmentMode(value)} /><span><b>{label}</b><small>{description}</small></span></label>)}
           </div>
-          {form.assignmentModes.includes(`department`) && <div className="assignment-option-block"><h4>부서 선택</h4><div className="assignment-chip-list">{LMS_ASSIGNMENT_DEPARTMENTS.map((value) => <button type="button" className={form.assignedDepartments.includes(value) ? `selected` : ``} onClick={() => toggleAssignmentValue(`assignedDepartments`, value)} key={value}>{form.assignedDepartments.includes(value) && <Icon icon={CheckmarkCircle02Icon} size={14} />}{value}</button>)}</div></div>}
-          {form.assignmentModes.includes(`position`) && <div className="assignment-option-block"><h4>직급 선택</h4><div className="assignment-chip-list">{LMS_ASSIGNMENT_POSITIONS.map((value) => <button type="button" className={form.assignedPositions.includes(value) ? `selected` : ``} onClick={() => toggleAssignmentValue(`assignedPositions`, value)} key={value}>{form.assignedPositions.includes(value) && <Icon icon={CheckmarkCircle02Icon} size={14} />}{value}</button>)}</div></div>}
-          {form.assignmentModes.includes(`individual`) && <div className="assignment-option-block assignment-individual-block"><h4>개별 학습자 선택</h4><label className="assignment-learner-search"><Icon icon={Search01Icon} size={17} /><input value={assignmentSearch} onChange={(event) => setAssignmentSearch(event.target.value)} placeholder="이름 또는 사번 검색" /></label><div className="assignment-learner-list">{filteredAssignmentLearners.map((learner) => <label className={form.assignedLearnerIds.includes(learner.id) ? `selected` : ``} key={learner.id}><input type="checkbox" checked={form.assignedLearnerIds.includes(learner.id)} onChange={() => toggleAssignmentValue(`assignedLearnerIds`, learner.id)} /><span>{learner.name[0]}</span><div><b>{learner.name}</b><small>{learner.id} · {learner.dept} · {learner.position}</small></div></label>)}</div></div>}
+          {form.assignmentModes.includes(`department`) && <div className="assignment-option-block"><h4>부서 선택</h4><div className="assignment-chip-list">{assignmentDepartments.map((value) => <button type="button" className={form.assignedDepartments.includes(value) ? `selected` : ``} onClick={() => toggleAssignmentValue(`assignedDepartments`, value)} key={value}>{form.assignedDepartments.includes(value) && <Icon icon={CheckmarkCircle02Icon} size={14} />}{value}</button>)}</div></div>}
+          {form.assignmentModes.includes(`position`) && <div className="assignment-option-block"><h4>직급 선택</h4><div className="assignment-chip-list">{assignmentPositions.map((value) => <button type="button" className={form.assignedPositions.includes(value) ? `selected` : ``} onClick={() => toggleAssignmentValue(`assignedPositions`, value)} key={value}>{form.assignedPositions.includes(value) && <Icon icon={CheckmarkCircle02Icon} size={14} />}{value}</button>)}</div></div>}
+          {form.assignmentModes.includes(`individual`) && <div className="assignment-option-block assignment-individual-block"><h4>개별 학습자 선택</h4><label className="assignment-learner-search"><Icon icon={Search01Icon} size={17} /><input value={assignmentSearch} onChange={(event) => setAssignmentSearch(event.target.value)} placeholder="이름 또는 사번 검색" /></label><div className="assignment-learner-list">{filteredAssignmentLearners.map((learner) => <label className={form.assignedLearnerIds.includes(learner.id) ? `selected` : ``} key={learner.id}><input type="checkbox" checked={form.assignedLearnerIds.includes(learner.id)} onChange={() => toggleAssignmentValue(`assignedLearnerIds`, learner.id)} /><span>{learner.name[0]}</span><div><b>{learner.name}</b><small>{learner.employeeNumber} · {learner.dept} · {learner.position}</small></div></label>)}</div></div>}
           <div className="assignment-settings">
             <label className="assignment-required"><input type="checkbox" checked={form.requiredTraining} onChange={(event) => update(`requiredTraining`, event.target.checked)} /><span><b>필수 교육으로 배정</b><small>대상 학습자의 나의 학습에 자동으로 추가됩니다.</small></span></label>
             <div className="assignment-deadline"><label><input type="checkbox" checked={form.assignmentDeadlineEnabled} onChange={(event) => update(`assignmentDeadlineEnabled`, event.target.checked)} /><span><b>학습 기한 설정</b><small>{form.assignmentDeadlineEnabled ? `기한 내 수료가 필요합니다.` : `기한 없음`}</small></span></label>{form.assignmentDeadlineEnabled && <input type="date" value={form.assignmentDeadline} min="2026-08-01" onChange={(event) => update(`assignmentDeadline`, event.target.value)} />}</div>
@@ -8433,30 +8432,23 @@ function w() {
     ],
   });
 }
-const adminNoticeSeed = [
-  { id: 101, category: `필수 안내`, title: `2026년 하반기 법정필수교육 수강 안내`, target: `전체 임직원`, start: `2026.08.05`, end: `2026.08.31`, status: `게시 중`, views: 186, important: true, content: `2026년 하반기 법정필수교육 일정을 안내드립니다. 모든 임직원은 교육 기간 내 필수 과정을 수료해 주세요.`, file: `2026_하반기_법정필수교육_안내.pdf` },
-  { id: 102, category: `시스템 안내`, title: `LMS 서비스 정기 점검 안내`, target: `전체 임직원`, start: `2026.08.18`, end: `2026.08.25`, status: `게시 예정`, views: 0, important: true, content: `안정적인 서비스 제공을 위해 LMS 정기 점검을 진행합니다. 점검 시간에는 학습 진도 저장이 일시적으로 제한될 수 있습니다.`, file: `` },
-  { id: 103, category: `교육 안내`, title: `신규 리더십 과정 오픈 안내`, target: `파트장 이상`, start: `2026.08.01`, end: `2026.09.15`, status: `게시 중`, views: 121, important: false, content: `신임 리더를 위한 리더십 과정이 새롭게 오픈되었습니다. 대상자는 교육과정 조회에서 상세 내용을 확인해 주세요.`, file: `리더십과정_안내.pdf` },
-  { id: 104, category: `교육 안내`, title: `데이터 분석 기초 과정 학습 일정 안내`, target: `데이터 분석 기초 입문 수강자`, start: `2026.08.03`, end: `2026.08.30`, status: `게시 중`, views: 84, important: false, content: `데이터 분석 기초 입문 과정의 학습 일정과 주요 안내사항을 확인해 주세요.`, file: `` },
-  { id: 105, category: `일반 공지`, title: `8월 학습 우수자 발표`, target: `전체 임직원`, start: `2026.08.08`, end: `2026.08.31`, status: `게시 중`, views: 203, important: false, content: `8월 학습 우수자를 안내드립니다. 선정된 구성원에게는 개별적으로 리워드 지급 일정을 안내할 예정입니다.`, file: `` },
-  { id: 106, category: `교육 안내`, title: `People팀 온보딩 교육 안내`, target: `People팀`, start: `2026.07.01`, end: `2026.07.31`, status: `종료`, views: 57, important: false, content: `People팀 신규 입사자를 위한 온보딩 교육 안내입니다.`, file: `` },
-  { id: 107, category: `시스템 안내`, title: `모바일 학습 환경 개선 안내`, target: `전체 임직원`, start: `2026.08.20`, end: ``, status: `임시저장`, views: 0, important: false, content: `모바일 학습 환경 개선 사항을 안내드립니다.`, file: `` },
-];
-
 function emptyNoticeForm() {
-  return { id: null, category: `필수 안내`, title: ``, targetType: `전체 임직원`, departments: [], course: `데이터 분석 기초 입문`, start: `2026-08-11`, end: `2026-08-31`, noEnd: false, important: false, content: ``, file: `` };
+  const start = new Date().toISOString().slice(0, 10);
+  const endDate = new Date();
+  endDate.setMonth(endDate.getMonth() + 1);
+  return { id: null, category: `필수 안내`, title: ``, targetType: `전체 임직원`, departments: [], course: ``, start, end: endDate.toISOString().slice(0, 10), noEnd: false, important: false, content: ``, file: `` };
 }
 
 function T({ createSignal }) {
-  const [notices, setNotices] = r.useState(() => {
-    try { return JSON.parse(localStorage.getItem(`sparkplus-admin-notices`)) || adminNoticeSeed; } catch { return adminNoticeSeed; }
-  });
+  const [notices, setNotices] = r.useState([]);
   const [query, setQuery] = r.useState(``);
   const [screen, setScreen] = r.useState(`list`);
   const [form, setForm] = r.useState(null);
   const [viewing, setViewing] = r.useState(null);
   const [deleteTarget, setDeleteTarget] = r.useState(null);
   const initialSignal = r.useRef(createSignal);
+  const loadNotices = () => apiRequest(`/api/v1/admin/notices`).then(setNotices).catch(() => showAdminToast(`공지사항을 불러오지 못했습니다.`));
+  r.useEffect(() => { loadNotices(); }, []);
   r.useEffect(() => {
     if (createSignal !== initialSignal.current) {
       initialSignal.current = createSignal;
@@ -8464,31 +8456,36 @@ function T({ createSignal }) {
       setScreen(`create`);
     }
   }, [createSignal]);
-  r.useEffect(() => {
-    localStorage.setItem(`sparkplus-admin-notices`, JSON.stringify(notices));
-    window.dispatchEvent(new CustomEvent(`sparkplus-notices-updated`));
-  }, [notices]);
   const visible = notices.filter((notice) =>
     (!query || notice.title.toLowerCase().includes(query.toLowerCase())) &&
     true
   );
-  const saveNotice = () => {
+  const saveNotice = async () => {
     if (!form.title.trim()) return alert(`공지사항 제목을 입력해 주세요.`);
     if (!form.content.trim()) return alert(`공지 내용을 입력해 주세요.`);
     const editing = Boolean(form.id);
-    const next = { ...form, id: form.id || Date.now(), target: `전체 임직원`, status: `게시 중`, views: form.views || 0 };
-    setNotices((current) => form.id ? current.map((item) => item.id === form.id ? next : item) : [next, ...current]);
-    setForm(null);
-    setScreen(`list`);
-    showAdminToast(editing ? `공지사항이 수정되었습니다.` : `공지사항이 등록되었습니다.`);
+    const targetDetails = form.targetType === `부서 선택` ? form.departments : form.targetType === `교육과정 수강자` ? [form.course].filter(Boolean) : [];
+    try {
+      const saved = await apiRequest(editing ? `/api/v1/admin/notices/${form.id}` : `/api/v1/admin/notices`, { method: editing ? `PATCH` : `POST`, body: JSON.stringify({ category:form.category,title:form.title,targetType:form.targetType,targetDetails,start:form.start,end:form.noEnd || !form.end ? null : form.end,status:`PUBLISHED`,important:form.important,content:form.content,file:form.file || null }) });
+      setNotices((current) => editing ? current.map((item) => item.id === form.id ? saved : item) : [saved, ...current]);
+      setForm(null);
+      setViewing(saved);
+      setScreen(`list`);
+      window.dispatchEvent(new CustomEvent(`sparkplus-notices-updated`));
+      showAdminToast(editing ? `공지사항이 수정되었습니다.` : `공지사항이 등록되었습니다.`);
+    } catch { showAdminToast(`공지사항을 저장하지 못했습니다.`); }
   };
   const editNotice = (notice) => { setForm({ ...emptyNoticeForm(), ...notice, start: notice.start?.replaceAll(`.`, `-`) || ``, end: notice.end?.replaceAll(`.`, `-`) || `` }); setScreen(`edit`); };
-  const removeNotice = (notice) => {
-    setNotices((current) => current.filter((item) => item.id !== notice.id));
-    setDeleteTarget(null);
-    setViewing(null);
-    setScreen(`list`);
-    showAdminToast(`공지사항이 삭제되었습니다.`);
+  const removeNotice = async (notice) => {
+    try {
+      await apiRequest(`/api/v1/admin/notices/${notice.id}`, { method: `DELETE` });
+      setNotices((current) => current.filter((item) => item.id !== notice.id));
+      setDeleteTarget(null);
+      setViewing(null);
+      setScreen(`list`);
+      window.dispatchEvent(new CustomEvent(`sparkplus-notices-updated`));
+      showAdminToast(`공지사항이 삭제되었습니다.`);
+    } catch { showAdminToast(`공지사항을 삭제하지 못했습니다.`); }
   };
   if (screen === `create` || screen === `edit`) return <NoticeEditorPage form={form} setForm={setForm} onCancel={() => { setForm(null); setScreen(screen === `edit` ? `detail` : `list`); }} onSave={saveNotice} />;
   if (screen === `detail` && viewing) return <><NoticeDetailPage notice={viewing} onBack={() => setScreen(`list`)} onEdit={() => editNotice(viewing)} onDelete={() => setDeleteTarget(viewing)} />{deleteTarget && <NoticeDeleteDialog onCancel={() => setDeleteTarget(null)} onConfirm={() => removeNotice(deleteTarget)} />}</>;
@@ -8953,15 +8950,6 @@ var O = [
       file: ``,
     },
   ];
-function getUserNoticeData() {
-  try {
-    const managed = JSON.parse(localStorage.getItem(`sparkplus-admin-notices`)) || [];
-    const published = managed
-      .filter((notice) => notice.status === `게시 중` && (notice.target === `전체 임직원` || notice.target?.includes(`People팀`) || notice.target?.includes(`수강자`)))
-      .map((notice) => ({ ...notice, writer: `LMS 관리자`, date: (notice.start || `2026-08-11`).replaceAll(`-`, `.`) }));
-    return published.sort((left, right) => Number(right.important) - Number(left.important) || right.date.localeCompare(left.date));
-  } catch { return []; }
-}
 function M() {
   let [theme, setTheme] = (0, r.useState)(
     () => localStorage.getItem(`sparkplus-theme`) || `light`,
@@ -8997,7 +8985,7 @@ function M() {
     [J, Y] = (0, r.useState)(1),
     [rewardInitialTab, setRewardInitialTab] = (0, r.useState)(`ranking`),
     [wishlistIds, setWishlistIds] = (0, r.useState)(() => O.filter((course) => localStorage.getItem(`sparkplus-wishlist-${course.id}`) === `true`).map((course) => course.id)),
-    [userNotices, setUserNotices] = (0, r.useState)(getUserNoticeData);
+    [userNotices, setUserNotices] = (0, r.useState)([]);
   const loadLearningCourses = () => apiRequest(`/api/v1/learning/courses`).then((items) => {
     g(items.map((course) => ({ ...course, enrolled:Boolean(course.enrollmentId), progress:Number(course.progress||0), totalLessons:Number(course.totalLessons||0), completedLessons:Number(course.completedLessons||0), requiredTraining:Boolean(course.required), assignmentDeadline:course.dueDate || ``, description:course.description || ``, status:`운영 중`, lessons:Number(course.totalLessons||0) })));
   });
@@ -9028,12 +9016,11 @@ function M() {
       return () => { active = !1; };
     }, []),
     (0, r.useEffect)(() => {
-      const refreshNotices = () => setUserNotices(getUserNoticeData());
+      const refreshNotices = () => apiRequest(`/api/v1/notices`).then(setUserNotices).catch(() => setUserNotices([]));
+      refreshNotices();
       window.addEventListener(`sparkplus-notices-updated`, refreshNotices);
-      window.addEventListener(`storage`, refreshNotices);
       return () => {
         window.removeEventListener(`sparkplus-notices-updated`, refreshNotices);
-        window.removeEventListener(`storage`, refreshNotices);
       };
     }, []),
     (0, r.useEffect)(() => {

@@ -10,6 +10,7 @@ import { createLeaderRouter } from "./routes/leader.js";
 import { createCoursesRouter } from "./routes/courses.js";
 import { createLearningRouter } from "./routes/learning.js";
 import { createAdminRewardsRouter, createRewardsRouter } from "./routes/rewards.js";
+import { createAdminNoticesRouter, createNoticesRouter } from "./routes/notices.js";
 
 interface AppOptions {
   sessionStore?: session.Store;
@@ -81,11 +82,13 @@ export function createApp(config: AppConfig, pool: DatabasePool, options: AppOpt
   });
 
   app.use("/api/v1/auth", createAuthRouter(config, pool));
+  app.use("/api/v1/admin/notices", createAdminNoticesRouter(pool));
   app.use("/api/v1/admin", createAdminRouter(pool, config));
   app.use("/api/v1/leader", createLeaderRouter(pool));
   app.use("/api/v1/courses", createCoursesRouter(pool, config));
   app.use("/api/v1/learning", createLearningRouter(pool, config));
   app.use("/api/v1/rewards", createRewardsRouter(pool));
+  app.use("/api/v1/notices", createNoticesRouter(pool));
   app.use("/api/v1/admin/rewards", createAdminRewardsRouter(pool));
 
   app.use((_request, response) => response.status(404).json({ data: null, error: { code: "NOT_FOUND" } }));

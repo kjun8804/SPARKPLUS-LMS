@@ -1,12 +1,23 @@
-# SPARKPLUS LMS Prototype
+# SPARKPLUS LMS
 
-현재 공개된 SPARKPLUS 사용자용 LMS 프로토타입을 다른 PC에서도 실행하고 수정할 수 있도록 정리한 React 프로젝트입니다.
+SPARKPLUS 임직원 교육을 위한 LMS입니다. React/Vite 프론트엔드와 Express API, PostgreSQL 데이터베이스로 구성되며 Vercel에 배포됩니다.
 
-## 다른 PC에서 실행하기
+## 주요 기능
 
-1. Node.js 20 이상을 설치합니다.
-2. 이 프로젝트 폴더에서 터미널을 엽니다.
-3. 아래 명령어를 순서대로 실행합니다.
+- `@sparkplus.co` Google 계정 로그인
+- 관리자·학습자 권한과 조직 리더 범위
+- 3단계 조직 및 사용자 등록, Excel/CSV 일괄 등록
+- 교육과정·차시·대상 배정과 필수 과정 관리
+- YouTube/Google Drive 학습 콘텐츠와 AI 퀴즈 자동 생성
+- 진도·퀴즈·설문·수료·리워드·뱃지·수료증 처리
+- Google Sheets 운영대장 및 Google Drive 아카이브 동기화
+- 공지사항 등록·게시·삭제 및 대상별 노출
+
+PostgreSQL이 운영 데이터의 원본이며, Google Sheets와 Drive는 조회·보관을 위한 아카이브입니다.
+
+## 로컬 실행
+
+Node.js 20 이상이 필요합니다.
 
 ```bash
 npm install
@@ -15,31 +26,48 @@ npm run dev
 
 터미널에 표시되는 로컬 주소를 브라우저에서 열면 됩니다.
 
-## 배포용 파일 만들기
+API를 별도로 실행하려면 다음 명령을 사용합니다.
+
+```bash
+npm --workspace server run dev
+```
+
+## 검사
 
 ```bash
 npm run build
+npm --workspace server run build
+npm --workspace server test
 ```
 
-빌드 결과는 `dist` 폴더에 생성됩니다. GitHub와 연결한 뒤 Vercel, Cloudflare Pages, Netlify 등에서 배포할 수 있습니다.
+## 데이터베이스
 
-## GitHub에 올리기
+마이그레이션 파일은 `server/src/database/migrations`에 있습니다. 새 환경에서는 다음 명령으로 적용합니다.
 
-GitHub Desktop을 이용하는 방법이 가장 간단합니다.
+```bash
+npm --workspace server run db:migrate
+```
 
-1. GitHub Desktop을 설치하고 로그인합니다.
-2. `File > Add local repository`에서 이 폴더를 선택합니다.
-3. 저장소가 아니라고 나오면 `create a repository`를 선택합니다.
-4. 저장소 이름을 `sparkplus-lms-prototype`으로 지정합니다.
-5. `Publish repository`를 누릅니다.
-6. 회사 자료라면 `Keep this code private`를 체크해 비공개 저장소로 올립니다.
+## 주요 환경변수
 
-## 주요 파일
+- `DATABASE_URL`
+- `SESSION_SECRET`
+- `APP_ORIGIN`
+- `INITIAL_ADMIN_EMAIL`
+- `GOOGLE_CLIENT_ID`
+- `GOOGLE_CLIENT_SECRET`
+- `GOOGLE_REDIRECT_URI`
+- `GOOGLE_SERVICE_ACCOUNT_JSON`
+- `GOOGLE_SHEET_ID`
+- `GOOGLE_DRIVE_ROOT_FOLDER_ID`
+- `GEMINI_API_KEY`
 
-- `src/App.jsx`: 화면 데이터, 페이지 구성, 버튼 동작
-- `src/styles.css`: 색상, 크기, 간격 등 전체 디자인
-- `src/main.jsx`: React 앱 시작 파일
+비밀값은 Git에 저장하지 않고 Vercel Environment Variables에서 관리합니다.
 
-## 현재 구현 범위
+## 주요 경로
 
-이 프로젝트는 프론트엔드 프로토타입이며 로그인, 교육과정, 진도율 등은 샘플 데이터로 동작합니다. 실제 임직원 계정과 학습 데이터를 연동하려면 추후 백엔드와 데이터베이스 작업이 필요합니다.
+- `src/App.jsx`: React 화면 및 사용자 상호작용
+- `src/styles.css`: 공통 화면 스타일
+- `server/src/app.ts`: API 애플리케이션 구성
+- `server/src/routes`: 인증·관리·과정·학습·리워드·공지 API
+- `server/src/database/migrations`: PostgreSQL 스키마 변경 이력
