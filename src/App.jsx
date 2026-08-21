@@ -6276,7 +6276,14 @@ function LearningRewardsPage() {
     const query=new URLSearchParams({start:effectiveRankingRange.start,end:effectiveRankingRange.end});
     apiRequest(`/api/v1/admin/rewards?${query}`).then((data)=>{
       if(!active)return;
-      setRewardPeople(data.ranking || []);
+      setRewardPeople((data.ranking || []).map((item) => ({
+        ...item,
+        point: Number(item.points ?? item.point ?? 0),
+        points: Number(item.points ?? item.point ?? 0),
+        courses: Number(item.courses || 0),
+        badges: Number(item.badges || 0),
+        rank: Number(item.rank || 0),
+      })));
       setPointRules((data.rules || []).map((rule)=>({...rule,id:rule.activityType,targetType:`전체 교육과정`,course:``,threshold:1,frequency:`조건 달성마다`})));
       setBadges((data.badges || []).map((badge)=>({...badge,activityType:badge.metric,targetType:`전체 교육과정`,course:``})));
       setRecentRewards(data.recent || []);
@@ -6378,7 +6385,7 @@ function LearningRewardsPage() {
                       </td>
                       <td>{item.dept}</td>
                       <td>
-                        <strong>{item.point.toLocaleString()}P</strong>
+                        <strong>{Number(item.point || 0).toLocaleString()}P</strong>
                       </td>
                       <td>{item.courses}개</td>
                       <td>{item.badges}개</td>
@@ -6457,7 +6464,7 @@ function LearningRewardsPage() {
           onClose={() => setDetail(null)}
         >
           {detail.type === `points` ? (
-            <><div className="point-detail-summary"><div><span>선택 기간 포인트</span><b>{detail.point.toLocaleString()}P</b></div><div><span>선택 기간 순위</span><b>{detail.rank}위</b></div><div><span>획득 뱃지</span><b>{detail.badges}개</b></div></div>
+            <><div className="point-detail-summary"><div><span>선택 기간 포인트</span><b>{Number(detail.point || 0).toLocaleString()}P</b></div><div><span>선택 기간 순위</span><b>{detail.rank}위</b></div><div><span>획득 뱃지</span><b>{detail.badges}개</b></div></div>
             <div className="point-history actual-history"><p className="table-empty">실제 포인트 적립 내역이 없습니다.</p></div></>
           ) : (
             <div className="badge-recipient-list"><p className="table-empty">실제 뱃지 획득 내역이 없습니다.</p></div>
@@ -6483,7 +6490,7 @@ function RewardTopThree({ items, type }) {
             <div className="podium-rank">{index + 1}위</div>
             <h3>{type === `individual` ? item.name : item.dept}</h3>
             <p>{type === `individual` ? item.dept : `참여 ${item.members}명`}</p>
-            <strong>{(type === `individual` ? item.point : item.averagePoint).toLocaleString()}P</strong>
+            <strong>{Number(type === `individual` ? item.point : item.averagePoint).toLocaleString()}P</strong>
             {type === `department` && <small>1인당 평균</small>}
           </article>
         ))}
