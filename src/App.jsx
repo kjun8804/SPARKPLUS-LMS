@@ -3218,7 +3218,7 @@ const apiRequestWithRetry = async (url, options = {}, attempts = 2) => {
   throw lastError;
 };
 
-function DatabaseLearnerManagement() {
+function DatabaseLearnerManagement({ onSelect }) {
   const emptyUser = { employeeNumber: ``, name: ``, email: ``, organizationId: ``, position: ``, role: `LEARNER`, status: `ACTIVE`, leaderOrganizationIds:[] };
   const [users, setUsers] = r.useState([]), [organizationTree, setOrganizationTree] = r.useState([]);
   const [loading, setLoading] = r.useState(true), [error, setError] = r.useState(``), [query, setQuery] = r.useState(``);
@@ -3359,7 +3359,7 @@ function DatabaseLearnerManagement() {
       {filteredUsers.map((user) => <tr key={user.id}><td><div className="person"><span>{user.name[0]}</span><div><b>{user.name}</b><small>{user.employeeNumber} · {user.email}</small></div></div></td>
         <td>{user.organizationName || `미지정`}</td><td>{user.position || `미지정`}</td><td>{user.role === `ADMIN` ? `관리자` : `학습자`}</td>
         <td><span className={`learner-account-status ${user.status === `ACTIVE` ? `active` : `inactive`}`}>{user.status === `ACTIVE` ? `활성` : `비활성`}</span></td>
-        <td><div className="database-row-actions"><button onClick={() => openEdit(user)}>수정</button><button onClick={() => changeStatus(user)}>{user.status === `ACTIVE` ? `비활성화` : `활성화`}</button><button className="danger" onClick={() => deleteUser(user)}>삭제</button></div></td></tr>)}
+        <td><div className="database-row-actions"><button onClick={() => onSelect?.({ ...user, userId:user.id, id:user.employeeNumber, dept:user.organizationName || `소속 미지정`, courses:0, completed:0, progress:0 })}>상세</button><button onClick={() => openEdit(user)}>수정</button><button onClick={() => changeStatus(user)}>{user.status === `ACTIVE` ? `비활성화` : `활성화`}</button><button className="danger" onClick={() => deleteUser(user)}>삭제</button></div></td></tr>)}
     </tbody></table>{!loading && !error && !filteredUsers.length && <div className="learner-management-empty">등록된 사용자가 없습니다.</div>}{!loading && error && !filteredUsers.length && <div className="learner-management-empty">데이터 조회에 실패했습니다. 위의 ‘다시 불러오기’를 눌러주세요.</div>}{loading && <div className="learner-management-empty">데이터를 불러오고 있습니다.</div>}</div>
     {userModal && <div className="overlay center" onMouseDown={() => setUserModal(null)}><section className="learner-registration-modal database-modal" onMouseDown={(event) => event.stopPropagation()}><header><div><h2>{userModal.mode === `create` ? `사용자 등록` : `사용자 수정`}</h2><p>@sparkplus.co Google 계정과 연결될 정보를 입력합니다.</p></div><button onClick={() => setUserModal(null)}><Icon icon={Cancel01Icon} /></button></header><div className="learner-registration-form">
       <label><span>사번 *</span><input value={userForm.employeeNumber} onChange={(event) => setUserForm({ ...userForm, employeeNumber: event.target.value })} /></label>
@@ -3766,116 +3766,86 @@ function LearnerDepartmentHub({ onSelect }) {
 }
 
 function LearnerProfilePage({ learner, onBack, onUpdate }) {
-  const departments = [`People팀`, `개발팀`, `마케팅팀`, `운영팀`, `세일즈팀`, `공간디자인팀`];
-  const positions = [`인턴`, `사원`, `매니저`, `파트장`, `팀장`];
   const [editOpen, setEditOpen] = r.useState(false);
   const [statusConfirmOpen, setStatusConfirmOpen] = r.useState(false);
   const [editTouched, setEditTouched] = r.useState({});
-  const [editForm, setEditForm] = r.useState({ name: learner.name, email: learner.email || `${learner.id.toLowerCase()}@sparkplus.co`, dept: learner.dept, position: learner.position });
-  const managedLearners = getAssignmentLearners();
+  const [detail,setDetail]=r.useState(null);
+  const userId=learner.userId || learner.id;
+  const loadDetail=r.useCallback(()=>apiRequest(`/api/v1/admin/users/${userId}/learning-summary`).then(setDetail).catch(()=>showAdminToast(`학습자 상세 정보를 불러오지 못했습니다.`,`error`)),[userId]);
+  r.useEffect(()=>{loadDetail();},[loadDetail]);
+  const profileUser=detail?.user || learner;
+  const summary=detail?.summary || {courses:0,completed:0,averageProgress:0,badgeCount:0,points:0,requiredTotal:0,requiredCompleted:0};
+  const [editForm, setEditForm] = r.useState({ name: learner.name, email: learner.email || ``, position: learner.position || `` });
   const normalizedEditEmail = editForm.email.trim().toLowerCase();
   const editErrors = {
     name: editForm.name.trim() ? `` : `이름을 입력해주세요.`,
-    email: !normalizedEditEmail ? `이메일을 입력해주세요.` : !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEditEmail) ? `올바른 이메일 형식으로 입력해주세요.` : managedLearners.some((item) => item.id !== learner.id && item.email?.toLowerCase() === normalizedEditEmail) ? `이미 등록된 이메일입니다.` : ``,
-    dept: editForm.dept ? `` : `부서를 선택해주세요.`,
+    email: !normalizedEditEmail ? `이메일을 입력해주세요.` : !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEditEmail) ? `올바른 이메일 형식으로 입력해주세요.` : ``,
     position: editForm.position ? `` : `직급을 선택해주세요.`,
   };
   const canSaveLearner = Object.values(editErrors).every((error) => !error);
-  const persistLearner = (updates) => {
-    const updated = { ...learner, ...updates };
-    const current = getAssignmentLearners();
-    localStorage.setItem(`sparkplus-managed-learners`, JSON.stringify(current.map((item) => item.id === learner.id ? { ...item, ...updates } : item)));
+  const persistLearner = async (updates) => {
+    const saved=await apiRequest(`/api/v1/admin/users/${userId}`,{method:`PATCH`,body:JSON.stringify(updates)});
+    const updated={...learner,...saved,userId:saved.id,id:saved.employeeNumber,dept:profileUser.organizationName};
     onUpdate?.(updated);
+    await loadDetail();
     return updated;
   };
-  const saveLearnerInfo = () => {
-    setEditTouched({ name: true, email: true, dept: true, position: true });
+  const saveLearnerInfo = async () => {
+    setEditTouched({ name: true, email: true, position: true });
     if (!canSaveLearner) return;
-    persistLearner({ name: editForm.name.trim(), email: normalizedEditEmail, dept: editForm.dept, position: editForm.position });
-    setEditOpen(false);
-    showAdminToast(`학습자 정보가 수정되었습니다.`);
+    try { await persistLearner({ name: editForm.name.trim(), email: normalizedEditEmail, position: editForm.position.trim() }); setEditOpen(false); showAdminToast(`학습자 정보가 수정되었습니다.`); }
+    catch { showAdminToast(`학습자 정보를 수정하지 못했습니다.`,`error`); }
   };
-  const toggleLearnerStatus = () => {
-    const activating = learner.status === `비활성`;
-    persistLearner({ status: activating ? `재직` : `비활성` });
-    setStatusConfirmOpen(false);
-    showAdminToast(activating ? `계정이 활성화되었습니다.` : `계정이 비활성화되었습니다.`);
+  const toggleLearnerStatus = async () => {
+    const activating = profileUser.status === `INACTIVE`;
+    try { await persistLearner({ status: activating ? `ACTIVE` : `INACTIVE` }); setStatusConfirmOpen(false); showAdminToast(activating ? `계정이 활성화되었습니다.` : `계정이 비활성화되었습니다.`); }
+    catch { showAdminToast(`계정 상태를 변경하지 못했습니다.`,`error`); }
   };
-  const learningCourses = a
-    .concat(a)
-    .slice(0, learner.courses)
-    .map((course, index) => {
-      const learningProgress =
-        index < learner.completed
-          ? 100
-          : index === learner.completed
-            ? learner.progress
-            : 0;
-      const userCourseId = ({ 1: 1, 2: 2, 3: 6, 4: 5 })[course.id] || course.id;
-      const surveyRequired = getCourseConfig(userCourseId).surveyEnabled !== false;
-      const surveySubmitted = learningProgress === 100 && index < learner.completed;
-      const completed = learningProgress === 100 && (!surveyRequired || surveySubmitted);
-      const totalLessons = course.lessons || 5;
-      const completedLessons = Math.min(
-        totalLessons,
-        Math.floor((learningProgress / 100) * totalLessons),
-      );
-      return {
-        ...course,
-        learningProgress,
-        totalLessons,
-        completedLessons,
-        surveyRequired,
-        surveySubmitted,
-        state: completed ? `수료` : learningProgress > 0 ? `학습 중` : `미수강`,
-        completedAt: completed ? `2026.08.${String(8 - index).padStart(2, `0`)}` : null,
-      };
-    });
-  const requiredCourseTotal = 5;
-  const requiredCourseCompleted = Math.min(requiredCourseTotal, learner.completed);
-  const overallCompletionRate = learner.courses
-    ? Math.round((learner.completed / learner.courses) * 100)
-    : 0;
+  const learningCourses=(detail?.courses || []).map((course)=>({...course,learningProgress:Number(course.progress||0),period:course.startDate&&course.endDate?`${String(course.startDate).slice(0,10).replaceAll(`-`,`.`)} ~ ${String(course.endDate).slice(0,10).replaceAll(`-`,`.`)}`:`기간 미설정`,state:course.status===`COMPLETED`?`수료`:Number(course.progress)>0?`학습 중`:`미수강`,completedAt:course.completedAt?new Date(course.completedAt).toLocaleDateString(`ko-KR`):null}));
+  const requiredCourseTotal=summary.requiredTotal;
+  const requiredCourseCompleted=summary.requiredCompleted;
+  const requiredCompletionRate=requiredCourseTotal?Math.round((requiredCourseCompleted/requiredCourseTotal)*100):0;
+  const overallCompletionRate=summary.courses?Math.round((summary.completed/summary.courses)*100):0;
   return (
     <section className="learner-profile-page-full">
-      <div className="breadcrumb admin-detail-breadcrumb"><button onClick={onBack}>홈</button><span>›</span><button onClick={onBack}>학습자 관리</button><span>›</span>{learner.name}</div>
+      <div className="breadcrumb admin-detail-breadcrumb"><button onClick={onBack}>홈</button><span>›</span><button onClick={onBack}>학습자 관리</button><span>›</span>{profileUser.name}</div>
       <button className="department-back" onClick={onBack}>
         <Icon icon={ArrowLeft01Icon} />
         학습자 목록으로
       </button>
       <div className="learner-profile-hero">
-        <div className="learner-profile-avatar">{learner.name[0]}</div>
+        <div className="learner-profile-avatar">{profileUser.name[0]}</div>
         <div className="learner-profile-identity">
-          <span>{learner.status}</span>
-          <h2>{learner.name}</h2>
+          <span>{profileUser.status === `ACTIVE` ? `활성` : `비활성`}</span>
+          <h2>{profileUser.name}</h2>
           <p>
-            {learner.dept} · {learner.position} · {learner.id}
+            {profileUser.organizationName || learner.dept} · {profileUser.position || `직책 미지정`} · {profileUser.employeeNumber || learner.id}
           </p>
         </div>
         <div className="learner-profile-contact">
           <span>이메일</span>
-          <b>{learner.email || `${learner.id.toLowerCase()}@sparkplus.co`}</b>
-          <span>입사일</span>
-          <b>2025.03.04</b>
+          <b>{profileUser.email}</b>
+          <span>학습 포인트</span>
+          <b>{summary.points.toLocaleString()}P</b>
         </div>
-        <button className="secondary learner-profile-edit" onClick={() => { setEditForm({ name: learner.name, email: learner.email || `${learner.id.toLowerCase()}@sparkplus.co`, dept: learner.dept, position: learner.position }); setEditTouched({}); setEditOpen(true); }}><Icon icon={Edit02Icon} size={16} />정보 수정</button>
+        <button className="secondary learner-profile-edit" onClick={() => { setEditForm({ name: profileUser.name, email: profileUser.email, position: profileUser.position || `` }); setEditTouched({}); setEditOpen(true); }}><Icon icon={Edit02Icon} size={16} />정보 수정</button>
       </div>
       <div className="learner-profile-summary">
         <div>
           <span>수강 과정</span>
-          <b>{learner.courses}개</b>
+          <b>{summary.courses}개</b>
         </div>
         <div>
           <span>수료 과정</span>
-          <b>{learner.completed}개</b>
+          <b>{summary.completed}개</b>
         </div>
         <div>
           <span>평균 진도율</span>
-          <b>{learner.progress}%</b>
+          <b>{summary.averageProgress}%</b>
         </div>
         <div>
           <span>보유 뱃지</span>
-          <b>3개</b>
+          <b>{summary.badgeCount}개</b>
         </div>
       </div>
       <div className="learner-profile-grid">
@@ -3890,7 +3860,7 @@ function LearnerProfilePage({ learner, onBack, onUpdate }) {
             <div className="learner-donut-item">
               <div
                 className="learner-donut required"
-                style={{ "--donut-value": `${(requiredCourseCompleted / requiredCourseTotal) * 360}deg` }}
+                style={{ "--donut-value": `${requiredCompletionRate * 3.6}deg` }}
               >
                 <div><strong>{requiredCourseCompleted} / {requiredCourseTotal}</strong></div>
               </div>
@@ -3905,7 +3875,7 @@ function LearnerProfilePage({ learner, onBack, onUpdate }) {
                 <div><strong>{overallCompletionRate}%</strong></div>
               </div>
               <b>전체 수료율</b>
-              <small>{learner.courses}개 과정 중 {learner.completed}개 수료</small>
+              <small>{summary.courses}개 과정 중 {summary.completed}개 수료</small>
             </div>
           </div>
         </article>
@@ -3916,21 +3886,18 @@ function LearnerProfilePage({ learner, onBack, onUpdate }) {
               <p>학습 성과로 받은 뱃지입니다.</p>
             </div>
           </div>
-          {[
-            [Medal01Icon, `이달의 TOP 3`, `gold`],
-            [Award01Icon, `수료 마스터`, `blue`],
-            [CheckmarkCircle02Icon, `필수교육 완료`, `green`],
-          ].map(([icon, label, tone]) => (
-            <div className="profile-badge-row" key={label}>
-              <span className={tone}>
-                <Icon icon={icon} />
+          {(detail?.badges || []).map((badge) => (
+            <div className="profile-badge-row" key={badge.id}>
+              <span className={badge.tone || `blue`}>
+                <Icon icon={Award01Icon} />
               </span>
               <div>
-                <b>{label}</b>
-                <small>2026.08 획득</small>
+                <b>{badge.name}</b>
+                <small>{new Date(badge.awardedAt).toLocaleDateString(`ko-KR`)} 획득</small>
               </div>
             </div>
           ))}
+          {!detail?.badges?.length && <p className="learner-management-empty">아직 획득한 뱃지가 없습니다.</p>}
         </article>
       </div>
       <div className="learner-course-section">
@@ -3979,7 +3946,7 @@ function LearnerProfilePage({ learner, onBack, onUpdate }) {
                   </td>
                   <td>
                     <span
-                      className={`learning-state ${course.state === `수료` ? `complete` : course.state === `수강 중` ? `current` : `none`}`}
+                      className={`learning-state ${course.state === `수료` ? `complete` : course.state === `학습 중` ? `current` : `none`}`}
                     >
                       {course.state}
                     </span>
@@ -3987,13 +3954,14 @@ function LearnerProfilePage({ learner, onBack, onUpdate }) {
                   <td>{course.completedAt || `—`}</td>
                 </tr>
               ))}
+              {learningCourses.length === 0 && <tr><td colSpan="7" className="learner-management-empty">배정된 교육과정이 없습니다.</td></tr>}
             </tbody>
           </table>
         </div>
       </div>
-      <div className={`learner-account-control ${learner.status === `비활성` ? `inactive` : ``}`}><div><h3>{learner.status === `비활성` ? `비활성 계정` : `계정 관리`}</h3><p>{learner.status === `비활성` ? `학습 이력과 수료 기록은 유지되며, 다시 활성화할 수 있습니다.` : `비활성화해도 기존 학습 이력과 수료 기록은 유지됩니다.`}</p></div><button className={learner.status === `비활성` ? `primary` : `learner-deactivate-button`} onClick={() => setStatusConfirmOpen(true)}>{learner.status === `비활성` ? `계정 활성화` : `계정 비활성화`}</button></div>
-      {editOpen && <div className="overlay center learner-registration-overlay" onMouseDown={() => setEditOpen(false)}><section className="learner-registration-modal learner-edit-modal" onMouseDown={(event) => event.stopPropagation()}><header><div><h2>학습자 정보 수정</h2><p>계정 식별값인 사번을 제외한 기본 정보를 수정합니다.</p></div><button className="learner-registration-close" onClick={() => setEditOpen(false)} aria-label="닫기"><Icon icon={Cancel01Icon} size={19} /></button></header><div className="learner-registration-form"><label><span>이름 <b>*</b></span><input value={editForm.name} onChange={(event) => setEditForm((current) => ({ ...current, name: event.target.value }))} onBlur={() => setEditTouched((current) => ({ ...current, name: true }))} />{editTouched.name && editErrors.name && <small>{editErrors.name}</small>}</label><label><span>사번</span><input value={learner.id} disabled /><small className="learner-field-help">사번은 변경할 수 없습니다.</small></label><label className="learner-registration-wide"><span>이메일 <b>*</b></span><input type="email" value={editForm.email} onChange={(event) => setEditForm((current) => ({ ...current, email: event.target.value }))} onBlur={() => setEditTouched((current) => ({ ...current, email: true }))} />{(editTouched.email || editForm.email) && editErrors.email && <small>{editErrors.email}</small>}</label><label><span>부서 <b>*</b></span><select value={editForm.dept} onChange={(event) => setEditForm((current) => ({ ...current, dept: event.target.value }))}>{departments.map((value) => <option key={value}>{value}</option>)}</select></label><label><span>직급 <b>*</b></span><select value={editForm.position} onChange={(event) => setEditForm((current) => ({ ...current, position: event.target.value }))}>{positions.map((value) => <option key={value}>{value}</option>)}</select></label></div><footer><button className="secondary" onClick={() => setEditOpen(false)}>취소</button><button className="primary" disabled={!canSaveLearner} onClick={saveLearnerInfo}>저장</button></footer></section></div>}
-      {statusConfirmOpen && <ConfirmModal title={learner.status === `비활성` ? `계정을 다시 활성화할까요?` : `계정을 비활성화할까요?`} description={learner.status === `비활성` ? `활성화하면 신규 학습을 다시 진행할 수 있습니다.` : `해당 학습자의 기존 학습 이력과 수료 기록은 유지됩니다.`} confirmLabel={learner.status === `비활성` ? `활성화` : `비활성화`} tone={learner.status === `비활성` ? `primary` : `danger`} onCancel={() => setStatusConfirmOpen(false)} onConfirm={toggleLearnerStatus} />}
+      <div className={`learner-account-control ${profileUser.status === `INACTIVE` ? `inactive` : ``}`}><div><h3>{profileUser.status === `INACTIVE` ? `비활성 계정` : `계정 관리`}</h3><p>{profileUser.status === `INACTIVE` ? `학습 이력과 수료 기록은 유지되며, 다시 활성화할 수 있습니다.` : `비활성화해도 기존 학습 이력과 수료 기록은 유지됩니다.`}</p></div><button className={profileUser.status === `INACTIVE` ? `primary` : `learner-deactivate-button`} onClick={() => setStatusConfirmOpen(true)}>{profileUser.status === `INACTIVE` ? `계정 활성화` : `계정 비활성화`}</button></div>
+      {editOpen && <div className="overlay center learner-registration-overlay" onMouseDown={() => setEditOpen(false)}><section className="learner-registration-modal learner-edit-modal" onMouseDown={(event) => event.stopPropagation()}><header><div><h2>학습자 정보 수정</h2><p>조직과 권한은 학습자 목록의 사용자 수정에서 변경할 수 있습니다.</p></div><button className="learner-registration-close" onClick={() => setEditOpen(false)} aria-label="닫기"><Icon icon={Cancel01Icon} size={19} /></button></header><div className="learner-registration-form"><label><span>이름 <b>*</b></span><input value={editForm.name} onChange={(event) => setEditForm((current) => ({ ...current, name: event.target.value }))} onBlur={() => setEditTouched((current) => ({ ...current, name: true }))} />{editTouched.name && editErrors.name && <small>{editErrors.name}</small>}</label><label><span>사번</span><input value={profileUser.employeeNumber || learner.id} disabled /><small className="learner-field-help">사번은 변경할 수 없습니다.</small></label><label className="learner-registration-wide"><span>이메일 <b>*</b></span><input type="email" value={editForm.email} onChange={(event) => setEditForm((current) => ({ ...current, email: event.target.value }))} onBlur={() => setEditTouched((current) => ({ ...current, email: true }))} />{(editTouched.email || editForm.email) && editErrors.email && <small>{editErrors.email}</small>}</label><label className="learner-registration-wide"><span>직책 <b>*</b></span><input value={editForm.position} onChange={(event) => setEditForm((current) => ({ ...current, position: event.target.value }))} /></label></div><footer><button className="secondary" onClick={() => setEditOpen(false)}>취소</button><button className="primary" disabled={!canSaveLearner} onClick={saveLearnerInfo}>저장</button></footer></section></div>}
+      {statusConfirmOpen && <ConfirmModal title={profileUser.status === `INACTIVE` ? `계정을 다시 활성화할까요?` : `계정을 비활성화할까요?`} description={profileUser.status === `INACTIVE` ? `활성화하면 신규 학습을 다시 진행할 수 있습니다.` : `해당 학습자의 기존 학습 이력과 수료 기록은 유지됩니다.`} confirmLabel={profileUser.status === `INACTIVE` ? `활성화` : `비활성화`} tone={profileUser.status === `INACTIVE` ? `primary` : `danger`} onCancel={() => setStatusConfirmOpen(false)} onConfirm={toggleLearnerStatus} />}
     </section>
   );
 }
@@ -9074,7 +9042,7 @@ function M() {
     (e === `userRewards`
       ? setRewardInitialTab(n || `ranking`)
       : n && e === `noticeDetail`
-        ? Y(n)
+        ? (await apiRequest(`/api/v1/notices/${n}/view`, { method: `POST` }).then(({ views }) => setUserNotices((items) => items.map((notice) => notice.id === n ? { ...notice, views } : notice))).catch(() => {}), Y(n))
         : n && v(n),
       t(e),
       z(!1),

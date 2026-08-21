@@ -54,6 +54,20 @@ export function createNoticesRouter(pool: DatabasePool) {
       response.json({ data: result.rows.map(output), error: null });
     } catch (error) { next(error); }
   });
+  router.post("/:id/view", async (request, response, next) => {
+    try {
+      await ensureNoticesSchema(pool);
+      const result = await pool.query(`UPDATE notices SET views=views+1,updated_at=now()
+        WHERE id=$1 AND deleted_at IS NULL AND status='PUBLISHED' AND start_date<=CURRENT_DATE
+          AND (end_date IS NULL OR end_date>=CURRENT_DATE)
+          AND (target_type='전체 임직원'
+            OR (target_type='부서 선택' AND target_details ? COALESCE((SELECT o.name FROM users u LEFT JOIN organizations o ON o.id=u.organization_id WHERE u.id=$2),''))
+            OR (target_type='교육과정 수강자' AND EXISTS(SELECT 1 FROM enrollments e JOIN courses c ON c.id=e.course_id WHERE e.user_id=$2 AND e.status<>'CANCELLED' AND target_details ? c.title)))
+        RETURNING views`, [request.params.id, request.currentUser!.id]);
+      if (!result.rowCount) return response.status(404).json({ data: null, error: { code: "NOTICE_NOT_FOUND" } });
+      response.json({ data: { views: result.rows[0].views }, error: null });
+    } catch (error) { next(error); }
+  });
   return router;
 }
 

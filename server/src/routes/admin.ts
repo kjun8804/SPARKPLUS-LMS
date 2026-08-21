@@ -6,6 +6,7 @@ import { buildOrganizationTree } from "../auth/policy.js";
 import type { OrganizationRecord } from "../types.js";
 import type { AppConfig } from "../config.js";
 import { syncGoogleArchive } from "../google/archive.js";
+import { ensureLearningSchema } from "../database/learning-schema.js";
 
 const companyEmail = z.string().trim().toLowerCase().email().refine((value) => value.endsWith("@sparkplus.co"));
 const userInput = z.object({
@@ -80,6 +81,37 @@ export function createAdminRouter(pool: DatabasePool, config?: AppConfig) {
         u.last_login_at AS "lastLoginAt" FROM users u LEFT JOIN organizations o ON o.id=u.organization_id
         WHERE u.status<>'DELETED' ORDER BY u.name`);
       response.json({ data: result.rows, error: null });
+    } catch (error) { next(error); }
+  });
+
+  router.get("/users/:id/learning-summary", async (request, response, next) => {
+    try {
+      await ensureLearningSchema(pool);
+      const userResult = await pool.query(`SELECT u.id,u.employee_number AS "employeeNumber",u.name,u.email,
+        u.organization_id AS "organizationId",COALESCE(o.name,'소속 미지정') AS "organizationName",u.position,u.role,u.status
+        FROM users u LEFT JOIN organizations o ON o.id=u.organization_id WHERE u.id=$1 AND u.status<>'DELETED'`, [request.params.id]);
+      if (!userResult.rowCount) return response.status(404).json({ data: null, error: { code: "USER_NOT_FOUND" } });
+      const [courses,badges,rewards] = await Promise.all([
+        pool.query(`SELECT e.id AS "enrollmentId",c.id,c.title,c.category,c.level,c.start_date AS "startDate",c.end_date AS "endDate",
+          e.required,e.status,e.progress,e.completed_at AS "completedAt",(e.survey_submitted_at IS NOT NULL) AS "surveySubmitted",
+          c.survey_enabled AS "surveyRequired",COUNT(DISTINCT l.id)::int AS "totalLessons",
+          COUNT(DISTINCT lp.lesson_id) FILTER(WHERE lp.completed)::int AS "completedLessons",cert.certificate_number AS "certificateNumber"
+          FROM enrollments e JOIN courses c ON c.id=e.course_id LEFT JOIN lessons l ON l.course_id=c.id
+          LEFT JOIN lesson_progress lp ON lp.lesson_id=l.id AND lp.enrollment_id=e.id LEFT JOIN certificates cert ON cert.enrollment_id=e.id
+          WHERE e.user_id=$1 AND e.status<>'CANCELLED' GROUP BY e.id,c.id,cert.certificate_number ORDER BY e.enrolled_at DESC`, [request.params.id]),
+        pool.query(`SELECT br.id,br.name,br.description,br.tone,ub.awarded_at AS "awardedAt"
+          FROM user_badges ub JOIN badge_rules br ON br.id=ub.badge_rule_id WHERE ub.user_id=$1 ORDER BY ub.awarded_at DESC`, [request.params.id]),
+        pool.query(`SELECT COALESCE(SUM(points),0)::int AS points FROM reward_transactions WHERE user_id=$1`, [request.params.id]),
+      ]);
+      const rows = courses.rows.map((course) => ({ ...course, progress:Number(course.progress || 0) }));
+      const completed = rows.filter((course) => course.status === "COMPLETED").length;
+      const requiredRows = rows.filter((course) => course.required);
+      response.json({ data: {
+        user:userResult.rows[0], courses:rows, badges:badges.rows,
+        summary:{ courses:rows.length, completed, averageProgress:rows.length ? Math.round(rows.reduce((sum,course)=>sum+course.progress,0)/rows.length) : 0,
+          badgeCount:badges.rowCount || 0, points:rewards.rows[0].points, requiredTotal:requiredRows.length,
+          requiredCompleted:requiredRows.filter((course)=>course.status === "COMPLETED").length },
+      }, error:null });
     } catch (error) { next(error); }
   });
 
