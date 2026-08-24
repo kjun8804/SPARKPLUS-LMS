@@ -3188,6 +3188,23 @@ const flattenOrganizationTree = (nodes, ancestors = []) => nodes.flatMap((node) 
   const names = [...ancestors, node.name];
   return [{ ...node, pathLabel: names.join(` > `) }, ...flattenOrganizationTree(node.children || [], names)];
 });
+function OrganizationTreeNode({ node, selectedId, expandedIds, onSelect, onToggle, userCountByOrganization, depth = 0 }) {
+  const children = node.children || [];
+  const expanded = expandedIds.has(node.id);
+  return <div className="organization-tree-branch">
+    <div className={`organization-tree-row ${selectedId === node.id ? `selected` : ``} ${expanded ? `expanded` : ``}`} style={{ "--tree-depth": depth }}>
+      <button type="button" className={`organization-tree-toggle ${children.length ? `` : `empty`}`} onClick={() => children.length && onToggle(node.id)} aria-label={expanded ? `${node.name} 접기` : `${node.name} 펼치기`}>
+        {children.length ? <Icon icon={ArrowDown01Icon} size={15} /> : null}
+      </button>
+      <button type="button" className="organization-tree-select" onClick={() => onSelect(node.id)}>
+        <span className="organization-tree-icon"><Icon icon={UserGroupIcon} size={16} /></span>
+        <span><b>{node.name}</b><small>{depth + 1}단계 · {userCountByOrganization.get(node.id) || 0}명</small></span>
+      </button>
+      <span className={`organization-tree-status ${node.status === `ACTIVE` ? `active` : ``}`}>{node.status === `ACTIVE` ? `사용 중` : `비활성`}</span>
+    </div>
+    {expanded && children.length > 0 && <div className="organization-tree-children">{children.map((child) => <OrganizationTreeNode key={child.id} node={child} selectedId={selectedId} expandedIds={expandedIds} onSelect={onSelect} onToggle={onToggle} userCountByOrganization={userCountByOrganization} depth={depth + 1} />)}</div>}
+  </div>;
+}
 const parseCsvLine = (line) => {
   const cells = []; let value = ``, quoted = false;
   for (let index = 0; index < line.length; index += 1) {
@@ -3223,11 +3240,34 @@ function DatabaseLearnerManagement({ onSelect }) {
   const [users, setUsers] = r.useState([]), [organizationTree, setOrganizationTree] = r.useState([]);
   const [loading, setLoading] = r.useState(true), [error, setError] = r.useState(``), [query, setQuery] = r.useState(``);
   const [organizationFilter, setOrganizationFilter] = r.useState(``), [statusFilter, setStatusFilter] = r.useState(``);
+  const [selectedOrganizationId, setSelectedOrganizationId] = r.useState(``);
+  const [expandedOrganizationIds, setExpandedOrganizationIds] = r.useState(() => new Set());
   const [userModal, setUserModal] = r.useState(null), [userForm, setUserForm] = r.useState(emptyUser);
   const [organizationModal, setOrganizationModal] = r.useState(false), [organizationForm, setOrganizationForm] = r.useState({ name: ``, parentId: `` });
   const [saving, setSaving] = r.useState(false), importInputRef = r.useRef(null);
   const [archiveStatus, setArchiveStatus] = r.useState(null), [syncingArchive, setSyncingArchive] = r.useState(false);
   const organizations = r.useMemo(() => flattenOrganizationTree(organizationTree), [organizationTree]);
+  r.useEffect(() => {
+    if (!organizationTree.length) return;
+    setExpandedOrganizationIds((current) => current.size ? current : new Set([organizationTree[0].id]));
+  }, [organizationTree]);
+  const organizationDescendantIds = r.useMemo(() => {
+    const result = new Map();
+    const visit = (node) => {
+      const ids = [node.id, ...(node.children || []).flatMap((child) => visit(child))];
+      result.set(node.id, ids);
+      return ids;
+    };
+    organizationTree.forEach(visit);
+    return result;
+  }, [organizationTree]);
+  const userCountByOrganization = r.useMemo(() => new Map(organizations.map((organization) => {
+    const scope = new Set(organizationDescendantIds.get(organization.id) || [organization.id]);
+    return [organization.id, users.filter((user) => scope.has(user.organizationId)).length];
+  })), [organizations, organizationDescendantIds, users]);
+  const selectedOrganization = organizations.find((organization) => organization.id === selectedOrganizationId) || null;
+  const selectedOrganizationScope = new Set(selectedOrganization ? (organizationDescendantIds.get(selectedOrganization.id) || [selectedOrganization.id]) : []);
+  const selectedOrganizationUsers = selectedOrganization ? users.filter((user) => selectedOrganizationScope.has(user.organizationId)) : [];
   const load = r.useCallback(async () => {
     setLoading(true); setError(``);
     try {
@@ -3253,7 +3293,7 @@ function DatabaseLearnerManagement({ onSelect }) {
   const filteredUsers = users.filter((user) => {
     const keyword = query.trim().toLowerCase();
     return (!keyword || `${user.name} ${user.employeeNumber} ${user.email} ${user.organizationName || ``}`.toLowerCase().includes(keyword))
-      && (!organizationFilter || user.organizationId === organizationFilter) && (!statusFilter || user.status === statusFilter);
+      && (!organizationFilter || new Set(organizationDescendantIds.get(organizationFilter) || [organizationFilter]).has(user.organizationId)) && (!statusFilter || user.status === statusFilter);
   });
   const openCreate = () => { setUserForm(emptyUser); setUserModal({ mode: `create` }); };
   const openEdit = async (user) => { let scopes=[];try{scopes=await apiRequest(`/api/v1/admin/users/${user.id}/leader-scopes`);}catch{} setUserForm({ ...user, organizationId: user.organizationId || ``, position: user.position || ``, leaderOrganizationIds:scopes.map((scope)=>scope.organizationId) }); setUserModal({ mode: `edit`, id: user.id }); };
@@ -3345,16 +3385,25 @@ function DatabaseLearnerManagement({ onSelect }) {
       <div><b>{archiveStatus?.configured ? `Google Drive · Sheets 연결 준비 완료` : `Google 아카이브 연결 설정 필요`}</b>
         <span>{archiveStatus?.latest?.action === `GOOGLE_ARCHIVE_SYNCED` ? `최근 동기화: ${new Date(archiveStatus.latest.createdAt).toLocaleString(`ko-KR`)}` : `동기화 버튼을 눌러 서비스 계정 접근 권한과 운영대장을 확인하세요.`}</span></div>
     </div>
-    <div className="organization-strip">
-      {organizations.length ? organizations.map((organization) => <div key={organization.id} className={`organization-chip ${organization.status.toLowerCase()}`}>
-        <span><small>{organization.depth}단계</small>{organization.pathLabel}</span>
-        <button onClick={() => toggleOrganization(organization)}>{organization.status === `ACTIVE` ? `사용 중` : `비활성`}</button>
-      </div>) : <p>등록된 조직이 없습니다. 먼저 조직을 등록해주세요.</p>}
-    </div>
+    <section className="organization-explorer">
+      <header><div><h3>조직도</h3><p>조직을 펼치고 선택하면 소속 구성원을 확인할 수 있습니다.</p></div><span>총 {organizations.length}개 조직 · {users.length}명</span></header>
+      {organizations.length ? <div className="organization-explorer-body">
+        <div className="organization-tree-panel">
+          <button type="button" className={!selectedOrganizationId ? `organization-all selected` : `organization-all`} onClick={() => { setSelectedOrganizationId(``); setOrganizationFilter(``); }}><span><Icon icon={UserGroupIcon} size={17} />전체 조직</span><b>{users.length}명</b></button>
+          <div className="organization-tree-scroll">{organizationTree.map((node) => <OrganizationTreeNode key={node.id} node={node} selectedId={selectedOrganizationId} expandedIds={expandedOrganizationIds} userCountByOrganization={userCountByOrganization} onSelect={(id) => { setSelectedOrganizationId(id); setOrganizationFilter(id); }} onToggle={(id) => setExpandedOrganizationIds((current) => { const next = new Set(current); next.has(id) ? next.delete(id) : next.add(id); return next; })} />)}</div>
+        </div>
+        <div className="organization-member-panel">
+          {selectedOrganization ? <><div className="organization-member-head"><div><span>{selectedOrganization.depth}단계 조직</span><h3>{selectedOrganization.name}</h3><p>{selectedOrganization.pathLabel}</p></div><button type="button" className={selectedOrganization.status === `ACTIVE` ? `active` : ``} onClick={() => toggleOrganization(selectedOrganization)}>{selectedOrganization.status === `ACTIVE` ? `사용 중` : `비활성`}</button></div>
+            <div className="organization-member-summary"><div><span>소속 구성원</span><b>{selectedOrganizationUsers.length}명</b></div><div><span>직속 구성원</span><b>{users.filter((user) => user.organizationId === selectedOrganization.id).length}명</b></div><div><span>하위 조직</span><b>{Math.max(0, selectedOrganizationScope.size - 1)}개</b></div></div>
+            <div className="organization-member-list">{selectedOrganizationUsers.slice(0, 8).map((user) => <article key={user.id}><span>{user.name?.[0] || `?`}</span><div><b>{user.name}</b><small>{user.position || `직책 미지정`} · {user.employeeNumber}</small></div><em className={user.status === `ACTIVE` ? `active` : ``}>{user.status === `ACTIVE` ? `활성` : `비활성`}</em></article>)}{selectedOrganizationUsers.length === 0 && <p>이 조직에 등록된 구성원이 없습니다.</p>}{selectedOrganizationUsers.length > 8 && <small className="organization-member-more">아래 사용자 목록에서 나머지 {selectedOrganizationUsers.length - 8}명을 확인하세요.</small>}</div>
+          </> : <div className="organization-empty-selection"><span><Icon icon={UserGroupIcon} size={24} /></span><h3>조직을 선택해주세요</h3><p>왼쪽 조직도에서 조직을 누르면 소속 구성원이 이곳에 표시됩니다.</p></div>}
+        </div>
+      </div> : <p className="organization-explorer-empty">등록된 조직이 없습니다. 먼저 조직을 등록해주세요.</p>}
+    </section>
     <SearchFilterPanel value={query} onValueChange={setQuery} placeholder="이름, 사번, 이메일 검색" filters={[
-      { label: `조직`, value: organizationFilter, onChange: setOrganizationFilter, options: [{ value: ``, label: `전체 조직` }, ...organizations.map((item) => ({ value: item.id, label: item.pathLabel }))] },
+      { label: `조직`, value: organizationFilter, onChange: (value) => { setOrganizationFilter(value); setSelectedOrganizationId(value); }, options: [{ value: ``, label: `전체 조직` }, ...organizations.map((item) => ({ value: item.id, label: item.pathLabel }))] },
       { label: `계정 상태`, value: statusFilter, onChange: setStatusFilter, options: [{ value: ``, label: `전체 상태` }, { value: `ACTIVE`, label: `활성` }, { value: `INACTIVE`, label: `비활성` }] },
-    ]} onSearch={() => {}} onReset={() => { setQuery(``); setOrganizationFilter(``); setStatusFilter(``); }} />
+    ]} onSearch={() => {}} onReset={() => { setQuery(``); setOrganizationFilter(``); setSelectedOrganizationId(``); setStatusFilter(``); }} />
     <div className="table-wrap learner-table database-user-table"><table><thead><tr><th>사용자</th><th>조직</th><th>직책</th><th>권한</th><th>상태</th><th>관리</th></tr></thead><tbody>
       {filteredUsers.map((user) => <tr key={user.id}><td><div className="person"><span>{user.name[0]}</span><div><b>{user.name}</b><small>{user.employeeNumber} · {user.email}</small></div></div></td>
         <td>{user.organizationName || `미지정`}</td><td>{user.position || `미지정`}</td><td>{user.role === `ADMIN` ? `관리자` : `학습자`}</td>
