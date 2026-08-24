@@ -43,6 +43,7 @@ import {
 
 const i = { jsx, jsxs, Fragment };
 function Icon({ icon, size = 18, className = ``, strokeWidth = 1.7 }) {
+  if (!icon) return null;
   return (
     <HugeiconsIcon
       icon={icon}
@@ -6353,7 +6354,10 @@ function LearningRewardsPage() {
     const query=new URLSearchParams({start:effectiveRankingRange.start,end:effectiveRankingRange.end});
     apiRequest(`/api/v1/admin/rewards?${query}`).then((data)=>{
       if(!active)return;
-      setRewardPeople((data.ranking || []).map((item) => ({
+      const rankingItems = Array.isArray(data?.ranking) ? data.ranking : [];
+      const ruleItems = Array.isArray(data?.rules) ? data.rules : [];
+      const badgeItems = Array.isArray(data?.badges) ? data.badges : [];
+      setRewardPeople(rankingItems.map((item) => ({
         ...item,
         point: Number(item.points ?? item.point ?? 0),
         points: Number(item.points ?? item.point ?? 0),
@@ -6361,10 +6365,10 @@ function LearningRewardsPage() {
         badges: Number(item.badges || 0),
         rank: Number(item.rank || 0),
       })));
-      setPointRules((data.rules || []).map((rule)=>({...rule,id:rule.activityType,targetType:`전체 교육과정`,course:``,threshold:1,frequency:`조건 달성마다`})));
-      setBadges((data.badges || []).map((badge)=>({...badge,activityType:badge.metric,targetType:`전체 교육과정`,course:``})));
-      setRecentRewards(data.recent || []);
-    }).catch(()=>{if(active){setRewardPeople([]);setRecentRewards([]);}}).finally(()=>{if(active)setRewardLoading(false);});
+      setPointRules(ruleItems.map((rule)=>({...rule,id:rule.activityType,targetType:`전체 교육과정`,course:``,threshold:1,frequency:`조건 달성마다`})));
+      setBadges(badgeItems.map((badge)=>({...badge,activityType:badge.metric,targetType:`전체 교육과정`,course:``})));
+      setRecentRewards(Array.isArray(data?.recent) ? data.recent : []);
+    }).catch(()=>{if(active){setRewardPeople([]);setPointRules([]);setBadges([]);setRecentRewards([]);}}).finally(()=>{if(active)setRewardLoading(false);});
     return()=>{active=false;};
   },[effectiveRankingRange.start,effectiveRankingRange.end]);
   const filteredRanking = ranking.filter(
@@ -6373,6 +6377,13 @@ function LearningRewardsPage() {
   const period = formatAdminPeriod(effectiveRankingRange);
   const courseOptions = [];
   const rewardActivityLabels={LESSON_COMPLETE:`차시 완료`,COURSE_COMPLETE:`과정 수료`,QUIZ_COMPLETE:`퀴즈 완료`,SURVEY_SUBMIT:`설문 제출`,POINTS_TOTAL:`누적 포인트`};
+  const badgeIconFor = (badge) => badge.metric === `QUIZ_COMPLETE`
+    ? Quiz01Icon
+    : badge.metric === `POINTS_TOTAL` || badge.type === `랭킹형`
+      ? RankingIcon
+      : badge.metric === `COURSE_COMPLETE`
+        ? Award01Icon
+        : Medal01Icon;
   const conditionUnit = (activity) => activity === `POINTS_TOTAL` ? `P 이상` : `회 이상`;
   const ruleSummary = (rule) => `${rule.targetType === `특정 교육과정` ? rule.course : `전체 과정`} · ${rule.label||rewardActivityLabels[rule.activityType]||rule.activityType} · ${rule.frequency}`;
   const badgeSummary = (badge) => `${badge.targetType === `특정 교육과정` ? badge.course : `전체 과정`} · ${rewardActivityLabels[badge.activityType]||badge.activityType} ${badge.threshold}${conditionUnit(badge.activityType)}`;
@@ -6509,7 +6520,7 @@ function LearningRewardsPage() {
               <article className="fixed-badge-card" key={badge.name}>
                 <div className="badge-card-head">
                   <div className={`fixed-badge-icon ${badge.tone}`}>
-                    <Icon icon={badge.icon} size={25} />
+                    <Icon icon={badgeIconFor(badge)} size={25} />
                   </div>
                   <div className="badge-switch-wrap">
                     <span>{badge.enabled ? `사용 중` : `사용 안 함`}</span>
