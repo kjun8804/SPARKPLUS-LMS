@@ -19135,3 +19135,116 @@ html[data-theme="dark"] .learning-status-dates input { color-scheme:dark; }
 html[data-theme="dark"] .learning-status-table .status-chip.required { background:#4a3317; color:#ffd28a; }
 @media(max-width:1050px){.learning-status-toolbar{grid-template-columns:1fr 1fr}.learning-status-search{grid-column:1/-1}.learning-status-summary{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:700px){.learning-status-toolbar{grid-template-columns:1fr}.learning-status-dates{display:grid;grid-template-columns:1fr auto 1fr}.learning-status-dates input{width:100%}.learning-status-search{grid-column:auto}.learning-status-summary{grid-template-columns:1fr}.learning-status-result-head{align-items:flex-start;flex-direction:column}.learning-status-table-wrap{overflow-x:auto}.learning-status-table{min-width:980px}}
+
+/* 2026-08-24 learner portal annotated QA pass */
+/* Search and select controls share a readable inset and a consistent control height. */
+.course-admin-grid-page .search-wrap,
+.user-portal .filter-card .search-wrap,
+.user-portal .notice-search .search-wrap {
+  gap:12px;
+  padding:0 16px;
+}
+.course-admin-grid-page .search-wrap input,
+.user-portal .filter-card .search-wrap input,
+.user-portal .notice-search .search-wrap input { padding-left:2px!important; }
+.user-portal .filter-card { gap:18px; }
+.user-portal .filter-card .filters { gap:14px; }
+.user-portal .filter-card :is(input,select),
+.user-portal .result-head select,
+.user-portal .reward-month-picker select { min-height:46px; }
+.user-portal .quick-tags { gap:10px; padding-top:16px; }
+.user-portal .result-head { margin-top:28px; }
+.user-portal .result-head select { min-width:132px; padding:0 38px 0 14px; }
+
+/* Hero text remains readable on both themes. */
+.user-portal .page-hero :is(.breadcrumb,h1,p) { position:relative; z-index:1; }
+html[data-theme="dark"] .user-portal .page-hero {
+  border:1px solid #34536f;
+  background:linear-gradient(115deg,#234866 0%,#2e607f 100%);
+}
+html[data-theme="dark"] .user-portal .page-hero :is(h1,p,.breadcrumb,.breadcrumb span) { color:#f3f8fd!important; }
+html[data-theme="dark"] .user-portal .page-hero p { color:#d0e0ec!important; }
+
+/* Learner home */
+html[data-theme="dark"] .user-portal .logo em,
+html[data-theme="dark"] .user-portal .home-section-label,
+html[data-theme="dark"] .user-portal .home-section-label svg,
+html[data-theme="dark"] .user-portal .home-continue-content :is(h2,small),
+html[data-theme="dark"] .user-portal .home-data-empty { color:#eef5fd!important; }
+html[data-theme="dark"] .user-portal .home-section-label > span { border-color:#46617d; background:#1c2a3b; color:#91c8f1; }
+
+/* Catalog, empty state and quick filters */
+html[data-theme="dark"] .user-portal .filter-card,
+html[data-theme="dark"] .user-portal .empty { border-color:#34465b; background:#172334; color:#eef5fd; }
+html[data-theme="dark"] .user-portal .filter-card .search-wrap,
+html[data-theme="dark"] .user-portal .filter-card select,
+html[data-theme="dark"] .user-portal .result-head select { border-color:#3b4d63; background:#111c2b; color:#edf4fc; color-scheme:dark; }
+html[data-theme="dark"] .user-portal .filter-card input,
+html[data-theme="dark"] .user-portal .filter-card input::placeholder { color:#aebccd; opacity:1; }
+html[data-theme="dark"] .user-portal .quick-tags button { border-color:#40536a; background:#223249; color:#d9e8f7; }
+html[data-theme="dark"] .user-portal .quick-tags button:hover { border-color:#6297c7; background:#294260; color:#fff; }
+html[data-theme="dark"] .user-portal .result-head :is(p,b) { color:#e8f0fa; }
+html[data-theme="dark"] .user-portal .empty h3 { color:#cbd8e8; }
+
+/* Classroom: remove light-only text and surfaces. */
+html[data-theme="dark"] .user-portal .player-page,
+html[data-theme="dark"] .user-portal .player-main { background:#0f1825; color:#edf4fc; }
+html[data-theme="dark"] .user-portal .lesson-sidebar { border-color:#314157; background:#131e2d; }
+html[data-theme="dark"] .user-portal .lesson-sidebar :is(small,b,em),
+html[data-theme="dark"] .user-portal .player-head :is(h1,span),
+html[data-theme="dark"] .user-portal .player-tabs button,
+html[data-theme="dark"] .user-portal .lesson-info :is(h3,li),
+html[data-theme="dark"] .user-portal .auto-save :is(b,small) { color:#e5edf7!important; }
+html[data-theme="dark"] .user-portal .sidebar-lessons button { border-color:#293a50; background:#162435; }
+html[data-theme="dark"] .user-portal .sidebar-lessons button.current { border-color:#3f82bd; background:#203c59; }
+html[data-theme="dark"] .user-portal .player-tabs { border-color:#34465b; }
+html[data-theme="dark"] .user-portal .player-tabs button.active { color:#7fbcf1!important; }
+html[data-theme="dark"] .user-portal .player-tabs span { border-color:#486078; background:#22354a; color:#ddecfb; }
+html[data-theme="dark"] .user-portal .player-tab-content { border-color:#34465b; background:#172334; }
+html[data-theme="dark"] .user-portal .lesson-info li::marker { color:#78b6e9; }
+html[data-theme="dark"] .user-portal .player-actions .secondary { border-color:#45586f; background:#1b293b; color:#e8f1fb; }
+
+/* Completion dialog and certificate */
+html[data-theme="dark"] .user-portal .modal,
+html[data-theme="dark"] .user-portal .certificate-modal { border:1px solid #3b4c62; background:#172334; color:#eef5fd; }
+html[data-theme="dark"] .user-portal .modal :is(h1,h2,h3,strong,b,p,dt,dd),
+html[data-theme="dark"] .user-portal .certificate-modal :is(h2,h3,strong,p,dt,dd),
+html[data-theme="dark"] .user-portal .certificate-modal .logo,
+html[data-theme="dark"] .user-portal .certificate-modal .logo em { color:#eef5fd!important; }
+html[data-theme="dark"] .user-portal .certificate-modal dl,
+html[data-theme="dark"] .user-portal .completion-modal-actions { border-color:#3b4c62; }
+html[data-theme="dark"] .user-portal .completion-modal-actions button { border-color:#465a72; background:#223249; color:#eef5fd; }
+
+/* Learner rewards month selector */
+.user-portal .user-reward-toolbar { align-items:flex-end; gap:24px; }
+.user-portal .reward-month-picker { display:grid; min-width:160px; gap:9px; }
+.user-portal .reward-month-picker span { font-size:12px; font-weight:700; }
+.user-portal .reward-month-picker select { width:100%; padding:0 40px 0 14px; border:1px solid var(--ui-line); border-radius:11px; background:var(--ui-surface); color:var(--ui-text); }
+html[data-theme="dark"] .user-portal .reward-month-picker select { border-color:#40536a; background:#172334; color:#eef5fd; color-scheme:dark; }
+
+/* Notices and profile: one border, never a light-only strip. */
+.user-portal .notice-search { gap:10px; padding:10px; }
+.user-portal .notice-search .search-wrap { min-width:0; flex:1; }
+html[data-theme="dark"] .user-portal .notice-search { border:1px solid #34465b; background:#172334; }
+html[data-theme="dark"] .user-portal .notice-search .search-wrap { border:0!important; box-shadow:none!important; background:#111c2b; color:#dbe7f4; }
+html[data-theme="dark"] .user-portal .notice-search input,
+html[data-theme="dark"] .user-portal .notice-search input::placeholder { color:#aebccd; opacity:1; }
+html[data-theme="dark"] .user-portal .notice-detail,
+html[data-theme="dark"] .user-portal .notice-detail-head,
+html[data-theme="dark"] .user-portal .notice-detail-body { border-color:#34465b; background:#172334; color:#e9f1fa; }
+html[data-theme="dark"] .user-portal .notice-detail :is(h1,p,span) { color:#e9f1fa; }
+.user-portal .notice-attachment { padding:18px 20px; }
+html[data-theme="dark"] .user-portal .notice-attachment { border-top:1px solid #34465b; background:#172334; color:#e9f1fa; }
+html[data-theme="dark"] .user-portal .notice-attachment > button { border-color:#40536a; background:#111c2b; color:#eef5fd; }
+html[data-theme="dark"] .user-portal .notice-attachment :is(strong,small,em) { color:#dbe7f4; }
+html[data-theme="dark"] .user-portal .profile-side,
+html[data-theme="dark"] .user-portal .profile-content { border-color:#34465b; background:#172334; color:#eef5fd; }
+html[data-theme="dark"] .user-portal .password-guide { border:1px solid #40536a; background:#111c2b; color:#dce8f5; }
+html[data-theme="dark"] .user-portal .password-guide :is(b,span) { color:#dce8f5; }
+html[data-theme="dark"] .user-portal :is(input,select,textarea) { color-scheme:dark; }
+
+@media(max-width:700px){
+  .user-portal .filter-card .filters { grid-template-columns:1fr; }
+  .user-portal .user-reward-toolbar { align-items:stretch; flex-direction:column; }
+  .user-portal .reward-month-picker { width:100%; margin-left:0; }
+}

@@ -1,25 +1,23 @@
-# Design QA
+# Learner Portal QA — 2026-08-24
 
-- Test URL: `https://sparkplus-lms.vercel.app`
-- Source references: the 11 annotated screenshots supplied in this task (`1308x915`, `1113x568`, `1187x586`, `1252x629`, `1116x545`, `820x447`, `992x512`, `1122x511`, `1070x537`, `950x522`, `945x538`).
-- Implementation screenshot: unavailable — the in-app browser reaches the company Google login page and has no authenticated administrator session.
-- Runtime/build check: Vite production build completed successfully.
-- Source-level checks completed: dashboard empty-state spacing, course list controls, course editor deadline/lesson spacing, lesson drawer attachment and quiz layout, survey divider, learner management spacing and dark-mode contrast, user modal spacing, reward editor alignment and activity mapping, notice list dark mode/search alignment, notice editor date spacing.
+## Result
 
-## Differences found and fixed
+**BLOCKED — authenticated production screens require the user's Google session for final visual capture.**
 
-- Separated the dashboard empty-state note from the chart heading with a visual divider and responsive fallback.
-- Normalized list filters, action buttons, course card metadata, and card gaps.
-- Removed dangling lesson separators when duration is empty and expanded deadline date controls.
-- Made attachment actions and four-choice quiz rows non-overlapping in the lesson drawer.
-- Removed the unwanted survey section divider.
-- Increased learner-management and registration-modal spacing and improved dark-mode status contrast.
-- Centered point/badge editors, reserved space for close controls, and normalized form gaps and unit inputs.
-- Added a point-rule creation action and normalized reward activity labels to API codes when saving.
-- Centered notice search controls, improved dark-mode table contrast, and widened notice date-range fields.
+## Automated verification
 
-## Verification result
+- Vite production build: passed
+- CSS parse/bundle: passed
+- Git whitespace validation: passed
 
-`blocked`
+## Implemented checks
 
-Reason: authenticated administrator pages could not be opened in the available in-app browser session, so exact screenshot-to-implementation visual comparison at matching states and viewport sizes could not be completed. No credentials or user browser session were reused.
+- Search and filter spacing is consistent across admin course management and learner catalog.
+- Learner home, catalog, classroom, completion modal, certificate, rewards, notices, and profile password guidance now use explicit dark-theme surfaces and readable text colors.
+- Notice search uses one container border rather than nested borders.
+- Notice attachment and password guidance no longer retain light-only backgrounds.
+- Month selector, sort selector, quick tags, and responsive layout use consistent control sizing.
+
+## Final manual check
+
+After deployment, verify each authenticated route at desktop width in both light and dark themes.
