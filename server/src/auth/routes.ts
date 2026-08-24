@@ -11,19 +11,28 @@ export function createAuthRouter(config: AppConfig, pool: DatabasePool) {
   const router = Router();
   const oauth = new OAuth2Client(config.GOOGLE_CLIENT_ID, config.GOOGLE_CLIENT_SECRET, config.GOOGLE_REDIRECT_URI);
 
-  router.get("/google", (request, response) => {
+  router.get("/google", async (request, response, next) => {
     if (!config.GOOGLE_CLIENT_ID || !config.GOOGLE_CLIENT_SECRET) {
       return response.status(503).json({ data: null, error: { code: "GOOGLE_OAUTH_NOT_CONFIGURED" } });
     }
-    const state = randomBytes(24).toString("hex");
-    request.session.oauthState = state;
-    response.redirect(oauth.generateAuthUrl({
-      access_type: "online",
-      scope: ["openid", "email", "profile"],
-      hd: config.GOOGLE_ALLOWED_DOMAIN,
-      state,
-      prompt: "select_account",
-    }));
+    try {
+      const state = randomBytes(24).toString("hex");
+      request.session.oauthState = state;
+      // Vercel may finish the serverless invocation immediately after redirecting.
+      // Persist the OAuth state before leaving for Google so the callback can
+      // reliably validate it even when it is handled by another instance.
+      await new Promise<void>((resolve, reject) => request.session.save((error) => error ? reject(error) : resolve()));
+      console.info(JSON.stringify({ level: "info", message: "oauth_state_saved", sessionId: request.sessionID.slice(0, 8) }));
+      response.redirect(oauth.generateAuthUrl({
+        access_type: "online",
+        scope: ["openid", "email", "profile"],
+        hd: config.GOOGLE_ALLOWED_DOMAIN,
+        state,
+        prompt: "select_account",
+      }));
+    } catch (error) {
+      next(error);
+    }
   });
 
   router.get("/google/callback", async (request, response, next) => {
@@ -31,6 +40,14 @@ export function createAuthRouter(config: AppConfig, pool: DatabasePool) {
       const code = typeof request.query.code === "string" ? request.query.code : "";
       const state = typeof request.query.state === "string" ? request.query.state : "";
       if (!code || !state || state !== request.session.oauthState) {
+        console.warn(JSON.stringify({
+          level: "warn",
+          message: "oauth_state_invalid",
+          sessionId: request.sessionID.slice(0, 8),
+          hasCode: Boolean(code),
+          hasReturnedState: Boolean(state),
+          hasStoredState: Boolean(request.session.oauthState),
+        }));
         return response.status(400).json({ data: null, error: { code: "OAUTH_STATE_INVALID" } });
       }
       delete request.session.oauthState;
