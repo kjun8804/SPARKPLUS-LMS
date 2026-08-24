@@ -3264,9 +3264,14 @@ function DatabaseLearnerManagement({ onSelect }) {
       return ids;
     };
     organizationTree.forEach(visit);
+    const allOrganizationIds = organizations.map((organization) => organization.id);
+    organizations
+      .filter((organization) => Number(organization.depth) === 0)
+      .forEach((organization) => result.set(organization.id, allOrganizationIds));
     return result;
-  }, [organizationTree]);
+  }, [organizationTree, organizations]);
   const userCountByOrganization = r.useMemo(() => new Map(organizations.map((organization) => {
+    if (Number(organization.depth) === 0) return [organization.id, users.length];
     const scope = new Set(organizationDescendantIds.get(organization.id) || [organization.id]);
     return [organization.id, users.filter((user) => scope.has(user.organizationId)).length];
   })), [organizations, organizationDescendantIds, users]);
@@ -3276,8 +3281,11 @@ function DatabaseLearnerManagement({ onSelect }) {
     .sort((left, right) => (left.sortOrder ?? 0) - (right.sortOrder ?? 0) || left.name.localeCompare(right.name, `ko`)) : [];
   const selectedOrganizationSiblingIndex = selectedOrganization
     ? selectedOrganizationSiblings.findIndex((organization) => organization.id === selectedOrganization.id) : -1;
+  const selectedOrganizationIsCorporate = Number(selectedOrganization?.depth) === 0;
   const selectedOrganizationScope = new Set(selectedOrganization ? (organizationDescendantIds.get(selectedOrganization.id) || [selectedOrganization.id]) : []);
-  const selectedOrganizationUsers = selectedOrganization ? users.filter((user) => selectedOrganizationScope.has(user.organizationId)) : [];
+  const selectedOrganizationUsers = selectedOrganization
+    ? (selectedOrganizationIsCorporate ? users : users.filter((user) => selectedOrganizationScope.has(user.organizationId)))
+    : [];
   const load = r.useCallback(async () => {
     setLoading(true); setError(``);
     try {
@@ -3302,8 +3310,12 @@ function DatabaseLearnerManagement({ onSelect }) {
   r.useEffect(() => { load(); }, [load]);
   const filteredUsers = users.filter((user) => {
     const keyword = query.trim().toLowerCase();
+    const filterOrganization = organizations.find((organization) => organization.id === organizationFilter);
+    const matchesOrganization = !organizationFilter
+      || Number(filterOrganization?.depth) === 0
+      || new Set(organizationDescendantIds.get(organizationFilter) || [organizationFilter]).has(user.organizationId);
     return (!keyword || `${user.name} ${user.employeeNumber} ${user.email} ${user.organizationName || ``}`.toLowerCase().includes(keyword))
-      && (!organizationFilter || new Set(organizationDescendantIds.get(organizationFilter) || [organizationFilter]).has(user.organizationId)) && (!statusFilter || user.status === statusFilter);
+      && matchesOrganization && (!statusFilter || user.status === statusFilter);
   });
   const openCreate = () => { setUserForm(emptyUser); setUserModal({ mode: `create` }); };
   const openEdit = async (user) => { let scopes=[];try{scopes=await apiRequest(`/api/v1/admin/users/${user.id}/leader-scopes`);}catch{} setUserForm({ ...user, organizationId: user.organizationId || ``, position: user.position || ``, leaderOrganizationIds:scopes.map((scope)=>scope.organizationId) }); setUserModal({ mode: `edit`, id: user.id }); };
