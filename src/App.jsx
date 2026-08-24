@@ -3875,6 +3875,7 @@ function AdminLearningStatusPage() {
   const [data, setData] = r.useState({ summary: {}, rows: [] });
   const [loading, setLoading] = r.useState(true);
   const [error, setError] = r.useState(``);
+  const [excludeCompleted, setExcludeCompleted] = r.useState(false);
   r.useEffect(() => {
     let active = true;
     setLoading(true); setError(``);
@@ -3886,6 +3887,9 @@ function AdminLearningStatusPage() {
   }, [filters]);
   const summary = data.summary || {};
   const rows = data.rows || [];
+  const visibleRows = filters.type === `ENROLLED` && excludeCompleted
+    ? rows.filter((row) => !row.completedAt && row.status !== `COMPLETED`)
+    : rows;
   const applyFilters = () => setFilters({ start: range.start, end: range.end, type, query: query.trim() });
   return <section className="learning-status-page">
     <div className="learning-status-toolbar">
@@ -3903,12 +3907,12 @@ function AdminLearningStatusPage() {
       <article><span>학습 대상 과정</span><b>{Number(summary.courseCount || 0).toLocaleString()}개</b><small>선택 기간 기준</small></article>
       <article><span>지급 리워드</span><b>{Number(summary.rewardPoints || 0).toLocaleString()}P</b><small>동일 기간 DB 기준</small></article>
     </div>
-    <div className="learning-status-result-head"><div><h2>{filters.type === `COMPLETED` ? `학습 완료` : `수강 신청`} 상세</h2><p>{filters.start.replaceAll(`-`, `.`)} ~ {filters.end.replaceAll(`-`, `.`)} · 총 {rows.length.toLocaleString()}건</p></div><span>관리자 홈·학습 리워드와 동일한 수강/포인트 원천 데이터를 사용합니다.</span></div>
+    <div className="learning-status-result-head"><div><div className="learning-status-result-title"><h2>{filters.type === `COMPLETED` ? `학습 완료` : `수강 신청`} 상세</h2>{filters.type === `ENROLLED` && <button type="button" className={excludeCompleted ? `active` : ``} onClick={() => setExcludeCompleted((current) => !current)}><Icon icon={CheckmarkCircle02Icon} size={15} />완료건 제외</button>}</div><p>{filters.start.replaceAll(`-`, `.`)} ~ {filters.end.replaceAll(`-`, `.`)} · 총 {visibleRows.length.toLocaleString()}건{filters.type === `ENROLLED` && excludeCompleted ? ` (완료 제외)` : ``}</p></div><span>관리자 홈·학습 리워드와 동일한 수강/포인트 원천 데이터를 사용합니다.</span></div>
     {error && <div className="inline-error">{error}</div>}
     <div className="table-wrap learning-status-table-wrap"><table className="learning-status-table"><thead><tr><th>학습자</th><th>조직</th><th>교육과정</th><th>구분</th><th>진도/차시</th><th>{filters.type === `COMPLETED` ? `완료일` : `신청일`}</th><th>리워드</th></tr></thead><tbody>
       {loading && <tr><td colSpan="7" className="table-empty">학습 현황을 불러오고 있습니다.</td></tr>}
-      {!loading && !rows.length && <tr><td colSpan="7" className="table-empty">선택한 조건의 학습 기록이 없습니다.</td></tr>}
-      {!loading && rows.map((row) => <tr key={row.enrollmentId}><td><b>{row.name}</b><small>{row.employeeNumber} · {row.email}</small></td><td>{row.organization}</td><td><b>{row.course}</b><small>{row.category}</small></td><td><span className={row.required ? `status-chip required` : `status-chip`}>{row.required ? `필수` : `선택`}</span></td><td><b>{Number(row.progress || 0)}%</b><small>{Number(row.completedLessons || 0)}/{Number(row.totalLessons || 0)}차시</small></td><td>{new Date(filters.type === `COMPLETED` ? row.completedAt : row.enrolledAt).toLocaleString(`ko-KR`, { year:`numeric`, month:`2-digit`, day:`2-digit`, hour:`2-digit`, minute:`2-digit` })}</td><td><b>{Number(row.rewardPoints || 0).toLocaleString()}P</b></td></tr>)}
+      {!loading && !visibleRows.length && <tr><td colSpan="7" className="table-empty">선택한 조건의 학습 기록이 없습니다.</td></tr>}
+      {!loading && visibleRows.map((row) => <tr key={row.enrollmentId}><td><b>{row.name}</b><small>{row.employeeNumber} · {row.email}</small></td><td>{row.organization}</td><td><b>{row.course}</b><small>{row.category}</small></td><td><span className={row.required ? `status-chip required` : `status-chip`}>{row.required ? `필수` : `선택`}</span></td><td><b>{Number(row.progress || 0)}%</b><small>{Number(row.completedLessons || 0)}/{Number(row.totalLessons || 0)}차시</small></td><td>{new Date(filters.type === `COMPLETED` ? row.completedAt : row.enrolledAt).toLocaleString(`ko-KR`, { year:`numeric`, month:`2-digit`, day:`2-digit`, hour:`2-digit`, minute:`2-digit` })}</td><td><b>{Number(row.rewardPoints || 0).toLocaleString()}P</b></td></tr>)}
     </tbody></table></div>
   </section>;
 }

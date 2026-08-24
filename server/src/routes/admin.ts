@@ -112,8 +112,8 @@ export function createAdminRouter(pool: DatabasePool, config?: AppConfig) {
         pool.query(`SELECT
           COUNT(DISTINCT e.id) FILTER(WHERE e.enrolled_at >= $1::date AND e.enrolled_at < ($2::date + interval '1 day') AND e.status<>'CANCELLED')::int AS "enrollmentCount",
           COUNT(DISTINCT e.user_id) FILTER(WHERE e.enrolled_at >= $1::date AND e.enrolled_at < ($2::date + interval '1 day') AND e.status<>'CANCELLED')::int AS "enrolledPeople",
-          COUNT(DISTINCT e.id) FILTER(WHERE e.completed_at >= $1::date AND e.completed_at < ($2::date + interval '1 day') AND e.status='COMPLETED')::int AS "completionCount",
-          COUNT(DISTINCT e.user_id) FILTER(WHERE e.completed_at >= $1::date AND e.completed_at < ($2::date + interval '1 day') AND e.status='COMPLETED')::int AS "completedPeople",
+          COUNT(DISTINCT e.id) FILTER(WHERE e.completed_at >= $1::date AND e.completed_at < ($2::date + interval '1 day') AND e.status<>'CANCELLED')::int AS "completionCount",
+          COUNT(DISTINCT e.user_id) FILTER(WHERE e.completed_at >= $1::date AND e.completed_at < ($2::date + interval '1 day') AND e.status<>'CANCELLED')::int AS "completedPeople",
           COUNT(DISTINCT e.course_id) FILTER(WHERE ((e.enrolled_at >= $1::date AND e.enrolled_at < ($2::date + interval '1 day')) OR (e.completed_at >= $1::date AND e.completed_at < ($2::date + interval '1 day'))) AND e.status<>'CANCELLED')::int AS "courseCount",
           COALESCE(SUM(rt.points) FILTER(WHERE rt.created_at >= $1::date AND rt.created_at < ($2::date + interval '1 day')),0)::int AS "rewardPoints"
           FROM enrollments e LEFT JOIN reward_transactions rt ON rt.enrollment_id=e.id`, [start, end]),
