@@ -12153,6 +12153,19 @@ html[data-theme="dark"] .organization-tree-icon { background:#263548; color:#79b
 html[data-theme="dark"] .archive-sync-panel.configured { border-color:#286b52; background:#12372c; color:#7ce0b2; }
 html[data-theme="dark"] .archive-sync-panel.configured b { color:#a5f0cb !important; }
 html[data-theme="dark"] .archive-sync-panel.configured span { color:#8eddb8 !important; }
+html[data-theme="dark"] .organization-member-summary > button.selected {
+  border-color:#6fa9e5;
+  background:#25415f;
+  color:#f5f8fc;
+  box-shadow:inset 3px 0 0 #6fa9e5;
+}
+html[data-theme="dark"] .organization-member-summary > button.selected span,
+html[data-theme="dark"] .organization-member-summary > button.selected small {
+  color:#becfe0;
+}
+html[data-theme="dark"] .organization-member-summary > button.selected b {
+  color:#ffffff;
+}
 @media(max-width:1100px){.database-management-toolbar{flex-direction:column}.database-management-actions{width:100%}.organization-explorer-body{grid-template-columns:1fr}.organization-tree-panel{border-right:0;border-bottom:1px solid var(--ui-line)}.organization-tree-scroll{max-height:320px}}
 .organization-member-actions button:disabled { opacity:.38; cursor:not-allowed; }
 @media(max-width:680px){.organization-explorer>header{align-items:flex-start;flex-direction:column}.organization-member-head{flex-direction:column}.organization-member-actions{width:100%;flex-wrap:wrap}.organization-member-actions button{flex:1}.organization-member-list{grid-template-columns:1fr}.organization-member-summary{grid-template-columns:1fr 1fr}.organization-member-summary>:last-child{grid-column:1/-1}.organization-member-pagination{align-items:flex-start;flex-direction:column}.organization-member-pagination>div{align-self:flex-end}}
