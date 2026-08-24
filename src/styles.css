@@ -19086,3 +19086,6 @@ html[data-theme="dark"] .notice-admin-search > span { border-color:#3b4a60; back
   .notice-page-dates { grid-template-columns:1fr; gap:10px; }
   .notice-page-dates > span { height:14px; line-height:14px; }
 }
+
+.organization-member-actions .corporation-promote { border-color:#8fb8ff; background:#eaf2ff; color:#1f5aa8; font-weight:750; }
+html[data-theme="dark"] .organization-member-actions .corporation-promote { border-color:#385f91; background:#18304f; color:#a9cbff; }

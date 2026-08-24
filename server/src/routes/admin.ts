@@ -32,6 +32,14 @@ async function audit(pool: DatabasePool, actor: string, action: string, type: st
     VALUES ($1,$2,$3,$4,$5,$6,$7)`, [actor, action, type, id, before ? JSON.stringify(before) : null, after ? JSON.stringify(after) : null, ip || null]);
 }
 let organizationOrderReady: Promise<void> | null = null;
+let corporateOrganizationReady: Promise<void> | null = null;
+function ensureCorporateOrganizationSchema(pool: DatabasePool) {
+  if (!corporateOrganizationReady) corporateOrganizationReady = (async () => {
+    await pool.query(`ALTER TABLE organizations DROP CONSTRAINT IF EXISTS organizations_depth_check`);
+    await pool.query(`ALTER TABLE organizations ADD CONSTRAINT organizations_depth_check CHECK (depth >= 0 AND depth <= 3)`);
+  })().catch((error) => { corporateOrganizationReady = null; throw error; });
+  return corporateOrganizationReady;
+}
 function ensureOrganizationOrderSchema(pool: DatabasePool) {
   if (!organizationOrderReady) organizationOrderReady = (async () => {
     await pool.query(`ALTER TABLE organizations ADD COLUMN IF NOT EXISTS sort_order integer NOT NULL DEFAULT 0`);
@@ -52,6 +60,7 @@ export function createAdminRouter(pool: DatabasePool, config?: AppConfig) {
   router.get("/management", async (request, response, next) => {
     try {
       await ensureOrganizationOrderSchema(pool);
+      await ensureCorporateOrganizationSchema(pool);
       const [users, organizations, latestArchive] = await Promise.all([
         pool.query(`SELECT u.id, u.employee_number AS "employeeNumber", u.name, u.email,
           u.organization_id AS "organizationId", o.name AS "organizationName", u.position, u.role, u.status,
@@ -235,10 +244,11 @@ export function createAdminRouter(pool: DatabasePool, config?: AppConfig) {
     const client = await pool.connect();
     try {
       await ensureOrganizationOrderSchema(pool);
+      await ensureCorporateOrganizationSchema(pool);
       await client.query("BEGIN");
       const parent = parsed.data.parentId ? await client.query(`SELECT id,depth,path FROM organizations WHERE id=$1 AND status='ACTIVE' FOR UPDATE`, [parsed.data.parentId]) : null;
       if (parsed.data.parentId && !parent?.rowCount) { await client.query("ROLLBACK"); return response.status(400).json({ data: null, error: { code: "PARENT_ORGANIZATION_NOT_FOUND" } }); }
-      const depth = parent?.rows[0].depth ? parent.rows[0].depth + 1 : 1;
+      const depth = parent?.rowCount ? Number(parent.rows[0].depth) + 1 : 0;
       if (depth > 3) { await client.query("ROLLBACK"); return response.status(400).json({ data: null, error: { code: "ORGANIZATION_DEPTH_EXCEEDED" } }); }
       const id = (await client.query(`SELECT gen_random_uuid() AS id`)).rows[0].id;
       const path = parent?.rows[0].path ? `${parent.rows[0].path}${id}/` : `/${id}/`;
@@ -267,6 +277,27 @@ export function createAdminRouter(pool: DatabasePool, config?: AppConfig) {
       if (error?.code === "23505") return response.status(409).json({ data: null, error: { code: "ORGANIZATION_ALREADY_EXISTS" } });
       next(error);
     }
+  });
+
+  router.post("/organizations/:id/promote-corporation", async (request, response, next) => {
+    const client = await pool.connect();
+    try {
+      await ensureCorporateOrganizationSchema(pool);
+      await client.query("BEGIN");
+      const organization = await client.query(`SELECT id,name,parent_id AS "parentId",depth FROM organizations WHERE id=$1 FOR UPDATE`, [request.params.id]);
+      if (!organization.rowCount) { await client.query("ROLLBACK"); return response.status(404).json({ data: null, error: { code: "ORGANIZATION_NOT_FOUND" } }); }
+      if (organization.rows[0].parentId) { await client.query("ROLLBACK"); return response.status(409).json({ data: null, error: { code: "CORPORATION_MUST_BE_ROOT" } }); }
+      const result = await client.query(`WITH RECURSIVE tree AS (
+        SELECT id,0 AS new_depth FROM organizations WHERE id=$1
+        UNION ALL SELECT child.id,tree.new_depth+1 FROM organizations child JOIN tree ON child.parent_id=tree.id
+      ) UPDATE organizations AS organization SET depth=tree.new_depth,updated_at=now() FROM tree
+        WHERE organization.id=tree.id RETURNING organization.id,organization.name,organization.parent_id AS "parentId",organization.depth,organization.status`, [request.params.id]);
+      if (result.rows.some((item) => Number(item.depth) > 3)) { await client.query("ROLLBACK"); return response.status(409).json({ data: null, error: { code: "ORGANIZATION_DEPTH_EXCEEDED" } }); }
+      await client.query("COMMIT");
+      await audit(pool, request.currentUser!.id, "ORGANIZATION_PROMOTED_TO_CORPORATION", "ORGANIZATION", request.params.id, organization.rows[0], result.rows[0], request.ip);
+      response.json({ data: result.rows[0], error: null });
+    } catch (error) { await client.query("ROLLBACK").catch(() => undefined); next(error); }
+    finally { client.release(); }
   });
 
   router.post("/organizations/:id/reorder", async (request, response, next) => {
