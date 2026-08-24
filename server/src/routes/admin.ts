@@ -252,6 +252,41 @@ export function createAdminRouter(pool: DatabasePool, config?: AppConfig) {
     }
   });
 
+  router.delete("/organizations/:id", async (request, response, next) => {
+    const client = await pool.connect();
+    try {
+      await client.query("BEGIN");
+      const organization = await client.query(`SELECT id,name,parent_id AS "parentId",depth,status FROM organizations WHERE id=$1 FOR UPDATE`, [request.params.id]);
+      if (!organization.rowCount) {
+        await client.query("ROLLBACK");
+        return response.status(404).json({ data: null, error: { code: "ORGANIZATION_NOT_FOUND" } });
+      }
+      const [children, users, assignments] = await Promise.all([
+        client.query(`SELECT count(*)::int AS count FROM organizations WHERE parent_id=$1`, [request.params.id]),
+        client.query(`SELECT count(*)::int AS count FROM users WHERE organization_id=$1 AND status<>'DELETED'`, [request.params.id]),
+        client.query(`SELECT count(*)::int AS count FROM course_assignments WHERE assignment_type='ORGANIZATION' AND (target_id=$1 OR target_id=$2)`, [request.params.id, organization.rows[0].name]),
+      ]);
+      const blockers = {
+        children: children.rows[0].count,
+        users: users.rows[0].count,
+        assignments: assignments.rows[0].count,
+      };
+      if (blockers.children || blockers.users || blockers.assignments) {
+        await client.query("ROLLBACK");
+        return response.status(409).json({ data: null, error: { code: "ORGANIZATION_DELETE_BLOCKED", details: blockers } });
+      }
+      await client.query(`UPDATE users SET organization_id=NULL,updated_at=now() WHERE organization_id=$1 AND status='DELETED'`, [request.params.id]);
+      await client.query(`DELETE FROM organizations WHERE id=$1`, [request.params.id]);
+      await client.query("COMMIT");
+      await audit(pool, request.currentUser!.id, "ORGANIZATION_DELETED", "ORGANIZATION", request.params.id, organization.rows[0], null, request.ip);
+      response.json({ data: { id: request.params.id }, error: null });
+    } catch (error: any) {
+      await client.query("ROLLBACK").catch(() => undefined);
+      if (error?.code === "23503") return response.status(409).json({ data: null, error: { code: "ORGANIZATION_DELETE_BLOCKED" } });
+      next(error);
+    } finally { client.release(); }
+  });
+
   router.get("/users/:id/leader-scopes", async (request, response, next) => {
     try { const result=await pool.query(`SELECT organization_id AS "organizationId",include_descendants AS "includeDescendants" FROM organization_leaders WHERE user_id=$1`,[request.params.id]); response.json({data:result.rows,error:null}); }
     catch(error){next(error);}
