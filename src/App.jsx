@@ -390,6 +390,7 @@ var a = [
     { label: `홈`, page: `home` },
     { label: `교육과정 관리`, page: `courses` },
     { label: `학습자 관리`, page: `learners` },
+    { label: `학습 현황`, page: `learningStatus` },
     { label: `학습 리워드`, page: `rewards` },
     { label: `공지사항 관리`, page: `notices` },
   ],
@@ -407,6 +408,7 @@ var a = [
       `전체 학습자 관리`,
       `부서별 학습 현황과 소속 임직원의 학습 정보를 확인합니다.`,
     ],
+    learningStatus: [`학습 현황`, `기간별 수강 신청과 학습 완료 기록을 강의·학습자 단위로 확인합니다.`],
     learnerDetail: [
       `학습자 상세`,
       `개인별 수강 과정과 학습 진행 정보를 확인합니다.`,
@@ -592,7 +594,7 @@ function f({ logout: e, user, switchToLearner }) {
         ],
       }),
       (0, i.jsxs)(`main`, {
-        className: `main ${t === `home` ? `admin-home-main` : t === `courses` ? `admin-courses-main` : t === `learners` ? `admin-learners-main` : [`rewards`, `notices`, `content`].includes(t) ? `admin-results-main` : ``}`,
+        className: `main ${t === `home` ? `admin-home-main` : t === `courses` ? `admin-courses-main` : t === `learners` ? `admin-learners-main` : [`learningStatus`, `rewards`, `notices`, `content`].includes(t) ? `admin-results-main` : ``}`,
         children: [
           ![`content`, `learnerDetail`, `notices`].includes(t) &&
             (0, i.jsx)(PageHeader, {
@@ -633,6 +635,7 @@ function f({ logout: e, user, switchToLearner }) {
                 A(learner);
               },
             }),
+          t === `learningStatus` && (0, i.jsx)(AdminLearningStatusPage, {}),
           t === `learnerDetail` &&
             k &&
             (0, i.jsx)(LearnerProfilePage, {
@@ -3846,6 +3849,53 @@ function LearnerDepartmentHub({ onSelect }) {
       )}
     </section>
   );
+}
+
+function AdminLearningStatusPage() {
+  const initialRange = adminQuickRange(`sixMonths`);
+  const [range, setRange] = r.useState(initialRange);
+  const [type, setType] = r.useState(`ENROLLED`);
+  const [query, setQuery] = r.useState(``);
+  const [filters, setFilters] = r.useState({ ...initialRange, type: `ENROLLED`, query: `` });
+  const [data, setData] = r.useState({ summary: {}, rows: [] });
+  const [loading, setLoading] = r.useState(true);
+  const [error, setError] = r.useState(``);
+  r.useEffect(() => {
+    let active = true;
+    setLoading(true); setError(``);
+    const params = new URLSearchParams({ start: filters.start, end: filters.end, type: filters.type, query: filters.query });
+    apiRequest(`/api/v1/admin/learning-activity?${params}`).then((result) => { if (active) setData(result || { summary: {}, rows: [] }); })
+      .catch((requestError) => { if (active) { setData({ summary: {}, rows: [] }); setError(requestError?.message || `학습 현황을 불러오지 못했습니다.`); } })
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, [filters]);
+  const summary = data.summary || {};
+  const rows = data.rows || [];
+  const applyFilters = () => setFilters({ start: range.start, end: range.end, type, query: query.trim() });
+  return <section className="learning-status-page">
+    <div className="learning-status-toolbar">
+      <div className="learning-status-tabs" role="tablist" aria-label="학습 현황 유형">
+        <button className={type === `ENROLLED` ? `active` : ``} onClick={() => setType(`ENROLLED`)}>수강 신청</button>
+        <button className={type === `COMPLETED` ? `active` : ``} onClick={() => setType(`COMPLETED`)}>학습 완료</button>
+      </div>
+      <div className="learning-status-dates"><input type="date" value={range.start} onChange={(event) => setRange({ ...range, start: event.target.value })} /><span>~</span><input type="date" value={range.end} onChange={(event) => setRange({ ...range, end: event.target.value })} /></div>
+      <label className="learning-status-search"><Icon icon={Search01Icon} size={18} /><input value={query} onChange={(event) => setQuery(event.target.value)} onKeyDown={(event) => event.key === `Enter` && applyFilters()} placeholder="이름, 사번, 강의명 검색" /></label>
+      <button className="primary" onClick={applyFilters}>조회</button>
+    </div>
+    <div className="learning-status-summary">
+      <article><span>수강 신청 건수</span><b>{Number(summary.enrollmentCount || 0).toLocaleString()}건</b><small>{Number(summary.enrolledPeople || 0).toLocaleString()}명</small></article>
+      <article><span>학습 완료 건수</span><b>{Number(summary.completionCount || 0).toLocaleString()}건</b><small>{Number(summary.completedPeople || 0).toLocaleString()}명</small></article>
+      <article><span>학습 대상 과정</span><b>{Number(summary.courseCount || 0).toLocaleString()}개</b><small>선택 기간 기준</small></article>
+      <article><span>지급 리워드</span><b>{Number(summary.rewardPoints || 0).toLocaleString()}P</b><small>동일 기간 DB 기준</small></article>
+    </div>
+    <div className="learning-status-result-head"><div><h2>{filters.type === `COMPLETED` ? `학습 완료` : `수강 신청`} 상세</h2><p>{filters.start.replaceAll(`-`, `.`)} ~ {filters.end.replaceAll(`-`, `.`)} · 총 {rows.length.toLocaleString()}건</p></div><span>관리자 홈·학습 리워드와 동일한 수강/포인트 원천 데이터를 사용합니다.</span></div>
+    {error && <div className="inline-error">{error}</div>}
+    <div className="table-wrap learning-status-table-wrap"><table className="learning-status-table"><thead><tr><th>학습자</th><th>조직</th><th>교육과정</th><th>구분</th><th>진도/차시</th><th>{filters.type === `COMPLETED` ? `완료일` : `신청일`}</th><th>리워드</th></tr></thead><tbody>
+      {loading && <tr><td colSpan="7" className="table-empty">학습 현황을 불러오고 있습니다.</td></tr>}
+      {!loading && !rows.length && <tr><td colSpan="7" className="table-empty">선택한 조건의 학습 기록이 없습니다.</td></tr>}
+      {!loading && rows.map((row) => <tr key={row.enrollmentId}><td><b>{row.name}</b><small>{row.employeeNumber} · {row.email}</small></td><td>{row.organization}</td><td><b>{row.course}</b><small>{row.category}</small></td><td><span className={row.required ? `status-chip required` : `status-chip`}>{row.required ? `필수` : `선택`}</span></td><td><b>{Number(row.progress || 0)}%</b><small>{Number(row.completedLessons || 0)}/{Number(row.totalLessons || 0)}차시</small></td><td>{new Date(filters.type === `COMPLETED` ? row.completedAt : row.enrolledAt).toLocaleString(`ko-KR`, { year:`numeric`, month:`2-digit`, day:`2-digit`, hour:`2-digit`, minute:`2-digit` })}</td><td><b>{Number(row.rewardPoints || 0).toLocaleString()}P</b></td></tr>)}
+    </tbody></table></div>
+  </section>;
 }
 
 function LearnerProfilePage({ learner, onBack, onUpdate }) {

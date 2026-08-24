@@ -97,6 +97,40 @@ export function createAdminRouter(pool: DatabasePool, config?: AppConfig) {
     ]);response.json({data:{totals:totals.rows[0],monthly:monthly.rows},error:null});
   } catch(error){next(error);} });
 
+  router.get("/learning-activity", async (request, response, next) => {
+    const parsed = z.object({
+      start: z.string().regex(/^\d{4}-\d{2}-\d{2}$/), end: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+      type: z.enum(["ENROLLED", "COMPLETED"]).default("ENROLLED"), query: z.string().trim().max(100).optional().default(""),
+    }).safeParse(request.query);
+    if (!parsed.success) return invalid(response, parsed.error);
+    try {
+      await ensureLearningSchema(pool);
+      const { start, end, type, query } = parsed.data;
+      const eventColumn = type === "COMPLETED" ? "e.completed_at" : "e.enrolled_at";
+      const baseWhere = `e.status<>'CANCELLED' AND ${eventColumn} >= $1::date AND ${eventColumn} < ($2::date + interval '1 day')`;
+      const [summary, rows] = await Promise.all([
+        pool.query(`SELECT
+          COUNT(DISTINCT e.id) FILTER(WHERE e.enrolled_at >= $1::date AND e.enrolled_at < ($2::date + interval '1 day') AND e.status<>'CANCELLED')::int AS "enrollmentCount",
+          COUNT(DISTINCT e.user_id) FILTER(WHERE e.enrolled_at >= $1::date AND e.enrolled_at < ($2::date + interval '1 day') AND e.status<>'CANCELLED')::int AS "enrolledPeople",
+          COUNT(DISTINCT e.id) FILTER(WHERE e.completed_at >= $1::date AND e.completed_at < ($2::date + interval '1 day') AND e.status='COMPLETED')::int AS "completionCount",
+          COUNT(DISTINCT e.user_id) FILTER(WHERE e.completed_at >= $1::date AND e.completed_at < ($2::date + interval '1 day') AND e.status='COMPLETED')::int AS "completedPeople",
+          COUNT(DISTINCT e.course_id) FILTER(WHERE ((e.enrolled_at >= $1::date AND e.enrolled_at < ($2::date + interval '1 day')) OR (e.completed_at >= $1::date AND e.completed_at < ($2::date + interval '1 day'))) AND e.status<>'CANCELLED')::int AS "courseCount",
+          COALESCE(SUM(rt.points) FILTER(WHERE rt.created_at >= $1::date AND rt.created_at < ($2::date + interval '1 day')),0)::int AS "rewardPoints"
+          FROM enrollments e LEFT JOIN reward_transactions rt ON rt.enrollment_id=e.id`, [start, end]),
+        pool.query(`SELECT e.id AS "enrollmentId",u.id AS "userId",u.employee_number AS "employeeNumber",u.name,u.email,
+          COALESCE(o.name,'소속 미지정') AS organization,c.id AS "courseId",c.title AS course,c.category,e.required,e.status,e.progress,
+          e.enrolled_at AS "enrolledAt",e.completed_at AS "completedAt",COUNT(DISTINCT lp.lesson_id) FILTER(WHERE lp.completed)::int AS "completedLessons",
+          COUNT(DISTINCT l.id)::int AS "totalLessons",COALESCE((SELECT SUM(reward.points) FROM reward_transactions reward WHERE reward.enrollment_id=e.id),0)::int AS "rewardPoints"
+          FROM enrollments e JOIN users u ON u.id=e.user_id JOIN courses c ON c.id=e.course_id
+          LEFT JOIN organizations o ON o.id=u.organization_id LEFT JOIN lessons l ON l.course_id=c.id
+          LEFT JOIN lesson_progress lp ON lp.enrollment_id=e.id AND lp.lesson_id=l.id
+          WHERE ${baseWhere} AND ($3='' OR u.name ILIKE '%'||$3||'%' OR u.employee_number ILIKE '%'||$3||'%' OR c.title ILIKE '%'||$3||'%')
+          GROUP BY e.id,u.id,o.name,c.id ORDER BY ${eventColumn} DESC LIMIT 500`, [start, end, query]),
+      ]);
+      response.json({ data: { summary: summary.rows[0], rows: rows.rows }, error: null });
+    } catch (error) { next(error); }
+  });
+
   router.get("/users", async (_request, response, next) => {
     try {
       const result = await pool.query(`SELECT u.id, u.employee_number AS "employeeNumber", u.name, u.email,
