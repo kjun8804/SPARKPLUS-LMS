@@ -3250,6 +3250,8 @@ function DatabaseLearnerManagement({ onSelect }) {
   const [organizationFilter, setOrganizationFilter] = r.useState(``), [statusFilter, setStatusFilter] = r.useState(``);
   const [selectedOrganizationId, setSelectedOrganizationId] = r.useState(``);
   const [expandedOrganizationIds, setExpandedOrganizationIds] = r.useState(() => new Set());
+  const [organizationMemberScope, setOrganizationMemberScope] = r.useState(`all`);
+  const [organizationMemberPage, setOrganizationMemberPage] = r.useState(1);
   const [userModal, setUserModal] = r.useState(null), [userForm, setUserForm] = r.useState(emptyUser);
   const [organizationModal, setOrganizationModal] = r.useState(false), [organizationForm, setOrganizationForm] = r.useState({ name: ``, parentId: `` });
   const [saving, setSaving] = r.useState(false), importInputRef = r.useRef(null);
@@ -3289,6 +3291,21 @@ function DatabaseLearnerManagement({ onSelect }) {
   const selectedOrganizationUsers = selectedOrganization
     ? (selectedOrganizationIsCorporate ? users : users.filter((user) => selectedOrganizationScope.has(user.organizationId)))
     : [];
+  const directOrganizationUsers = selectedOrganization
+    ? users.filter((user) => user.organizationId === selectedOrganization.id)
+    : [];
+  const visibleOrganizationUsers = organizationMemberScope === `direct` ? directOrganizationUsers : selectedOrganizationUsers;
+  const organizationMemberPageSize = 8;
+  const organizationMemberPageCount = Math.max(1, Math.ceil(visibleOrganizationUsers.length / organizationMemberPageSize));
+  const safeOrganizationMemberPage = Math.min(organizationMemberPage, organizationMemberPageCount);
+  const pagedOrganizationUsers = visibleOrganizationUsers.slice(
+    (safeOrganizationMemberPage - 1) * organizationMemberPageSize,
+    safeOrganizationMemberPage * organizationMemberPageSize,
+  );
+  r.useEffect(() => {
+    setOrganizationMemberScope(`all`);
+    setOrganizationMemberPage(1);
+  }, [selectedOrganizationId]);
   const load = r.useCallback(async () => {
     setLoading(true); setError(``);
     try {
@@ -3446,8 +3463,16 @@ function DatabaseLearnerManagement({ onSelect }) {
         </div>
         <div className="organization-member-panel">
           {selectedOrganization ? <><div className="organization-member-head"><div><span>{Number(selectedOrganization.depth) === 0 ? `0단계 법인` : `${selectedOrganization.depth}단계 조직`}</span><h3>{selectedOrganization.name}</h3><p>{selectedOrganization.pathLabel}</p></div><div className="organization-member-actions">{!selectedOrganization.parentId && Number(selectedOrganization.depth) !== 0 && <button type="button" className="corporation-promote" onClick={() => promoteCorporation(selectedOrganization)}>0단계 법인 설정</button>}<button type="button" disabled={selectedOrganizationSiblingIndex <= 0} onClick={() => reorderOrganization(`UP`)}>위로</button><button type="button" disabled={selectedOrganizationSiblingIndex < 0 || selectedOrganizationSiblingIndex >= selectedOrganizationSiblings.length - 1} onClick={() => reorderOrganization(`DOWN`)}>아래로</button><button type="button" className={selectedOrganization.status === `ACTIVE` ? `active` : ``} onClick={() => toggleOrganization(selectedOrganization)}>{selectedOrganization.status === `ACTIVE` ? `사용 중` : `비활성`}</button><button type="button" className="danger" onClick={() => deleteOrganization(selectedOrganization)}>조직 삭제</button></div></div>
-            <div className="organization-member-summary"><div><span>소속 구성원</span><b>{selectedOrganizationUsers.length}명</b></div><div><span>직속 구성원</span><b>{users.filter((user) => user.organizationId === selectedOrganization.id).length}명</b></div><div><span>하위 조직</span><b>{Math.max(0, selectedOrganizationScope.size - 1)}개</b></div></div>
-            <div className="organization-member-list">{selectedOrganizationUsers.slice(0, 8).map((user) => <article key={user.id}><span>{user.name?.[0] || `?`}</span><div><b>{user.name}</b><small>{user.position || `직책 미지정`} · {user.employeeNumber}</small></div><em className={user.status === `ACTIVE` ? `active` : ``}>{user.status === `ACTIVE` ? `활성` : `비활성`}</em></article>)}{selectedOrganizationUsers.length === 0 && <p>이 조직에 등록된 구성원이 없습니다.</p>}{selectedOrganizationUsers.length > 8 && <small className="organization-member-more">아래 사용자 목록에서 나머지 {selectedOrganizationUsers.length - 8}명을 확인하세요.</small>}</div>
+            <div className="organization-member-summary">
+              <button type="button" className={organizationMemberScope === `all` ? `selected` : ``} onClick={() => { setOrganizationMemberScope(`all`); setOrganizationMemberPage(1); }}><span>소속 구성원</span><b>{selectedOrganizationUsers.length}명</b><small>하위 조직 포함</small></button>
+              <button type="button" className={organizationMemberScope === `direct` ? `selected` : ``} onClick={() => { setOrganizationMemberScope(`direct`); setOrganizationMemberPage(1); }}><span>직속 구성원</span><b>{directOrganizationUsers.length}명</b><small>이 조직에 직접 소속</small></button>
+              <div><span>하위 조직</span><b>{Math.max(0, selectedOrganizationScope.size - 1)}개</b><small>조직 범위</small></div>
+            </div>
+            <div className="organization-member-list">
+              {pagedOrganizationUsers.map((user) => <article key={user.id}><span>{user.name?.[0] || `?`}</span><div><b>{user.name}</b><small>{user.position || `직책 미지정`} · {user.employeeNumber}</small></div><em className={user.status === `ACTIVE` ? `active` : ``}>{user.status === `ACTIVE` ? `활성` : `비활성`}</em></article>)}
+              {visibleOrganizationUsers.length === 0 && <p>{organizationMemberScope === `direct` ? `이 조직에 직접 소속된 구성원이 없습니다.` : `이 조직 범위에 등록된 구성원이 없습니다.`}</p>}
+              {visibleOrganizationUsers.length > 0 && <div className="organization-member-pagination"><span>{organizationMemberScope === `direct` ? `직속 구성원` : `소속 구성원`} 총 {visibleOrganizationUsers.length}명 · {safeOrganizationMemberPage}/{organizationMemberPageCount} 페이지</span><div><button type="button" disabled={safeOrganizationMemberPage <= 1} onClick={() => setOrganizationMemberPage((page) => Math.max(1, page - 1))} aria-label="이전 구성원 페이지"><Icon icon={ArrowLeft01Icon} size={15} /></button><button type="button" disabled={safeOrganizationMemberPage >= organizationMemberPageCount} onClick={() => setOrganizationMemberPage((page) => Math.min(organizationMemberPageCount, page + 1))} aria-label="다음 구성원 페이지"><Icon icon={ArrowRight01Icon} size={15} /></button></div></div>}
+            </div>
           </> : <div className="organization-empty-selection"><span><Icon icon={UserGroupIcon} size={24} /></span><h3>조직을 선택해주세요</h3><p>왼쪽 조직도에서 조직을 누르면 소속 구성원이 이곳에 표시됩니다.</p></div>}
         </div>
       </div> : <p className="organization-explorer-empty">등록된 조직이 없습니다. 먼저 조직을 등록해주세요.</p>}
