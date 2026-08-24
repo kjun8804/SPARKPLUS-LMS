@@ -767,6 +767,7 @@ function p({ onGo: e }) {
           <div className="panel-head admin-chart-head">
             <div>
               <h2>{formatAdminPeriod(effectiveRange)} 교육 현황</h2>
+              {!data.length && <p className="admin-chart-empty-note">* 선택한 기간에 조회할 통계가 없습니다.</p>}
             </div>
           </div>
 
@@ -805,7 +806,6 @@ function p({ onGo: e }) {
                     <em><i className="course-color" />수료 과정 <strong>{item.courses}개</strong></em>
                   </span>}
                 </button>)}
-                {!data.length && <div className="admin-chart-empty">선택한 기간에 조회할 통계가 없습니다.</div>}
               </div>
             </div>
           </div>
@@ -1035,10 +1035,11 @@ function CourseAdminGrid({ onEdit, onCreate }) {
             }}
           >
             <div className="visual-wrap admin-course-visual">
-              <J
-                accent={[`blue`, `green`, `purple`, `red`][index % 4]}
-                label={course.category}
-              />
+              {course.thumbnail ? (
+                <img className="admin-course-thumbnail" src={course.thumbnail} alt={`${course.title} 썸네일`} />
+              ) : (
+                <J accent={[`blue`, `green`, `purple`, `red`][index % 4]} label={course.category} />
+              )}
               <span
                 className={`admin-course-status ${course.status === `운영 중` ? `running` : course.status === `오픈 전` ? `ready` : `closed`}`}
               >
@@ -6554,13 +6555,14 @@ function LearningRewardsPage() {
 }
 
 function RewardTopThree({ items, type }) {
+  const visibleItems = items.slice(0, 3);
   return (
     <div className={`reward-top-section ${type}-reward-top`}>
       <div className="reward-section-title">
         <h2>TOP 3</h2>
       </div>
-      <div className="reward-podium-grid">
-        {items.map((item, index) => (
+      <div className={`reward-podium-grid count-${visibleItems.length}`}>
+        {visibleItems.map((item, index) => (
           <article className={`reward-podium-card rank-${index + 1}`} key={item.name || item.dept}>
             <span className="podium-medal"><Icon icon={Medal01Icon} size={24} /></span>
             <div className="podium-rank">{index + 1}위</div>
@@ -6570,6 +6572,7 @@ function RewardTopThree({ items, type }) {
             {type === `department` && <small>1인당 평균</small>}
           </article>
         ))}
+        {!visibleItems.length && <div className="reward-top-empty">선택한 기간에 랭킹 데이터가 없습니다.</div>}
       </div>
     </div>
   );

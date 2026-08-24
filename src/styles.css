@@ -18979,3 +18979,34 @@ html[data-theme="dark"] .user-portal .course-wishlist.wishlisted { color:#f06a9b
   transform:translateY(1px);
   box-shadow:0 2px 5px rgba(49,101,156,.14),inset 0 1px 0 rgba(255,255,255,.24);
 }
+
+/* 2026-08-24 admin dashboard, course management, and reward QA */
+.admin-chart-head > div { display:flex; align-items:baseline; flex-wrap:wrap; }
+.admin-chart-empty-note { display:inline-block; margin:0 0 0 10px; color:var(--ui-text-secondary,#7c8798); font-size:12px; font-weight:550; line-height:1.5; }
+.course-admin-result-actions > select,
+.course-admin-result-actions > button { box-sizing:border-box; height:40px!important; min-height:40px!important; padding:0 14px!important; border-radius:11px; font-size:12px; line-height:1; white-space:nowrap; }
+.course-admin-result-actions > button { display:inline-flex; align-items:center; justify-content:center; gap:6px; }
+.course-admin-result-actions .course-sort-select { min-width:132px; }
+.admin-course-thumbnail { display:block; width:100%; height:100%; object-fit:cover; object-position:center; }
+.course-builder-section .course-edit-grid { gap:22px 18px; padding-top:22px; }
+.course-builder-section .course-edit-grid label { gap:9px; line-height:1.4; }
+.course-builder-section .course-edit-grid select { padding-right:38px; }
+.reward-podium-grid.count-1 { grid-template-columns:minmax(280px,420px); }
+.reward-podium-grid.count-2 { grid-template-columns:repeat(2,minmax(260px,1fr)); }
+.reward-top-empty { grid-column:1/-1; display:grid; min-height:150px; place-items:center; color:var(--ui-text-secondary); font-size:13px; text-align:center; }
+html[data-theme="dark"] .reward-top-section { border-color:#344258; background:linear-gradient(145deg,#172233 0%,#131d2c 100%); box-shadow:none; }
+html[data-theme="dark"] .reward-podium-card { border-color:#3b4a60; color:#eef4fc; box-shadow:0 10px 26px rgba(3,9,18,.22); }
+html[data-theme="dark"] .reward-podium-card.rank-1 { border-color:#78683f; background:linear-gradient(145deg,#332e20 0%,#202b39 72%); }
+html[data-theme="dark"] .reward-podium-card.rank-2 { border-color:#475a73; background:linear-gradient(145deg,#263448 0%,#1c2736 100%); }
+html[data-theme="dark"] .reward-podium-card.rank-3 { border-color:#694f45; background:linear-gradient(145deg,#352b29 0%,#202a38 100%); }
+html[data-theme="dark"] .reward-podium-card :is(h3,strong,.podium-rank) { color:#f5f8fc; }
+html[data-theme="dark"] .reward-podium-card :is(p,small) { color:#aeb9ca; }
+html[data-theme="dark"] .reward-top-empty { color:#9ca9bc; }
+@media (max-width:700px) {
+  .admin-chart-empty-note { display:block; width:100%; margin:5px 0 0; }
+  .course-admin-result-actions { align-items:stretch; flex-direction:column; }
+  .course-admin-result-actions > select,
+  .course-admin-result-actions > button { width:100%; }
+  .reward-podium-grid.count-1,
+  .reward-podium-grid.count-2 { grid-template-columns:1fr; }
+}
