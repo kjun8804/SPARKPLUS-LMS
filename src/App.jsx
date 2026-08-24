@@ -707,12 +707,20 @@ function DateRangeFilter({ value, onChange, mode = `dashboard` }) {
 
 function p({ onGo: e }) {
   const [liveDashboard,setLiveDashboard]=r.useState({totals:{courses:0,learners:0,completed:0,progress:0,completionRate:0,requiredIncomplete:0,delayed:0},monthly:[]});
-  r.useEffect(()=>{apiRequest(`/api/v1/admin/dashboard`).then(setLiveDashboard).catch(()=>{});},[]);
+  const [dashboardState,setDashboardState]=r.useState({loading:true,error:false});
   const [range, setRange] = r.useState({ preset:`sixMonths`, ...adminQuickRange(`sixMonths`) });
   const validRange = Boolean(range.start && range.end && range.start <= range.end);
   const lastValidRange = r.useRef(range);
   if (validRange) lastValidRange.current = range;
   const effectiveRange = validRange ? range : lastValidRange.current;
+  r.useEffect(()=>{
+    let active=true;
+    setDashboardState({loading:true,error:false});
+    apiRequest(`/api/v1/admin/dashboard?start=${encodeURIComponent(effectiveRange.start)}&end=${encodeURIComponent(effectiveRange.end)}`)
+      .then((result)=>{if(active){setLiveDashboard(result);setDashboardState({loading:false,error:false});}})
+      .catch(()=>{if(active)setDashboardState({loading:false,error:true});});
+    return ()=>{active=false;};
+  },[effectiveRange.start,effectiveRange.end]);
   const data = (liveDashboard.monthly || []).filter((item) => item.key >= effectiveRange.start.slice(0,7) && item.key <= effectiveRange.end.slice(0,7));
   const average = (key) => data.length ? Math.round(data.reduce((sum, item) => sum + item[key], 0) / data.length) : 0;
   const totals = liveDashboard.totals;
@@ -771,7 +779,9 @@ function p({ onGo: e }) {
           <div className="panel-head admin-chart-head">
             <div>
               <h2>{formatAdminPeriod(effectiveRange)} 교육 현황</h2>
-              {!data.length && <p className="admin-chart-empty-note">* 선택한 기간에 조회할 통계가 없습니다.</p>}
+              {dashboardState.loading && <p className="admin-chart-empty-note">* 선택한 기간의 통계를 불러오는 중입니다.</p>}
+              {dashboardState.error && <p className="admin-chart-empty-note error">* 통계를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.</p>}
+              {!dashboardState.loading && !dashboardState.error && !data.some((item)=>item.completed||item.active||item.courses) && <p className="admin-chart-empty-note">* 선택한 기간에 조회할 통계가 없습니다.</p>}
             </div>
           </div>
 

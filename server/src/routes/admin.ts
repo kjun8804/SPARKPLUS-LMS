@@ -90,12 +90,54 @@ export function createAdminRouter(pool: DatabasePool, config?: AppConfig) {
     }
   });
 
-  router.get("/dashboard", async (_request, response, next) => { try {
-    const [totals,monthly]=await Promise.all([
-      pool.query(`SELECT (SELECT COUNT(*) FROM courses WHERE deleted_at IS NULL AND status='OPEN')::int courses,(SELECT COUNT(*) FROM enrollments WHERE status<>'CANCELLED')::int learners,(SELECT COUNT(*) FROM enrollments WHERE status='COMPLETED')::int completed,COALESCE((SELECT ROUND(AVG(progress)) FROM enrollments WHERE status<>'CANCELLED'),0)::int progress,COALESCE((SELECT ROUND(100.0*COUNT(*) FILTER(WHERE status='COMPLETED')/NULLIF(COUNT(*),0)) FROM enrollments WHERE status<>'CANCELLED'),0)::int AS "completionRate",(SELECT COUNT(*) FROM enrollments WHERE required AND status<>'COMPLETED' AND status<>'CANCELLED')::int AS "requiredIncomplete",(SELECT COUNT(*) FROM enrollments e WHERE e.status='IN_PROGRESS' AND NOT EXISTS(SELECT 1 FROM lesson_progress lp WHERE lp.enrollment_id=e.id AND lp.updated_at>=now()-interval '14 days'))::int AS delayed`),
-      pool.query(`WITH months AS (SELECT generate_series(date_trunc('month',now())-interval '11 months',date_trunc('month',now()),interval '1 month') month) SELECT to_char(m.month,'YYYY-MM') key,to_char(m.month,'FMMM월') month,COUNT(e.id) FILTER(WHERE e.completed_at>=m.month AND e.completed_at<m.month+interval '1 month')::int completed,COUNT(e.id) FILTER(WHERE e.enrolled_at<m.month+interval '1 month' AND e.status<>'CANCELLED')::int active,COUNT(DISTINCT e.course_id) FILTER(WHERE e.completed_at>=m.month AND e.completed_at<m.month+interval '1 month')::int courses,COUNT(e.id) FILTER(WHERE e.enrolled_at>=m.month AND e.enrolled_at<m.month+interval '1 month')::int AS "newLearners",COALESCE(ROUND(AVG(e.progress) FILTER(WHERE e.enrolled_at<m.month+interval '1 month')),0)::int progress,COALESCE(ROUND(100.0*COUNT(e.id) FILTER(WHERE e.status='COMPLETED' AND e.completed_at<m.month+interval '1 month')/NULLIF(COUNT(e.id) FILTER(WHERE e.enrolled_at<m.month+interval '1 month' AND e.status<>'CANCELLED'),0)),0)::int AS "completionRate" FROM months m LEFT JOIN enrollments e ON e.enrolled_at<m.month+interval '1 month' GROUP BY m.month ORDER BY m.month`),
-    ]);response.json({data:{totals:totals.rows[0],monthly:monthly.rows},error:null});
-  } catch(error){next(error);} });
+  router.get("/dashboard", async (request, response, next) => {
+    const parsed = z.object({
+      start: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+      end: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    }).refine(({ start, end }) => start <= end, { message: "start must not be after end" }).safeParse(request.query);
+    if (!parsed.success) return invalid(response, parsed.error);
+    try {
+      const { start, end } = parsed.data;
+      const results = await Promise.allSettled([
+        pool.query(`SELECT
+          (SELECT COUNT(*) FROM courses c WHERE c.deleted_at IS NULL AND c.status='OPEN'
+            AND (c.start_date IS NULL OR c.start_date < ($2::date + interval '1 day'))
+            AND (c.end_date IS NULL OR c.end_date >= $1::date))::int AS courses,
+          (SELECT COUNT(DISTINCT e.user_id) FROM enrollments e WHERE e.status<>'CANCELLED'
+            AND e.enrolled_at >= $1::date AND e.enrolled_at < ($2::date + interval '1 day'))::int AS learners,
+          (SELECT COUNT(DISTINCT e.user_id) FROM enrollments e WHERE e.status<>'CANCELLED'
+            AND e.completed_at >= $1::date AND e.completed_at < ($2::date + interval '1 day'))::int AS completed,
+          COALESCE((SELECT ROUND(AVG(e.progress)) FROM enrollments e WHERE e.status<>'CANCELLED'
+            AND e.enrolled_at < ($2::date + interval '1 day')),0)::int AS progress,
+          COALESCE((SELECT ROUND(100.0 * COUNT(*) FILTER(WHERE e.completed_at >= $1::date AND e.completed_at < ($2::date + interval '1 day'))
+            / NULLIF(COUNT(*) FILTER(WHERE e.enrolled_at >= $1::date AND e.enrolled_at < ($2::date + interval '1 day')),0))
+            FROM enrollments e WHERE e.status<>'CANCELLED'),0)::int AS "completionRate",
+          (SELECT COUNT(*) FROM enrollments e WHERE e.required AND e.status NOT IN ('COMPLETED','CANCELLED'))::int AS "requiredIncomplete",
+          (SELECT COUNT(*) FROM enrollments e WHERE e.status='IN_PROGRESS' AND NOT EXISTS
+            (SELECT 1 FROM lesson_progress lp WHERE lp.enrollment_id=e.id AND lp.updated_at>=now()-interval '14 days'))::int AS delayed`, [start, end]),
+        pool.query(`WITH months AS (
+          SELECT generate_series(date_trunc('month',$1::date),date_trunc('month',$2::date),interval '1 month') month
+        ) SELECT to_char(m.month,'YYYY-MM') key,to_char(m.month,'FMMM월') month,
+          COUNT(e.id) FILTER(WHERE e.completed_at>=m.month AND e.completed_at<m.month+interval '1 month')::int completed,
+          COUNT(e.id) FILTER(WHERE e.enrolled_at<m.month+interval '1 month' AND e.status<>'CANCELLED')::int active,
+          COUNT(DISTINCT e.course_id) FILTER(WHERE e.completed_at>=m.month AND e.completed_at<m.month+interval '1 month')::int courses,
+          COUNT(DISTINCT e.user_id) FILTER(WHERE e.enrolled_at>=m.month AND e.enrolled_at<m.month+interval '1 month')::int AS "newLearners",
+          COALESCE(ROUND(AVG(e.progress) FILTER(WHERE e.enrolled_at<m.month+interval '1 month')),0)::int progress,
+          COALESCE(ROUND(100.0*COUNT(e.id) FILTER(WHERE e.completed_at>=m.month AND e.completed_at<m.month+interval '1 month')
+            /NULLIF(COUNT(e.id) FILTER(WHERE e.enrolled_at>=m.month AND e.enrolled_at<m.month+interval '1 month' AND e.status<>'CANCELLED'),0)),0)::int AS "completionRate"
+          FROM months m LEFT JOIN enrollments e ON e.enrolled_at<m.month+interval '1 month'
+          GROUP BY m.month ORDER BY m.month`, [start, end]),
+      ]);
+      const fallbackTotals = { courses:0, learners:0, completed:0, progress:0, completionRate:0, requiredIncomplete:0, delayed:0 };
+      const totals = results[0].status === "fulfilled" ? results[0].value.rows[0] : fallbackTotals;
+      const monthly = results[1].status === "fulfilled" ? results[1].value.rows : [];
+      results.forEach((result, index) => {
+        if (result.status === "rejected") console.error("[admin/dashboard] partial query failed", { index, start, end, error: result.reason });
+      });
+      if (results.every((result) => result.status === "rejected")) throw results[0].status === "rejected" ? results[0].reason : new Error("Dashboard queries failed");
+      response.json({data:{totals,monthly},error:null});
+    } catch(error){next(error);}
+  });
 
   router.get("/learning-activity", async (request, response, next) => {
     const parsed = z.object({
