@@ -21,4 +21,13 @@ describe("organization hierarchy", () => {
     expect(tree).toHaveLength(1);
     expect(tree[0]?.children[0]?.children[0]?.name).toBe("개발파트");
   });
+
+  it("sorts sibling organizations by their persisted order", () => {
+    const tree = buildOrganizationTree([
+      { id: "development", name: "개발본부", parentId: null, depth: 1, sortOrder: 2, status: "ACTIVE" },
+      { id: "sparkplus", name: "스파크플러스", parentId: null, depth: 1, sortOrder: 1, status: "ACTIVE" },
+    ]);
+
+    expect(tree.map((organization) => organization.name)).toEqual(["스파크플러스", "개발본부"]);
+  });
 });

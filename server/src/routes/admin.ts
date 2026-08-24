@@ -31,6 +31,19 @@ async function audit(pool: DatabasePool, actor: string, action: string, type: st
   await pool.query(`INSERT INTO audit_logs (actor_user_id, action, target_type, target_id, before_data, after_data, ip_address)
     VALUES ($1,$2,$3,$4,$5,$6,$7)`, [actor, action, type, id, before ? JSON.stringify(before) : null, after ? JSON.stringify(after) : null, ip || null]);
 }
+let organizationOrderReady: Promise<void> | null = null;
+function ensureOrganizationOrderSchema(pool: DatabasePool) {
+  if (!organizationOrderReady) organizationOrderReady = (async () => {
+    await pool.query(`ALTER TABLE organizations ADD COLUMN IF NOT EXISTS sort_order integer NOT NULL DEFAULT 0`);
+    await pool.query(`WITH ranked AS (
+      SELECT id,row_number() OVER (PARTITION BY parent_id ORDER BY CASE WHEN name='스파크플러스' THEN 0 ELSE 1 END,name,id)::integer AS position
+      FROM organizations
+    ) UPDATE organizations AS organization SET sort_order=ranked.position FROM ranked
+      WHERE organization.id=ranked.id AND NOT EXISTS (SELECT 1 FROM organizations WHERE sort_order<>0)`);
+    await pool.query(`CREATE INDEX IF NOT EXISTS organizations_parent_sort_idx ON organizations(parent_id,sort_order)`);
+  })().catch((error) => { organizationOrderReady = null; throw error; });
+  return organizationOrderReady;
+}
 
 export function createAdminRouter(pool: DatabasePool, config?: AppConfig) {
   const router = Router();
@@ -38,13 +51,14 @@ export function createAdminRouter(pool: DatabasePool, config?: AppConfig) {
 
   router.get("/management", async (request, response, next) => {
     try {
+      await ensureOrganizationOrderSchema(pool);
       const [users, organizations, latestArchive] = await Promise.all([
         pool.query(`SELECT u.id, u.employee_number AS "employeeNumber", u.name, u.email,
           u.organization_id AS "organizationId", o.name AS "organizationName", u.position, u.role, u.status,
           u.last_login_at AS "lastLoginAt" FROM users u LEFT JOIN organizations o ON o.id=u.organization_id
           WHERE u.status<>'DELETED' ORDER BY u.name`),
-        pool.query<{ id: string; name: string; parentId: string | null; depth: number; status: OrganizationRecord["status"] }>(
-          `SELECT id,name,parent_id AS "parentId",depth,status FROM organizations ORDER BY path`),
+        pool.query<{ id: string; name: string; parentId: string | null; depth: number; sortOrder: number; status: OrganizationRecord["status"] }>(
+          `SELECT id,name,parent_id AS "parentId",depth,sort_order AS "sortOrder",status FROM organizations ORDER BY parent_id NULLS FIRST,sort_order,name`),
         pool.query(`SELECT action,after_data AS "afterData",created_at AS "createdAt" FROM audit_logs
           WHERE action IN ('GOOGLE_ARCHIVE_SYNCED','GOOGLE_ARCHIVE_FAILED') ORDER BY created_at DESC LIMIT 1`),
       ]);
@@ -209,8 +223,9 @@ export function createAdminRouter(pool: DatabasePool, config?: AppConfig) {
 
   router.get("/organizations/tree", async (_request, response, next) => {
     try {
-      const result = await pool.query<{ id: string; name: string; parentId: string | null; depth: number; status: OrganizationRecord["status"] }>(
-        `SELECT id,name,parent_id AS "parentId",depth,status FROM organizations ORDER BY path`);
+      await ensureOrganizationOrderSchema(pool);
+      const result = await pool.query<{ id: string; name: string; parentId: string | null; depth: number; sortOrder: number; status: OrganizationRecord["status"] }>(
+        `SELECT id,name,parent_id AS "parentId",depth,sort_order AS "sortOrder",status FROM organizations ORDER BY parent_id NULLS FIRST,sort_order,name`);
       response.json({ data: buildOrganizationTree(result.rows), error: null });
     } catch (error) { next(error); }
   });
@@ -219,6 +234,7 @@ export function createAdminRouter(pool: DatabasePool, config?: AppConfig) {
     const parsed = organizationInput.safeParse(request.body); if (!parsed.success) return invalid(response, parsed.error);
     const client = await pool.connect();
     try {
+      await ensureOrganizationOrderSchema(pool);
       await client.query("BEGIN");
       const parent = parsed.data.parentId ? await client.query(`SELECT id,depth,path FROM organizations WHERE id=$1 AND status='ACTIVE' FOR UPDATE`, [parsed.data.parentId]) : null;
       if (parsed.data.parentId && !parent?.rowCount) { await client.query("ROLLBACK"); return response.status(400).json({ data: null, error: { code: "PARENT_ORGANIZATION_NOT_FOUND" } }); }
@@ -226,8 +242,9 @@ export function createAdminRouter(pool: DatabasePool, config?: AppConfig) {
       if (depth > 3) { await client.query("ROLLBACK"); return response.status(400).json({ data: null, error: { code: "ORGANIZATION_DEPTH_EXCEEDED" } }); }
       const id = (await client.query(`SELECT gen_random_uuid() AS id`)).rows[0].id;
       const path = parent?.rows[0].path ? `${parent.rows[0].path}${id}/` : `/${id}/`;
-      const result = await client.query(`INSERT INTO organizations (id,name,parent_id,depth,path,status) VALUES ($1,$2,$3,$4,$5,$6)
-        RETURNING id,name,parent_id AS "parentId",depth,status`, [id, parsed.data.name, parsed.data.parentId || null, depth, path, parsed.data.status]);
+      const nextOrder = (await client.query(`SELECT COALESCE(MAX(sort_order),0)+1 AS value FROM organizations WHERE parent_id IS NOT DISTINCT FROM $1::uuid`, [parsed.data.parentId || null])).rows[0].value;
+      const result = await client.query(`INSERT INTO organizations (id,name,parent_id,depth,path,status,sort_order) VALUES ($1,$2,$3,$4,$5,$6,$7)
+        RETURNING id,name,parent_id AS "parentId",depth,sort_order AS "sortOrder",status`, [id, parsed.data.name, parsed.data.parentId || null, depth, path, parsed.data.status, nextOrder]);
       await client.query("COMMIT");
       await audit(pool, request.currentUser!.id, "ORGANIZATION_CREATED", "ORGANIZATION", id, null, result.rows[0], request.ip);
       response.status(201).json({ data: result.rows[0], error: null });
@@ -250,6 +267,32 @@ export function createAdminRouter(pool: DatabasePool, config?: AppConfig) {
       if (error?.code === "23505") return response.status(409).json({ data: null, error: { code: "ORGANIZATION_ALREADY_EXISTS" } });
       next(error);
     }
+  });
+
+  router.post("/organizations/:id/reorder", async (request, response, next) => {
+    const parsed = z.object({ direction: z.enum(["UP", "DOWN"]) }).safeParse(request.body);
+    if (!parsed.success) return invalid(response, parsed.error);
+    const client = await pool.connect();
+    try {
+      await ensureOrganizationOrderSchema(pool);
+      await client.query("BEGIN");
+      const current = await client.query(`SELECT id,name,parent_id AS "parentId",sort_order AS "sortOrder" FROM organizations WHERE id=$1 FOR UPDATE`, [request.params.id]);
+      if (!current.rowCount) { await client.query("ROLLBACK"); return response.status(404).json({ data: null, error: { code: "ORGANIZATION_NOT_FOUND" } }); }
+      const item = current.rows[0];
+      const upward = parsed.data.direction === "UP";
+      const neighbor = await client.query(`SELECT id,name,sort_order AS "sortOrder" FROM organizations
+        WHERE parent_id IS NOT DISTINCT FROM $1::uuid AND id<>$2 AND sort_order ${upward ? "<" : ">"} $3
+        ORDER BY sort_order ${upward ? "DESC" : "ASC"},name ${upward ? "DESC" : "ASC"} LIMIT 1 FOR UPDATE`,
+        [item.parentId, item.id, item.sortOrder]);
+      if (neighbor.rowCount) {
+        await client.query(`UPDATE organizations SET sort_order=$2,updated_at=now() WHERE id=$1`, [item.id, neighbor.rows[0].sortOrder]);
+        await client.query(`UPDATE organizations SET sort_order=$2,updated_at=now() WHERE id=$1`, [neighbor.rows[0].id, item.sortOrder]);
+      }
+      await client.query("COMMIT");
+      await audit(pool, request.currentUser!.id, "ORGANIZATION_REORDERED", "ORGANIZATION", item.id, item, { direction: parsed.data.direction, neighbor: neighbor.rows[0] || null }, request.ip);
+      response.json({ data: { id: item.id, moved: Boolean(neighbor.rowCount) }, error: null });
+    } catch (error) { await client.query("ROLLBACK").catch(() => undefined); next(error); }
+    finally { client.release(); }
   });
 
   router.delete("/organizations/:id", async (request, response, next) => {

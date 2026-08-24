@@ -3266,6 +3266,11 @@ function DatabaseLearnerManagement({ onSelect }) {
     return [organization.id, users.filter((user) => scope.has(user.organizationId)).length];
   })), [organizations, organizationDescendantIds, users]);
   const selectedOrganization = organizations.find((organization) => organization.id === selectedOrganizationId) || null;
+  const selectedOrganizationSiblings = selectedOrganization ? organizations
+    .filter((organization) => organization.parentId === selectedOrganization.parentId)
+    .sort((left, right) => (left.sortOrder ?? 0) - (right.sortOrder ?? 0) || left.name.localeCompare(right.name, `ko`)) : [];
+  const selectedOrganizationSiblingIndex = selectedOrganization
+    ? selectedOrganizationSiblings.findIndex((organization) => organization.id === selectedOrganization.id) : -1;
   const selectedOrganizationScope = new Set(selectedOrganization ? (organizationDescendantIds.get(selectedOrganization.id) || [selectedOrganization.id]) : []);
   const selectedOrganizationUsers = selectedOrganization ? users.filter((user) => selectedOrganizationScope.has(user.organizationId)) : [];
   const load = r.useCallback(async () => {
@@ -3344,6 +3349,16 @@ function DatabaseLearnerManagement({ onSelect }) {
         : `조직을 삭제하지 못했습니다.`);
     }
   };
+  const reorderOrganization = async (direction) => {
+    if (!selectedOrganization) return;
+    setError(``);
+    try {
+      await apiRequest(`/api/v1/admin/organizations/${selectedOrganization.id}/reorder`, {
+        method: `POST`, body: JSON.stringify({ direction }),
+      });
+      await load(); showAdminToast(`조직 순서가 변경되었습니다.`);
+    } catch { setError(`조직 순서를 변경하지 못했습니다.`); }
+  };
   const downloadTemplate = () => {
     const samplePath = organizations.find((item) => item.status === `ACTIVE`)?.pathLabel || `개발본부 > 부동산팀 > 개발파트`;
     const csv = `사번,이름,이메일,조직경로,직책,권한,상태\nSP1001,홍길동,hong.gildong@sparkplus.co,"${samplePath}",매니저,LEARNER,ACTIVE\n`;
@@ -3405,7 +3420,7 @@ function DatabaseLearnerManagement({ onSelect }) {
           <div className="organization-tree-scroll">{organizationTree.map((node) => <OrganizationTreeNode key={node.id} node={node} selectedId={selectedOrganizationId} expandedIds={expandedOrganizationIds} userCountByOrganization={userCountByOrganization} onSelect={(id) => { setSelectedOrganizationId(id); setOrganizationFilter(id); }} onToggle={(id) => setExpandedOrganizationIds((current) => { const next = new Set(current); next.has(id) ? next.delete(id) : next.add(id); return next; })} />)}</div>
         </div>
         <div className="organization-member-panel">
-          {selectedOrganization ? <><div className="organization-member-head"><div><span>{selectedOrganization.depth}단계 조직</span><h3>{selectedOrganization.name}</h3><p>{selectedOrganization.pathLabel}</p></div><div className="organization-member-actions"><button type="button" className={selectedOrganization.status === `ACTIVE` ? `active` : ``} onClick={() => toggleOrganization(selectedOrganization)}>{selectedOrganization.status === `ACTIVE` ? `사용 중` : `비활성`}</button><button type="button" className="danger" onClick={() => deleteOrganization(selectedOrganization)}>조직 삭제</button></div></div>
+          {selectedOrganization ? <><div className="organization-member-head"><div><span>{selectedOrganization.depth}단계 조직</span><h3>{selectedOrganization.name}</h3><p>{selectedOrganization.pathLabel}</p></div><div className="organization-member-actions"><button type="button" disabled={selectedOrganizationSiblingIndex <= 0} onClick={() => reorderOrganization(`UP`)}>위로</button><button type="button" disabled={selectedOrganizationSiblingIndex < 0 || selectedOrganizationSiblingIndex >= selectedOrganizationSiblings.length - 1} onClick={() => reorderOrganization(`DOWN`)}>아래로</button><button type="button" className={selectedOrganization.status === `ACTIVE` ? `active` : ``} onClick={() => toggleOrganization(selectedOrganization)}>{selectedOrganization.status === `ACTIVE` ? `사용 중` : `비활성`}</button><button type="button" className="danger" onClick={() => deleteOrganization(selectedOrganization)}>조직 삭제</button></div></div>
             <div className="organization-member-summary"><div><span>소속 구성원</span><b>{selectedOrganizationUsers.length}명</b></div><div><span>직속 구성원</span><b>{users.filter((user) => user.organizationId === selectedOrganization.id).length}명</b></div><div><span>하위 조직</span><b>{Math.max(0, selectedOrganizationScope.size - 1)}개</b></div></div>
             <div className="organization-member-list">{selectedOrganizationUsers.slice(0, 8).map((user) => <article key={user.id}><span>{user.name?.[0] || `?`}</span><div><b>{user.name}</b><small>{user.position || `직책 미지정`} · {user.employeeNumber}</small></div><em className={user.status === `ACTIVE` ? `active` : ``}>{user.status === `ACTIVE` ? `활성` : `비활성`}</em></article>)}{selectedOrganizationUsers.length === 0 && <p>이 조직에 등록된 구성원이 없습니다.</p>}{selectedOrganizationUsers.length > 8 && <small className="organization-member-more">아래 사용자 목록에서 나머지 {selectedOrganizationUsers.length - 8}명을 확인하세요.</small>}</div>
           </> : <div className="organization-empty-selection"><span><Icon icon={UserGroupIcon} size={24} /></span><h3>조직을 선택해주세요</h3><p>왼쪽 조직도에서 조직을 누르면 소속 구성원이 이곳에 표시됩니다.</p></div>}

@@ -17,6 +17,7 @@ export interface OrganizationRecord {
   name: string;
   parentId: string | null;
   depth: number;
+  sortOrder?: number;
   status: "ACTIVE" | "INACTIVE";
 }
 

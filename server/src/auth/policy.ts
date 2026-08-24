@@ -28,7 +28,8 @@ export function buildOrganizationTree(records: OrganizationRecord[]): Organizati
   }
 
   const sort = (items: OrganizationNode[]) => {
-    items.sort((left, right) => left.name.localeCompare(right.name, "ko"));
+    items.sort((left, right) => (left.sortOrder ?? Number.MAX_SAFE_INTEGER) - (right.sortOrder ?? Number.MAX_SAFE_INTEGER)
+      || left.name.localeCompare(right.name, "ko"));
     items.forEach((item) => sort(item.children));
   };
   sort(roots);

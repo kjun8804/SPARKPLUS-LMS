@@ -12153,7 +12153,8 @@ html[data-theme="dark"] .archive-sync-panel.configured { border-color:#286b52; b
 html[data-theme="dark"] .archive-sync-panel.configured b { color:#a5f0cb !important; }
 html[data-theme="dark"] .archive-sync-panel.configured span { color:#8eddb8 !important; }
 @media(max-width:1100px){.database-management-toolbar{flex-direction:column}.database-management-actions{width:100%}.organization-explorer-body{grid-template-columns:1fr}.organization-tree-panel{border-right:0;border-bottom:1px solid var(--ui-line)}.organization-tree-scroll{max-height:320px}}
-@media(max-width:680px){.organization-explorer>header{align-items:flex-start;flex-direction:column}.organization-member-head{flex-direction:column}.organization-member-actions{width:100%}.organization-member-actions button{flex:1}.organization-member-list{grid-template-columns:1fr}.organization-member-summary{grid-template-columns:1fr 1fr}.organization-member-summary>div:last-child{grid-column:1/-1}}
+.organization-member-actions button:disabled { opacity:.38; cursor:not-allowed; }
+@media(max-width:680px){.organization-explorer>header{align-items:flex-start;flex-direction:column}.organization-member-head{flex-direction:column}.organization-member-actions{width:100%;flex-wrap:wrap}.organization-member-actions button{flex:1}.organization-member-list{grid-template-columns:1fr}.organization-member-summary{grid-template-columns:1fr 1fr}.organization-member-summary>div:last-child{grid-column:1/-1}}
 
 /* Global header */
 .topbar {
