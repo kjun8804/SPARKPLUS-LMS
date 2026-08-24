@@ -116,17 +116,17 @@ export function createAdminRouter(pool: DatabasePool, config?: AppConfig) {
           (SELECT COUNT(*) FROM enrollments e WHERE e.status='IN_PROGRESS' AND NOT EXISTS
             (SELECT 1 FROM lesson_progress lp WHERE lp.enrollment_id=e.id AND lp.updated_at>=now()-interval '14 days'))::int AS delayed`, [start, end]),
         pool.query(`WITH months AS (
-          SELECT generate_series(date_trunc('month',$1::date),date_trunc('month',$2::date),interval '1 month') month
-        ) SELECT to_char(m.month,'YYYY-MM') key,to_char(m.month,'FMMM월') month,
-          COUNT(e.id) FILTER(WHERE e.completed_at>=m.month AND e.completed_at<m.month+interval '1 month')::int completed,
-          COUNT(e.id) FILTER(WHERE e.enrolled_at<m.month+interval '1 month' AND e.status<>'CANCELLED')::int active,
-          COUNT(DISTINCT e.course_id) FILTER(WHERE e.completed_at>=m.month AND e.completed_at<m.month+interval '1 month')::int courses,
-          COUNT(DISTINCT e.user_id) FILTER(WHERE e.enrolled_at>=m.month AND e.enrolled_at<m.month+interval '1 month')::int AS "newLearners",
-          COALESCE(ROUND(AVG(e.progress) FILTER(WHERE e.enrolled_at<m.month+interval '1 month')),0)::int progress,
-          COALESCE(ROUND(100.0*COUNT(e.id) FILTER(WHERE e.completed_at>=m.month AND e.completed_at<m.month+interval '1 month')
-            /NULLIF(COUNT(e.id) FILTER(WHERE e.enrolled_at>=m.month AND e.enrolled_at<m.month+interval '1 month' AND e.status<>'CANCELLED'),0)),0)::int AS "completionRate"
-          FROM months m LEFT JOIN enrollments e ON e.enrolled_at<m.month+interval '1 month'
-          GROUP BY m.month ORDER BY m.month`, [start, end]),
+          SELECT generate_series(date_trunc('month',$1::date),date_trunc('month',$2::date),interval '1 month') AS month_start
+        ) SELECT to_char(m.month_start,'YYYY-MM') AS key,to_char(m.month_start,'FMMM월') AS month,
+          COUNT(e.id) FILTER(WHERE e.completed_at>=m.month_start AND e.completed_at<m.month_start+interval '1 month')::int AS completed,
+          COUNT(e.id) FILTER(WHERE e.enrolled_at<m.month_start+interval '1 month' AND e.status<>'CANCELLED')::int AS active,
+          COUNT(DISTINCT e.course_id) FILTER(WHERE e.completed_at>=m.month_start AND e.completed_at<m.month_start+interval '1 month')::int AS courses,
+          COUNT(DISTINCT e.user_id) FILTER(WHERE e.enrolled_at>=m.month_start AND e.enrolled_at<m.month_start+interval '1 month')::int AS "newLearners",
+          COALESCE(ROUND(AVG(e.progress) FILTER(WHERE e.enrolled_at<m.month_start+interval '1 month')),0)::int AS progress,
+          COALESCE(ROUND(100.0*COUNT(e.id) FILTER(WHERE e.completed_at>=m.month_start AND e.completed_at<m.month_start+interval '1 month')
+            /NULLIF(COUNT(e.id) FILTER(WHERE e.enrolled_at>=m.month_start AND e.enrolled_at<m.month_start+interval '1 month' AND e.status<>'CANCELLED'),0)),0)::int AS "completionRate"
+          FROM months m LEFT JOIN enrollments e ON e.enrolled_at<m.month_start+interval '1 month'
+          GROUP BY m.month_start ORDER BY m.month_start`, [start, end]),
       ]);
       const fallbackTotals = { courses:0, learners:0, completed:0, progress:0, completionRate:0, requiredIncomplete:0, delayed:0 };
       const totals = results[0].status === "fulfilled" ? results[0].value.rows[0] : fallbackTotals;
