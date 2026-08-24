@@ -156,7 +156,7 @@ export function createAdminRouter(pool: DatabasePool, config?: AppConfig) {
           FROM enrollments e JOIN courses c ON c.id=e.course_id LEFT JOIN lessons l ON l.course_id=c.id
           LEFT JOIN lesson_progress lp ON lp.lesson_id=l.id AND lp.enrollment_id=e.id LEFT JOIN certificates cert ON cert.enrollment_id=e.id
           WHERE e.user_id=$1 AND e.status<>'CANCELLED' GROUP BY e.id,c.id,cert.certificate_number ORDER BY e.enrolled_at DESC`, [request.params.id]),
-        pool.query(`SELECT br.id,br.name,br.description,br.tone,ub.awarded_at AS "awardedAt"
+        pool.query(`SELECT br.id,br.name,br.description,br.tone,br.icon,ub.awarded_at AS "awardedAt"
           FROM user_badges ub JOIN badge_rules br ON br.id=ub.badge_rule_id WHERE ub.user_id=$1 ORDER BY ub.awarded_at DESC`, [request.params.id]),
         pool.query(`SELECT COALESCE(SUM(points),0)::int AS points FROM reward_transactions WHERE user_id=$1`, [request.params.id]),
       ]);

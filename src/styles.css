@@ -17451,6 +17451,14 @@ html[data-theme="dark"] .learner-soft-tag.position { background:#252b32; color:#
   .recent-point-list time { grid-column:2 / -1; }
 }
 .badge-intro-actions { display:flex; align-items:center; gap:10px; }
+.badge-icon-picker { min-width:0; margin:0; padding:0; border:0; }
+.badge-icon-picker legend { margin-bottom:9px; color:var(--ui-text); font-size:12px; font-weight:700; }
+.badge-icon-picker > div { display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); gap:8px; }
+.badge-icon-picker button { display:grid; min-width:0; min-height:72px; place-items:center; gap:5px; padding:8px 4px; border:1px solid var(--ui-line); border-radius:12px; color:var(--ui-sub); background:var(--ui-surface-soft); }
+.badge-icon-picker button span { font-size:10px; font-weight:650; }
+.badge-icon-picker button.active { border-color:#5798dc; color:#2f7fc7; background:rgba(72,143,209,.14); box-shadow:0 0 0 2px rgba(72,143,209,.12); }
+html[data-theme="dark"] .badge-icon-picker button.active { color:#8dc5f2; background:rgba(66,137,202,.22); }
+@media(max-width:620px){.badge-icon-picker > div{grid-template-columns:repeat(3,minmax(0,1fr))}}
 .badge-intro-actions > span { padding:7px 11px; border-radius:999px; background:var(--ui-surface-soft); color:var(--ui-sub); font-size:12px; font-weight:650; white-space:nowrap; }
 .rule-target-summary { color:var(--ui-sub); font-size:13px; line-height:1.5; }
 .structured-rule-editor { width:min(620px,calc(100vw - 32px)); }
