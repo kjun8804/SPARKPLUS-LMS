@@ -79,6 +79,7 @@ CREATE TABLE IF NOT EXISTS badge_rules (
   badge_type varchar(20) NOT NULL DEFAULT '성취형', tone varchar(20) NOT NULL DEFAULT 'blue', enabled boolean NOT NULL DEFAULT true,
   created_at timestamptz NOT NULL DEFAULT now(), updated_at timestamptz NOT NULL DEFAULT now()
 );
+ALTER TABLE badge_rules ADD COLUMN IF NOT EXISTS icon varchar(30) NOT NULL DEFAULT 'medal';
 INSERT INTO badge_rules(code,name,description,metric,threshold,badge_type,tone) VALUES
   ('FIRST_COMPLETION','첫 수료','첫 번째 교육과정 수료','COURSE_COMPLETE',1,'성취형','blue'),
   ('POINT_COLLECTOR','포인트 컬렉터','누적 학습 포인트 500P 달성','POINTS_TOTAL',500,'성취형','gold'),

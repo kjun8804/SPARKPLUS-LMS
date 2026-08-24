@@ -2,6 +2,7 @@ import { Router } from "express";
 import { z } from "zod";
 import { requireRole, requireUser } from "../auth/middleware.js";
 import type { DatabasePool } from "../database/pool.js";
+import { ensureLearningSchema } from "../database/learning-schema.js";
 
 export type RewardActivity = "LESSON_COMPLETE" | "COURSE_COMPLETE" | "QUIZ_COMPLETE" | "SURVEY_SUBMIT";
 
@@ -57,6 +58,7 @@ const rankingSql = `WITH totals AS (
 export function createRewardsRouter(pool: DatabasePool) {
   const router=Router(); router.use(requireUser(pool));
   router.get("/me",async(req,res,next)=>{try{
+    await ensureLearningSchema(pool);
     const range=bounds(req.query);if(!range)return res.status(400).json({data:null,error:{code:"VALIDATION_ERROR"}});
     const [ranking,transactions,rules,badges,total]=await Promise.all([
       pool.query(rankingSql,[range.start,range.end,range.month]),
@@ -77,6 +79,7 @@ const badgeInput=z.object({name:z.string().trim().min(1).max(100),description:z.
 export function createAdminRewardsRouter(pool: DatabasePool) {
   const router=Router();router.use(requireUser(pool),requireRole("ADMIN"));
   router.get("/",async(req,res,next)=>{try{
+    await ensureLearningSchema(pool);
     const range=bounds(req.query);if(!range)return res.status(400).json({data:null,error:{code:"VALIDATION_ERROR"}});
     const [ranking,rules,badges,recent]=await Promise.all([
       pool.query(rankingSql,[range.start,range.end,range.month]),

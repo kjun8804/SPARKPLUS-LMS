@@ -12116,6 +12116,7 @@ textarea {
 .database-management-actions button { display:inline-flex; align-items:center; gap:6px; white-space:nowrap; }
 .database-management-error { display:flex; justify-content:space-between; padding:13px 16px; border-radius:12px; background:#fff1f1; color:#b42318; font-size:13px; }
 .database-management-error button { border:0; background:transparent; color:inherit; font-weight:700; }
+.reward-load-error { display:flex; align-items:center; gap:10px; margin-top:16px; padding:13px 16px; border:1px solid #fda29b; border-radius:12px; background:#fff1f1; color:#b42318; font-size:12px; }.reward-load-error span { flex:1; }.reward-load-error button { border:0; background:transparent; color:inherit; font-weight:800; cursor:pointer; }html[data-theme="dark"] .reward-load-error { border-color:#7a271a; background:#35120f; color:#fecdca; }
 .archive-sync-panel { display:flex; align-items:center; gap:11px; padding:13px 16px; border:1px solid #d0d5dd; border-radius:12px; background:var(--ui-surface); color:#475467; }
 .archive-sync-panel.configured { border-color:#abefc6; background:#ecfdf3; color:#067647; }
 .archive-sync-panel>div { display:grid; gap:3px; }.archive-sync-panel b { font-size:13px; }.archive-sync-panel span { font-size:12px; color:var(--ui-sub); }

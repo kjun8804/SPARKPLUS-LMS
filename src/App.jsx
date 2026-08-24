@@ -6434,6 +6434,7 @@ function LearningRewardsPage() {
   const [rewardPeople, setRewardPeople] = r.useState([]);
   const [recentRewards, setRecentRewards] = r.useState([]);
   const [rewardLoading, setRewardLoading] = r.useState(true);
+  const [rewardError, setRewardError] = r.useState(``);
   const [pointRuleForm, setPointRuleForm] = r.useState(null);
   const [badgeFilter, setBadgeFilter] = r.useState(`전체`);
   const [badgeRuleForm, setBadgeRuleForm] = r.useState(null);
@@ -6449,7 +6450,7 @@ function LearningRewardsPage() {
   }).sort((a, b) => b.averagePoint - a.averagePoint).map((item, index) => ({ ...item, rank:index + 1 }));
   const [badges, setBadges] = r.useState([]);
   r.useEffect(() => {
-    let active=true; setRewardLoading(true);
+    let active=true; setRewardLoading(true); setRewardError(``);
     const query=new URLSearchParams({start:effectiveRankingRange.start,end:effectiveRankingRange.end});
     apiRequest(`/api/v1/admin/rewards?${query}`).then((data)=>{
       if(!active)return;
@@ -6467,7 +6468,7 @@ function LearningRewardsPage() {
       setPointRules(ruleItems.map((rule)=>({...rule,id:rule.activityType,activityType:rewardActivityLabels[rule.activityType]||rule.activityType,targetType:`전체 교육과정`,course:``,threshold:1,frequency:`조건 달성마다`})));
       setBadges(badgeItems.map((badge)=>({...badge,activityType:rewardActivityLabels[badge.metric]||badge.metric,targetType:`전체 교육과정`,course:``})));
       setRecentRewards(Array.isArray(data?.recent) ? data.recent : []);
-    }).catch(()=>{if(active){setRewardPeople([]);setPointRules([]);setBadges([]);setRecentRewards([]);}}).finally(()=>{if(active)setRewardLoading(false);});
+    }).catch((requestError)=>{if(active){setRewardPeople([]);setPointRules([]);setBadges([]);setRecentRewards([]);setRewardError(`리워드 데이터를 불러오지 못했습니다. (${requestError.message || `요청 실패`})`);}}).finally(()=>{if(active)setRewardLoading(false);});
     return()=>{active=false;};
   },[effectiveRankingRange.start,effectiveRankingRange.end]);
   const filteredRanking = ranking.filter(
@@ -6520,6 +6521,7 @@ function LearningRewardsPage() {
           뱃지 관리
         </button>
       </div>
+      {rewardError && <div className="reward-load-error"><Icon icon={Notification01Icon} size={17} /><span>{rewardError}</span><button type="button" onClick={() => window.location.reload()}>다시 불러오기</button></div>}
       {tab === `ranking` ? (
         <>
           <div className="reward-period-heading reward-period-toolbar" aria-label="학습 랭킹 기간 필터"><DateRangeFilter value={rankingRange} onChange={setRankingRange} mode="ranking" /></div>
