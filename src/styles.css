@@ -19010,3 +19010,79 @@ html[data-theme="dark"] .reward-top-empty { color:#9ca9bc; }
   .reward-podium-grid.count-1,
   .reward-podium-grid.count-2 { grid-template-columns:1fr; }
 }
+
+/* 2026-08-24 annotated admin QA pass */
+.admin-chart-head > div { column-gap:14px; row-gap:5px; }
+.admin-chart-empty-note { margin-left:0; padding-left:14px; border-left:1px solid var(--ui-line); white-space:nowrap; }
+
+/* Catalog controls and cards use one rhythm. */
+.course-admin-grid-page .search-filter-panel { gap:18px; }
+.course-admin-grid-page .search-filter-panel .search-row { margin-bottom:2px; }
+.course-admin-result { min-height:44px; }
+.course-admin-result-actions { gap:12px; }
+.course-admin-result-actions > :is(select,button) { height:42px!important; min-height:42px!important; }
+.admin-course-card-grid { gap:20px; }
+.admin-course-management-card .course-meta { display:flex; flex-wrap:wrap; align-items:center; gap:7px 10px; }
+
+/* Course editor form, assignment deadline and lesson drawer. */
+.assignment-settings { gap:18px; }
+.assignment-deadline { align-items:center; gap:18px; }
+.assignment-deadline > input[type="date"] { width:168px; min-width:168px; height:44px; padding:0 12px; }
+.lesson-manage-list > article { row-gap:9px; }
+.lesson-manage-list > article > div:nth-of-type(1) small { display:block; margin-bottom:5px; }
+.lesson-studio-drawer { color:var(--ui-text); }
+.lesson-attachment-builder > div { grid-template-columns:auto minmax(0,1fr) auto auto; gap:12px; }
+.lesson-attachment-builder > div button { display:inline-flex; min-width:44px; min-height:34px; align-items:center; justify-content:center; padding:0 10px; border-radius:8px; }
+.lesson-attachment-builder > div button:hover { background:var(--ui-surface-soft); }
+.lesson-attachment-builder > div button.delete { margin-left:2px; }
+.lesson-quiz-list > article { overflow:visible; }
+.lesson-quiz-list .quiz-option-list { gap:10px; }
+.lesson-quiz-list .quiz-option-list > div { display:grid; grid-template-columns:auto minmax(0,1fr) 34px; gap:10px; align-items:center; }
+.lesson-quiz-list .quiz-option-list > div > input:not([type="radio"]) { width:100%; min-width:0; }
+.lesson-quiz-list .quiz-option-list > div > button { width:34px; min-width:34px; }
+.survey-builder-head { border-bottom:0!important; padding-bottom:10px!important; }
+
+/* Learner management readability and modal spacing. */
+.learner-management-hub { gap:24px!important; }
+.learner-management-hub .search-filter-panel { margin-top:22px; }
+.learner-registration-modal.database-modal { width:min(680px,calc(100vw - 32px)); }
+.learner-registration-modal.database-modal .learner-registration-form { gap:20px 18px; padding-top:24px; padding-bottom:24px; }
+.learner-registration-modal.database-modal .learner-registration-form label { gap:9px; }
+.learner-registration-modal.database-modal :is(input,select) { height:44px; }
+html[data-theme="dark"] .archive-sync-status.success { border-color:#316b55; background:#123f32; color:#d5f5e7; }
+html[data-theme="dark"] .archive-sync-status.success :is(b,span,small) { color:#d5f5e7; }
+
+/* Reward forms: centered, non-overlapping controls and accessible dark mode. */
+.overlay.center { padding:20px; }
+.structured-rule-editor { margin:auto; }
+.structured-rule-editor > header { align-items:center; gap:18px; }
+.structured-rule-editor > header > button { display:grid; flex:0 0 38px; place-items:center; }
+.structured-rule-grid { gap:20px 18px; }
+.structured-rule-grid label { min-width:0; }
+.structured-rule-grid :is(input,select) { min-width:0; }
+.structured-rule-grid .point-input-with-unit input { padding-right:72px; }
+.structured-rule-grid .point-input-with-unit span { right:1px; display:flex; align-items:center; border-left:1px solid var(--ui-line); }
+html[data-theme="dark"] .point-rule-editor { border-color:#344258; background:#172233; color:#eef4fc; }
+html[data-theme="dark"] .point-rule-editor :is(input,select) { border-color:#3b4a60; background:#111b2a; color:#edf3fb; color-scheme:dark; }
+
+/* Notice list and editor alignment. */
+.notice-admin-search { display:flex; width:min(100%,900px); align-items:center; gap:10px; margin:0 auto 34px; padding:10px; border:1px solid var(--ui-line); border-radius:16px; background:var(--ui-surface-soft); }
+.notice-admin-search > span { display:flex; min-width:0; height:44px; flex:1; align-items:center; gap:10px; padding:0 14px; border:1px solid var(--ui-line); border-radius:11px; background:var(--ui-surface); color:var(--ui-sub); }
+.notice-admin-search input { min-width:0; flex:1; border:0; outline:0; background:transparent; color:var(--ui-text); font:inherit; }
+.notice-admin-search > button { height:44px; min-height:44px; padding:0 20px; }
+.notice-page-dates { grid-template-columns:minmax(220px,1fr) 30px minmax(220px,1fr); gap:18px; }
+.notice-page-dates > span { text-align:center; }
+html[data-theme="dark"] .notice-admin-table-wrap { border-color:#344258; background:#172233; }
+html[data-theme="dark"] .notice-admin-table th { background:#202d40; color:#b6c2d2; }
+html[data-theme="dark"] .notice-admin-table td { color:#d9e1ec; }
+html[data-theme="dark"] .notice-important-row { background:rgba(151,105,30,.18); }
+html[data-theme="dark"] .notice-title-button { color:#edf3fb; }
+html[data-theme="dark"] .notice-admin-search { border-color:#344258; background:#172233; }
+html[data-theme="dark"] .notice-admin-search > span { border-color:#3b4a60; background:#111b2a; }
+@media(max-width:700px) {
+  .admin-chart-empty-note { width:100%; margin:0; padding:0; border-left:0; white-space:normal; }
+  .notice-admin-search { align-items:stretch; flex-direction:column; }
+  .notice-admin-search > button { width:100%; }
+  .notice-page-dates { grid-template-columns:1fr; gap:10px; }
+  .notice-page-dates > span { height:14px; line-height:14px; }
+}

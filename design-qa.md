@@ -1,43 +1,25 @@
 # Design QA
 
-- Source visual truth: `C:/Users/user/AppData/Local/Temp/codex-clipboard-65873d5e-a5b4-4b17-90a2-e0c4ae54f78c.png`
-- Implementation URL: `https://sparkplus-lms.vercel.app/`
-- Viewport: desktop, approximately 1372 × 904 CSS pixels
-- Source pixels: 1372 × 904
-- Implementation pixels: unavailable
-- Density normalization: not applicable
-- State: dark-mode administrator organization tree with nested organizations expanded
+- Test URL: `https://sparkplus-lms.vercel.app`
+- Source references: the 11 annotated screenshots supplied in this task (`1308x915`, `1113x568`, `1187x586`, `1252x629`, `1116x545`, `820x447`, `992x512`, `1122x511`, `1070x537`, `950x522`, `945x538`).
+- Implementation screenshot: unavailable — the in-app browser reaches the company Google login page and has no authenticated administrator session.
+- Runtime/build check: Vite production build completed successfully.
+- Source-level checks completed: dashboard empty-state spacing, course list controls, course editor deadline/lesson spacing, lesson drawer attachment and quiz layout, survey divider, learner management spacing and dark-mode contrast, user modal spacing, reward editor alignment and activity mapping, notice list dark mode/search alignment, notice editor date spacing.
 
-## Full-view comparison evidence
+## Differences found and fixed
 
-The source screenshot clearly shows one organization row expanding to roughly twice the normal row height. The implementation was deployed with fixed 54px organization rows and overflow-safe, single-line labels. The deployed authenticated administrator state could not be captured because the in-app browser reached the company Google login screen and the connected Chrome session was unavailable.
+- Separated the dashboard empty-state note from the chart heading with a visual divider and responsive fallback.
+- Normalized list filters, action buttons, course card metadata, and card gaps.
+- Removed dangling lesson separators when duration is empty and expanded deadline date controls.
+- Made attachment actions and four-choice quiz rows non-overlapping in the lesson drawer.
+- Removed the unwanted survey section divider.
+- Increased learner-management and registration-modal spacing and improved dark-mode status contrast.
+- Centered point/badge editors, reserved space for close controls, and normalized form gaps and unit inputs.
+- Added a point-rule creation action and normalized reward activity labels to API codes when saving.
+- Centered notice search controls, improved dark-mode table contrast, and widened notice date-range fields.
 
-## Focused region comparison evidence
+## Verification result
 
-Focused target: the left organization tree, especially the oversized `스페이스팀` row. Browser-rendered post-fix evidence is unavailable for the authenticated state.
+`blocked`
 
-## Findings and comparison history
-
-- Earlier P1: organization rows could become substantially taller than neighboring rows, breaking scanability and wasting vertical space.
-- Fix: set every `.organization-tree-row` to a fixed 54px border-box height, hide overflow, constrain the select control to 52px, and enforce single-line ellipsis on both organization name and metadata.
-- Post-fix evidence: production CSS asset `index-BW1hdJ10.css` is deployed and the frontend production build passes. Authenticated visual capture remains blocked.
-
-## Required fidelity surfaces
-
-- Fonts and typography: preserved; labels now have explicit single-line truncation.
-- Spacing and layout rhythm: row height normalized to 54px with existing 5px vertical margins.
-- Colors and visual tokens: unchanged.
-- Image quality and asset fidelity: no image assets are involved in this correction.
-- Copy and content: unchanged.
-
-## Primary interactions and console checks
-
-- Production page loaded successfully.
-- Authenticated organization selection/expansion could not be exercised in the in-app browser.
-- Console verification for the authenticated state could not be completed.
-
-## Final result
-
-final result: blocked
-
-Blocker: the verification browser is not authenticated with the company Google account, and a connected Chrome session is unavailable.
+Reason: authenticated administrator pages could not be opened in the available in-app browser session, so exact screenshot-to-implementation visual comparison at matching states and viewport sizes could not be completed. No credentials or user browser session were reused.
