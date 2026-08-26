@@ -5801,6 +5801,10 @@ html[data-theme="dark"] .brand-logo,
 html[data-theme="dark"] .logo img {
   filter: invert(1);
 }
+html[data-theme="dark"] .logo,
+html[data-theme="dark"] .logo em {
+  color: #eef5fd !important;
+}
 html[data-theme="dark"] footer {
   background: #15181b !important;
   border-color: var(--ui-line) !important;
