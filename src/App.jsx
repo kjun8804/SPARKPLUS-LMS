@@ -682,6 +682,14 @@ const formatAdminPeriod = ({ start, end }) => start.slice(0, 7) === end.slice(0,
   ? `${Number(start.slice(0, 4))}년 ${Number(start.slice(5, 7))}월`
   : `${start.replaceAll(`-`, `.`)} ~ ${end.replaceAll(`-`, `.`)}`;
 
+function openNativeDatePicker(event) {
+  try {
+    event.currentTarget.showPicker?.();
+  } catch {
+    // Browsers without showPicker still provide their native date control.
+  }
+}
+
 function DateRangeFilter({ value, onChange, mode = `dashboard` }) {
   const options = mode === `ranking`
     ? [[`month`, `월간`], [`quarter`, `분기`], [`year`, `올해`], [`custom`, `직접 설정`]]
@@ -696,9 +704,9 @@ function DateRangeFilter({ value, onChange, mode = `dashboard` }) {
     <div className="date-range-control">
       <label><span>기간 선택</span><select value={value.preset} onChange={(event) => selectPreset(event.target.value)}>{options.map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></label>
       <div className="date-range-inputs">
-        <label><span>시작일</span><input type="date" required value={value.start} max={value.end || undefined} onChange={(event) => onChange({ ...value, preset: `custom`, start: event.target.value })} /></label>
+        <label><span>시작일</span><input type="date" onClick={openNativeDatePicker} required value={value.start} max={value.end || undefined} onChange={(event) => onChange({ ...value, preset: `custom`, start: event.target.value })} /></label>
         <i aria-hidden="true">~</i>
-        <label><span>종료일</span><input type="date" required value={value.end} min={value.start || undefined} onChange={(event) => onChange({ ...value, preset: `custom`, end: event.target.value })} /></label>
+        <label><span>종료일</span><input type="date" onClick={openNativeDatePicker} required value={value.end} min={value.start || undefined} onChange={(event) => onChange({ ...value, preset: `custom`, end: event.target.value })} /></label>
       </div>
     </div>
     {invalid && <p className="date-range-error">시작일과 종료일을 올바른 순서로 입력해주세요.</p>}
@@ -1695,6 +1703,7 @@ function CourseEditorV2({ selected, onBack, isNew = false }) {
               교육 시작일
               <input
                 type="date"
+                onClick={openNativeDatePicker}
                 value={form.startDate}
                 onChange={(event) => update(`startDate`, event.target.value)}
               />
@@ -1704,6 +1713,7 @@ function CourseEditorV2({ selected, onBack, isNew = false }) {
               교육 종료일
               <input
                 type="date"
+                onClick={openNativeDatePicker}
                 value={form.endDate}
                 min={form.startDate}
                 onChange={(event) => update(`endDate`, event.target.value)}
@@ -1738,7 +1748,7 @@ function CourseEditorV2({ selected, onBack, isNew = false }) {
           {form.assignmentModes.includes(`individual`) && <div className="assignment-option-block assignment-individual-block"><h4>개별 학습자 선택</h4><label className="assignment-learner-search"><Icon icon={Search01Icon} size={17} /><input value={assignmentSearch} onChange={(event) => setAssignmentSearch(event.target.value)} placeholder="이름 또는 사번 검색" /></label><div className="assignment-learner-list">{filteredAssignmentLearners.map((learner) => <label className={form.assignedLearnerIds.includes(learner.id) ? `selected` : ``} key={learner.id}><input type="checkbox" checked={form.assignedLearnerIds.includes(learner.id)} onChange={() => toggleAssignmentValue(`assignedLearnerIds`, learner.id)} /><span>{learner.name[0]}</span><div><b>{learner.name}</b><small>{learner.employeeNumber} · {learner.dept} · {learner.position}</small></div></label>)}</div></div>}
           <div className="assignment-settings">
             <label className="assignment-required"><input type="checkbox" checked={form.requiredTraining} onChange={(event) => update(`requiredTraining`, event.target.checked)} /><span><b>필수 교육으로 배정</b><small>대상 학습자의 나의 학습에 자동으로 추가됩니다.</small></span></label>
-            <div className="assignment-deadline"><label><input type="checkbox" checked={form.assignmentDeadlineEnabled} onChange={(event) => update(`assignmentDeadlineEnabled`, event.target.checked)} /><span><b>학습 기한 설정</b><small>{form.assignmentDeadlineEnabled ? `기한 내 수료가 필요합니다.` : `기한 없음`}</small></span></label>{form.assignmentDeadlineEnabled && <input type="date" value={form.assignmentDeadline} min="2026-08-01" onChange={(event) => update(`assignmentDeadline`, event.target.value)} />}</div>
+            <div className="assignment-deadline"><label><input type="checkbox" checked={form.assignmentDeadlineEnabled} onChange={(event) => update(`assignmentDeadlineEnabled`, event.target.checked)} /><span><b>학습 기한 설정</b><small>{form.assignmentDeadlineEnabled ? `기한 내 수료가 필요합니다.` : `기한 없음`}</small></span></label>{form.assignmentDeadlineEnabled && <input type="date" onClick={openNativeDatePicker} value={form.assignmentDeadline} min="2026-08-01" onChange={(event) => update(`assignmentDeadline`, event.target.value)} />}</div>
           </div>
         </div>
       </section>
@@ -3932,7 +3942,7 @@ function AdminLearningStatusPage() {
         <button className={type === `ENROLLED` ? `active` : ``} onClick={() => setType(`ENROLLED`)}>수강 신청</button>
         <button className={type === `COMPLETED` ? `active` : ``} onClick={() => setType(`COMPLETED`)}>학습 완료</button>
       </div>
-      <div className="learning-status-dates"><input type="date" value={range.start} onChange={(event) => setRange({ ...range, start: event.target.value })} /><span>~</span><input type="date" value={range.end} onChange={(event) => setRange({ ...range, end: event.target.value })} /></div>
+      <div className="learning-status-dates"><input type="date" onClick={openNativeDatePicker} value={range.start} onChange={(event) => setRange({ ...range, start: event.target.value })} /><span>~</span><input type="date" onClick={openNativeDatePicker} value={range.end} onChange={(event) => setRange({ ...range, end: event.target.value })} /></div>
       <label className="learning-status-search"><Icon icon={Search01Icon} size={18} /><input value={query} onChange={(event) => setQuery(event.target.value)} onKeyDown={(event) => event.key === `Enter` && applyFilters()} placeholder="이름, 사번, 강의명 검색" /></label>
       <button className="primary" onClick={applyFilters}>조회</button>
     </div>
@@ -8695,7 +8705,7 @@ function NoticeEditorPage({ form, setForm, onCancel, onSave }) {
     <div className="notice-page-form">
       <label>공지 제목<input value={form.title} onChange={(event) => update(`title`, event.target.value)} placeholder="공지사항 제목을 입력해주세요" /></label>
       <label className="notice-important-check"><input type="checkbox" checked={form.important} onChange={(event) => update(`important`, event.target.checked)} /><span>중요 공지로 등록</span></label>
-      <fieldset><legend>게시 기간</legend><div className="notice-page-dates"><input aria-label="게시 시작일" type="date" value={form.start} onChange={(event) => update(`start`, event.target.value)} /><span>~</span><input aria-label="게시 종료일" type="date" value={form.end} onChange={(event) => update(`end`, event.target.value)} /></div></fieldset>
+      <fieldset><legend>게시 기간</legend><div className="notice-page-dates"><input aria-label="게시 시작일" type="date" onClick={openNativeDatePicker} value={form.start} onChange={(event) => update(`start`, event.target.value)} /><span>~</span><input aria-label="게시 종료일" type="date" onClick={openNativeDatePicker} value={form.end} onChange={(event) => update(`end`, event.target.value)} /></div></fieldset>
       <label>공지 내용<textarea value={form.content} onChange={(event) => update(`content`, event.target.value)} placeholder="공지 내용을 입력해주세요." /></label>
       <div className="notice-page-actions"><button className="secondary" onClick={onCancel}>취소</button><button className="primary" onClick={onSave}>{form.id ? `저장` : `등록`}</button></div>
     </div>
@@ -8726,7 +8736,7 @@ function NoticeEditorModal({ form, setForm, onClose, onPreview, onDraft, onPubli
     <div className="notice-editor-scroll">
       <div className="notice-form-section"><h3>기본 정보</h3><div className="notice-form-grid"><label className="full">공지 제목<input value={form.title} onChange={(event) => update(`title`, event.target.value)} placeholder="공지사항 제목을 입력해주세요" /></label><label className="check-label"><input type="checkbox" checked={form.important} onChange={(event) => update(`important`, event.target.checked)} />중요 공지로 상단 고정</label></div></div>
       <div className="notice-form-section"><h3>게시 대상</h3><div className="notice-target-options">{[`전체 임직원`, `부서 선택`, `교육과정 수강자`].map((item) => <label key={item}><input type="radio" name="target" checked={form.targetType === item} onChange={() => update(`targetType`, item)} />{item}</label>)}</div>{form.targetType === `부서 선택` && <div className="department-checks">{departments.map((item) => <label key={item}><input type="checkbox" checked={form.departments.includes(item)} onChange={() => update(`departments`, form.departments.includes(item) ? form.departments.filter((value) => value !== item) : [...form.departments, item])} />{item}</label>)}</div>}{form.targetType === `교육과정 수강자` && <select className="notice-course-select" value={form.course} onChange={(event) => update(`course`, event.target.value)}>{a.map((course) => <option key={course.id}>{course.title}</option>)}</select>}</div>
-      <div className="notice-form-section"><h3>게시 기간</h3><div className="notice-date-grid"><label>게시 시작<input type="date" value={form.start} onChange={(event) => update(`start`, event.target.value)} /></label><label>게시 종료<input type="date" value={form.end} disabled={form.noEnd} onChange={(event) => update(`end`, event.target.value)} /></label></div><label className="check-label inline"><input type="checkbox" checked={form.noEnd} onChange={(event) => update(`noEnd`, event.target.checked)} />종료일 없이 계속 게시</label></div>
+      <div className="notice-form-section"><h3>게시 기간</h3><div className="notice-date-grid"><label>게시 시작<input type="date" onClick={openNativeDatePicker} value={form.start} onChange={(event) => update(`start`, event.target.value)} /></label><label>게시 종료<input type="date" onClick={openNativeDatePicker} value={form.end} disabled={form.noEnd} onChange={(event) => update(`end`, event.target.value)} /></label></div><label className="check-label inline"><input type="checkbox" checked={form.noEnd} onChange={(event) => update(`noEnd`, event.target.checked)} />종료일 없이 계속 게시</label></div>
       <div className="notice-form-section"><h3>공지 내용</h3><div className="notice-editor-toolbar"><button type="button"><b>B</b></button><button type="button">목록</button><button type="button"><Icon icon={File01Icon} size={15} /> 링크</button></div><textarea value={form.content} onChange={(event) => update(`content`, event.target.value)} placeholder="임직원에게 안내할 내용을 입력해주세요" /></div>
       <div className="notice-form-section"><h3>첨부파일</h3><label className="notice-file-upload"><Icon icon={Add01Icon} /><span>{form.file || `파일 첨부`}</span><input type="file" onChange={(event) => update(`file`, event.target.files?.[0]?.name || ``)} /></label></div>
     </div>
