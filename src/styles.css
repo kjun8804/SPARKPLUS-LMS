@@ -18761,6 +18761,9 @@ html[data-theme="dark"] .user-portal :is(.status-ribbon,.course-recruit-badge) {
 .user-portal .course-card .card-actions {
   align-items:stretch;
 }
+.user-portal .course-card .card-actions.single-action {
+  grid-template-columns:1fr;
+}
 .user-portal .course-card .card-actions button { min-height:42px; border-radius:11px; font-size:13px; font-weight:650; }
 
 html[data-theme="dark"] .user-portal .course-status-badge.pre-open { background:rgba(79,143,207,.18); border-color:rgba(112,164,213,.3); color:#8ebce5; }

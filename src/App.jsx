@@ -10336,10 +10336,7 @@ function Y({ course: e, go: t, wishlisted: controlledWishlisted, onWishlistChang
           <Icon icon={ThumbsUpIcon} size={15} />
           <span>추천 {base + (recommended ? 1 : 0)}</span>
         </button>
-        <div className="card-actions">
-          <button className="secondary" onClick={() => t(`courseDetail`, e.id)}>
-            상세 보기
-          </button>
+        <div className="card-actions single-action">
           <button
             className={`course-action ${cta.action === `enter` || cta.action === `certificate` ? `enter-course` : `enroll-course`}`}
             disabled={cta.disabled}
