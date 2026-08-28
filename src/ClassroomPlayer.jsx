@@ -67,6 +67,7 @@ export default function ClassroomPlayer({
   const [quizResult, setQuizResult] = useState(null);
   const [completionOpen, setCompletionOpen] = useState(false);
   const [completedLessonIds, setCompletedLessonIds] = useState(() => new Set(lessons.filter((lesson) => lesson.completed).map((lesson) => lesson.id)));
+  const [answeredQuizIds, setAnsweredQuizIds] = useState(() => new Set(lessons.flatMap((lesson) => (lesson.quiz || []).filter((question) => question.correctlyAnswered).map((question) => question.id))));
   const [courseCompleted, setCourseCompleted] = useState(course.enrollmentStatus === "COMPLETED");
   const [currentProgress, setCurrentProgress] = useState(Number(course.progress || 0));
   const mainRef = useRef(null);
@@ -79,6 +80,9 @@ export default function ClassroomPlayer({
   const surveyRequired = course.surveyEnabled !== false;
   const lastLesson = Math.max(lessons.length - 1, 0);
   const displayedProgress = courseCompleted ? 100 : currentProgress;
+  const currentQuiz = currentLesson?.quiz?.[0];
+  const currentVideoComplete = completedLessonIds.has(currentLesson?.id);
+  const currentQuizComplete = !currentQuiz || answeredQuizIds.has(currentQuiz.id) || Boolean(quizResult?.correct);
 
   useEffect(() => {
     setQuizAnswer(null);
@@ -90,6 +94,7 @@ export default function ClassroomPlayer({
 
   useEffect(() => {
     setCompletedLessonIds(new Set(lessons.filter((lesson) => lesson.completed).map((lesson) => lesson.id)));
+    setAnsweredQuizIds(new Set(lessons.flatMap((lesson) => (lesson.quiz || []).filter((question) => question.correctlyAnswered).map((question) => question.id))));
     setCourseCompleted(course.enrollmentStatus === "COMPLETED");
     setCurrentProgress(Number(course.progress || 0));
   }, [course.id, course.enrollmentStatus, course.progress, lessons]);
@@ -115,7 +120,9 @@ export default function ClassroomPlayer({
 
   const finishCourse = async () => {
     const result = await saveLessonProgress().catch(() => null);
-    if (currentLesson?.quiz?.length && !quizResult?.correct) { setActiveTab("quiz"); return; }
+    if (currentLesson?.quiz?.length && !currentQuizComplete) { setActiveTab("quiz"); return; }
+    const missingLesson = lessons.findIndex((lesson) => !completedLessonIds.has(lesson.id) && lesson.id !== currentLesson?.id || (lesson.quiz?.length && !(lesson.quiz || []).every((question) => answeredQuizIds.has(question.id) || question.correctlyAnswered) && lesson.id !== currentLesson?.id));
+    if (missingLesson >= 0) { setActiveLesson(missingLesson); setActiveTab(lessons[missingLesson]?.completed ? "quiz" : "goals"); return; }
     setCourseCompleted(Boolean(result?.completed) || !course.enrollmentId);
     saveProgress?.(true);
     window.dispatchEvent(new CustomEvent("sparkplus-course-progress", { detail: { courseId: course.id } }));
@@ -218,7 +225,7 @@ export default function ClassroomPlayer({
                   </button>
                 ))}
               </div>
-              <button className="primary quiz-submit" disabled={quizAnswer === null} onClick={async () => { const question=currentLesson?.quiz?.[0]; if(course.enrollmentId&&question?.id){const response=await fetch(`/api/v1/learning/enrollments/${course.enrollmentId}/quiz/${question.id}`,{method:"POST",credentials:"include",headers:{"Content-Type":"application/json"},body:JSON.stringify({selectedOption:quizAnswer})});if(response.ok){const result=(await response.json()).data;setQuizResult(result);setCurrentProgress(Number(result?.progress || currentProgress));setCourseCompleted(Boolean(result?.completed));}}else setQuizResult({correct:quizAnswer===0});setQuizDone(true); }}>정답 확인</button>
+              <button className="primary quiz-submit" disabled={quizAnswer === null} onClick={async () => { const question=currentLesson?.quiz?.[0]; if(course.enrollmentId&&question?.id){const response=await fetch(`/api/v1/learning/enrollments/${course.enrollmentId}/quiz/${question.id}`,{method:"POST",credentials:"include",headers:{"Content-Type":"application/json"},body:JSON.stringify({selectedOption:quizAnswer})});if(response.ok){const result=(await response.json()).data;setQuizResult(result);if(result?.correct)setAnsweredQuizIds((current)=>new Set([...current,question.id]));setCurrentProgress(Number(result?.progress || currentProgress));setCourseCompleted(Boolean(result?.completed));}}else setQuizResult({correct:quizAnswer===0});setQuizDone(true); }}>정답 확인</button>
               {quizDone && <div className={`quiz-result ${quizResult?.correct ? "correct" : "wrong"}`}><b>{quizResult?.correct ? "정답입니다!" : "다시 한번 생각해 보세요."}</b><span>{quizResult?.explanation || (quizResult?.correct ? "정답이 학습 기록에 저장되었습니다." : "강의 내용을 확인한 후 다시 응시해주세요.")}</span></div>}
               </> : <div className="lesson-info"><p>이 차시에 등록된 퀴즈가 없습니다.</p></div>}
             </div>
@@ -227,8 +234,9 @@ export default function ClassroomPlayer({
 
         <div className="player-actions">
           <button className="lesson-nav previous" disabled={activeLesson === 0} onClick={() => selectLesson(activeLesson - 1)}><Icon icon={ArrowLeft01Icon} size={17} />이전 차시</button>
+          <div className="lesson-completion-hint"><b>이 차시 완료 조건</b><span className={currentVideoComplete ? "done" : ""}>영상 {currentVideoComplete ? "완료" : "학습 필요"}</span>{currentQuiz && <span className={currentQuizComplete ? "done" : ""}>퀴즈 {currentQuizComplete ? "완료" : "정답 제출 필요"}</span>}</div>
           {activeLesson === lastLesson
-            ? <button className="lesson-nav next course-finish-button" onClick={finishCourse}>수강 완료<Icon icon={CheckmarkCircle02Icon} size={17} /></button>
+            ? <button className="lesson-nav next course-finish-button" onClick={finishCourse}>{currentQuiz && !currentQuizComplete ? "퀴즈 완료하기" : "차시 완료하기"}<Icon icon={CheckmarkCircle02Icon} size={17} /></button>
             : <button className="lesson-nav next" onClick={() => selectLesson(activeLesson + 1)}>다음 차시<Icon icon={ArrowRight01Icon} size={17} /></button>}
         </div>
       </section>
